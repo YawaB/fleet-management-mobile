@@ -18,13 +18,13 @@ const FeatureScreen = ({navigation , route}) => {
   const dashboard_filters = []
 
   const onFeatureSelected = (feature)=>{
-      dispatch(setSelectedfeature(feature?.code))
-      AsyncStorage.setItem('app' , feature?.code)
-      if(feature?.code == 'tickets'){
-      }
-      navigation.navigate('FeaturesTab' ,{
-        screen: feature.route,
-      })
+    console.log('feature selected', feature)
+    dispatch(setSelectedfeature(feature?.code))
+    AsyncStorage.setItem('app' , feature?.code)
+    
+    navigation.navigate('FeaturesTab' ,{
+      screen: feature.route,
+    })
   }
 
   useFocusEffect(useCallback(()=>{

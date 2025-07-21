@@ -1,12 +1,12 @@
 import React from 'react'
 import { View , Text } from 'react-native'
 
-function DashboardComponent() {
+function PaneList() {
   return (
     <View>
-        <Text>Dashboard screen</Text>
+        <Text>List screen</Text>
     </View>
   )
 }
 
-export default DashboardComponent
+export default PaneList
