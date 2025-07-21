@@ -17,7 +17,7 @@ const AuthenticationScreen = ({navigation , route}) => {
   const [rememberMe , setRememberMe] = useState(false)
   const [ready , setReady ] = useState(false)
   const [loading , setLoading ] = useState(false)
-  const [isCheckingUser , setIsCheckingUser] = useState(true)
+  const [isCheckingUser , setIsCheckingUser] = useState(false)
 
   const { log } = useLogger()
   const dispatch = useDispatch();
@@ -32,6 +32,8 @@ const AuthenticationScreen = ({navigation , route}) => {
   }
   const Login = async ()=> {
        try{
+        goToFeatures()
+        return
           setLoading(true)
           setReady(false)
           const result = await dispatch(login(credentials))
@@ -80,7 +82,8 @@ const AuthenticationScreen = ({navigation , route}) => {
   }
 
   useEffect(() => {
-    AsyncStorage.getItem('token').then(token =>{
+    return
+     AsyncStorage.getItem('token').then(token =>{
       if(token){
         setIsCheckingUser(true)
         dispatch(checkUser())
