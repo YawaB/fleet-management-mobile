@@ -12,7 +12,6 @@ import LoadingComponent from "./Shared/LoadingComponent/LoadingComponent";
 import { getUiParams } from "../store/slice/ui";
 import { useEffect } from "react";
 import SqliteModule from "../core/modules/SqliteModule";
-import { initializeChecksTables } from "../modules/Ticket/service";
 import { requestGeolocationCurrentPosition } from "../core/api/geolocation";
 import Toast from "react-native-toast-message";
 import { bindEvents, unbindEvents } from "../socket/socket";
@@ -34,7 +33,6 @@ function Layout() {
       debug: false
     }).then(async res=>{
       if(res.db){
-        await initializeChecksTables()
       }
     })
 
@@ -87,6 +85,7 @@ function Layout() {
                 component={LoggerScreen}
                 options={{ headerTitle: "Les logs" }}
               />
+              
             </>
           ):(
             <>

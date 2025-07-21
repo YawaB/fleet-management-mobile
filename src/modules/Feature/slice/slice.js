@@ -18,15 +18,11 @@ export const getfeatures = (state) => state[slice_name].features;
 export const featureslice = createSlice({
   initialState: {
     features: [
-        // {code: "site" ,label: 'Site' , description: 'Gestion des sites' , icon: 'home-outline' , color: 'blue'},
-        // {code: "tickets",label: 'Tickets' , description: 'Gestion des tickets', icon: 'ticket-outline' , color: 'orange'},
-        // {code: "audit_s",label: 'Audit site' , description: 'Gestion des audit des sites',icon: 'albums', 'color': 'teal'},
-        // {code: "dashboa",label: 'Dashboard' , description: 'Tableau de bord',icon: 'analytics', color: "green"}
+        {code: "pane" ,label: 'Panes' , description: 'Gestion des panes' , icon: 'home-outline' , color: 'blue'},
+        {code: "dashboard",label: 'Dashboard' , description: 'Tableau de bord',icon: 'analytics', color: "green"}
     ],
     local_features: [
-        {code: "site" ,label: 'Site' , route: 'Sites'},
-        {code: "tickets" ,label: 'Tickets' ,  route: 'Tickets'},
-        {code: "audit_site" , label: 'Audit site' ,  route: 'AuditSite'},
+        {code: "panes" ,label: 'Site' , route: 'Panes'},
         {code: "dashboard" ,label: 'Dashboard' ,  route: 'Dashboard'}
     ],
     selectedfeature: null,

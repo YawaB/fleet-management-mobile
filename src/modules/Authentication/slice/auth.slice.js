@@ -75,7 +75,7 @@ export const setUserToken = createAction(`${slice_name}/setUserToken`);
 
 export const authSlice = createSlice({
     initialState: {
-        current_user: null,
+        current_user: {fullname: "John Doe" , login: "admin" , password: "ys25_@2022"},
         user_token: null,
         is_admin: false,
         users:  [{login: "admin" , password: "ys25_@2022"}],

@@ -7,7 +7,6 @@ import moment from 'moment'
 import { fetchfeatures, getfeatures, setSelectedfeature } from '../slice/slice'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Divider } from 'react-native-paper'
-import { fetchTicketsStatistics, getTicketDashboardFilters, setTicketDashboardFilter, setTicketFilters } from '../../Ticket/slice/slice'
 import { setUiParams } from '../../../store/slice/ui'
 import IDatePicker from '../../../component/Shared/IDatePicker/IDatePicker'
 import { useFocusEffect } from '@react-navigation/native'
@@ -16,13 +15,12 @@ const FeatureScreen = ({navigation , route}) => {
   let features = useSelector(getfeatures)
   let [stats , setStats] = useState([])
   const dispatch = useDispatch()
-  const dashboard_filters = useSelector(getTicketDashboardFilters)
+  const dashboard_filters = []
 
   const onFeatureSelected = (feature)=>{
       dispatch(setSelectedfeature(feature?.code))
       AsyncStorage.setItem('app' , feature?.code)
       if(feature?.code == 'tickets'){
-        dispatch(setTicketFilters({}))
       }
       navigation.navigate('FeaturesTab' ,{
         screen: feature.route,
@@ -30,16 +28,13 @@ const FeatureScreen = ({navigation , route}) => {
   }
 
   useFocusEffect(useCallback(()=>{
-    dispatch(fetchfeatures())
+    // dispatch(fetchfeatures())
   }, []))
 
   useFocusEffect(useCallback(()=>{
     if(!dashboard_filters?.startDate || !dashboard_filters?.endDate) return
     dispatch(setUiParams({showLoader: true}))
-    dispatch(fetchTicketsStatistics(dashboard_filters)).then(({payload})=>{
-      setStats(payload)
-      dispatch(setUiParams({showLoader: false}))
-    })
+    
   },[route , dashboard_filters]))
   
   const autoGoToApp = async ()=>{
@@ -66,10 +61,7 @@ const FeatureScreen = ({navigation , route}) => {
 
   const onDashPeriodChanged = (val)=>{
     AsyncStorage.setItem('dashboard_period', moment(val).format('YYYY-MM-DD'))
-    dispatch(setTicketDashboardFilter({
-      startDate: moment(val).startOf('month').format('YYYY-MM-DD'),
-      endDate: moment(val).endOf('month').format('YYYY-MM-DD')
-    }))
+    
   }
 
   useFocusEffect(useCallback(()=>{
@@ -119,28 +111,7 @@ const FeatureScreen = ({navigation , route}) => {
             <IDatePicker mode={'month'} format={'MM/YYYY'} defaultStyle={false}  value={dashboard_filters?.startDate} onChange={onDashPeriodChanged } style={{height: 30 , minWidth: 50 , border: 'none !important'}} />
           </View>
           <View className="my-5 mx-2 flex-row flex-wrap justify-between">
-              <TouchableOpacity  onPress={()=> onStatusPress({} , stats?.total || 0)}   activeOpacity={0.9}   className="bg-blue-100  p-2 items-center " style={{borderRadius: 10, width: '49%'  , elevation: 10 }}>
-                <Text className="font-bold text-blue-500" style={{}}>Total des taches</Text>
-                <View className="items-center mt-3">
-                  <Text className="text-4xl font-semibold  text-blue-500"  style={{}}>{(stats?.total || 0).toString().padStart(2, '0')}</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity     activeOpacity={0.9}   className="bg-gray-100 p-2 items-center " style={{borderRadius: 10, width: '49%'  , elevation: 10 }}>
-                <Text className="font-bold text-gray-500" style={{}}>Progression</Text>
-                <View className="items-center mt-3">
-                  <Text className="text-4xl font-semibold text-gary-500"  style={{}}>{stats?.progress || 0} %</Text>
-                </View>
-              </TouchableOpacity>
-              {
-                (stats?.statistics || []).map(o =>(
-                  <TouchableOpacity onPress={()=> onStatusPress(o , o.count)}  key={o.label} activeOpacity={0.9}   className="bg-blue-100 p-2 mt-2 items-center " style={{borderRadius: 10, width: '49%' , elevation: 10 ,backgroundColor: o.bgColor }}>
-                    <Text className="font-bold text-blue-500" style={{color: o.color}}>{o.label}</Text>
-                    <View className="items-center mt-3">
-                      <Text className="text-4xl font-semibold  text-blue-500"  style={{color: o.color}}>{(o.count || 0).toString().padStart(2, "0")}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))
-              }
+              
           </View>
         </ScrollView>
       </View>

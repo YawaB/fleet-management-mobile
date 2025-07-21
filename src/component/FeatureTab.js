@@ -1,7 +1,7 @@
 import React from 'react'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SiteScreen from '../modules/Site/user-interface/SiteScreen';
-import TicketScreen from '../modules/Ticket/ui/TicketScreen';
+import PaneComponent from '../modules/Pane/ui/PaneComponent';
+import DashboardComponent from '../modules/Dashboard/ui/DashboardComponent';
 
 const Stack = createNativeStackNavigator();
 
@@ -9,15 +9,15 @@ function FeatureTab() {
   return (
     <Stack.Navigator>
         <Stack.Screen
-            component={SiteScreen}
-            name='Sites'
+            component={PaneComponent}
+            name='Panes'
             options={({route})=>({
                 header: ()=> null
             })}
         />
         <Stack.Screen
-            component={TicketScreen}
-            name='Tickets'
+            component={DashboardComponent}
+            name='Dashboard'
             options={({route})=>({
                 header: ()=> null
             })}
