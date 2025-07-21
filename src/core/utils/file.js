@@ -1,0 +1,124 @@
+import { Image } from 'react-native-compressor';
+import * as ImageManipulator from 'expo-image-manipulator';
+import {  File, Paths  } from 'expo-file-system/next';
+
+
+export async function _compressBase64(base64 , options){
+    console.log('start compressing' , base64)
+    try {
+        return await compress(base64 , {
+            width: 400,
+            type: 'image/png',
+            max: 200, // max size
+            min: 20, // min size
+            quality: 0.7,
+        })
+    }catch(err){
+        console.log('error compressing', err)
+        return null
+    }
+    
+}
+
+export async function compressBase64(uri){
+    try{
+        const result = await Image.compress(uri, {
+            maxWidth: 500,
+            quality: 0.9,
+        });
+        let finalRes = result;
+        if(result){
+            finalRes =  await filePathToBase642(result)
+        }
+        return finalRes
+    }catch(err){
+        console.log('error compressing', err)
+        return null
+    }
+}
+
+export async function convertToBase64(){
+
+}
+
+export function localFilesPathToBase64(files){
+    try{
+        return files.map(file => {
+            return localFileToBase64(file)
+        })
+    }catch(err){
+        console.log('error converting files to base64', err)
+        return null
+    }
+}
+
+
+function localFileToBase64(path){
+    try{
+        if((path || '').includes('base64')) return path;
+        let file = new File(path)
+        return file.base64()
+    }catch(err){
+        console.log('error converting files to base64', err)
+        return null
+    }
+}
+
+function filePathToBase642 (path){
+    return new Promise((resolve, result) => {
+        setTimeout(()=> {
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET', path, true)
+            xhr.responseType = 'blob';
+            xhr.onload = function (oEvent) {
+                if (xhr.response instanceof Blob) {
+                    let blob = xhr.response;
+                    let reader = new FileReader();
+                    reader.onload = () => {
+                        resolve(reader.result)
+                    }
+                    reader.readAsDataURL(blob)
+                } else {
+                    resolve(undefined)
+                }
+            }
+            xhr.send()
+        },0)
+    })
+}
+
+export function moveFileToDocument(dir){
+    try{
+        console.log('Start moving file')
+        const file = new File(dir);
+        file.move(Paths.document)
+        console.log('End moving file', file.uri)
+        return file.uri.toString();
+    }catch(err){
+        console.log('error reading file', err)
+        return null
+    }
+}
+
+export function readFile(){
+    try{
+        const file = new File(Paths.document, 'exampl.txt');
+        console.log('content',file.text())
+    }catch(err){
+        console.log('error reading file', err)
+    }
+}
+
+export function createFile(){
+    try {
+        console.log('start creating file')
+        const file = new File(Paths.document, 'example.txt');
+        file.create(); // can throw an error if the file already exists or no permission to create it
+        file.write('Hello, world!');
+        console.log(file.text() , file.parentDirectory); // Hello, world!
+        console.log('end creating file')
+
+    } catch (error) {
+        console.error(error);
+    }
+}
