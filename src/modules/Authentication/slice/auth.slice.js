@@ -5,21 +5,28 @@ import _ from "lodash";
 import { subscribeToTopic } from "../../../firebase";
 const slice_name = "auth";
 
-export const login = createAsyncThunk(`${slice_name}/login`, async (_args, { dispatch, getState }) => {
-    const res = await _login(_args)
-    console.log('response auth:', res)
-    if (res.success) {
-        let response = res.response 
-        dispatch(setCurrentUser(response?.user))
-        dispatch(fetchUserAuthorizations())
-        await AsyncStorage.setItem('token', response?.accessToken)
-        await AsyncStorage.setItem('user', JSON.stringify(response?.user))
-    }else{
-        dispatch(setCurrentUser(null))
-        await AsyncStorage.setItem('token', '')
-    }
-    // const cookie = new Cookies()
-    return res
+export const login = createAsyncThunk(`${slice_name}/login`,
+     async (_args, { dispatch, getState }) => {
+        try{
+            console.log('login args:', _args)
+            const res = await _login(_args)
+            console.log('response auth:', res)
+            return
+            if (res.success) {
+                dispatch(setCurrentUser(res?.result))
+                dispatch(fetchUserAuthorizations())
+                await AsyncStorage.setItem('token', res?.key)
+                await AsyncStorage.setItem('user', JSON.stringify(res?.result))
+                return true
+            }else{
+                dispatch(setCurrentUser(null))
+                await AsyncStorage.setItem('token', '')
+                return false
+            }
+        }catch(e){
+            console.log('error:', e)
+            return false
+        }
 })
 
 export const checkUser = createAsyncThunk(`${slice_name}/checkUser`, async (_args, { dispatch, getState }) => {
@@ -39,14 +46,15 @@ export const checkUser = createAsyncThunk(`${slice_name}/checkUser`, async (_arg
     }
 
     if (res.success) {
-        let response = res.response 
-        dispatch(setCurrentUser(response?.user))
-        dispatch(fetchUserAuthorizations())
-        await AsyncStorage.setItem('token', response?.accessToken)
-        await AsyncStorage.setItem('user', JSON.stringify(response?.user))
+        dispatch(setCurrentUser(res?.result))
+        // dispatch(fetchUserAuthorizations())
+        await AsyncStorage.setItem('token', res?.key)
+        await AsyncStorage.setItem('user', JSON.stringify(res?.result))
     }
     return res?.success
 })
+
+
 export const logout = createAsyncThunk(`${slice_name}/logout`, async (_args, { dispatch, getState }) => {
     try {
         const res = await _logOut();

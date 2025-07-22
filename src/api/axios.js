@@ -1,10 +1,9 @@
 import axios from 'axios'
-import { API_BASE_URI } from './config'
 
-console.log('baseurl:', API_BASE_URI)
+console.log('baseurl axios:', process.env.EXPO_PUBLIC_REACT_APP_API)
 const instance = axios.create({
-    baseURL: API_BASE_URI,
-    withCredentials: true
+    baseURL: process.env.EXPO_PUBLIC_REACT_APP_API,
+    // withCredentials: true
 })
 
 export default instance

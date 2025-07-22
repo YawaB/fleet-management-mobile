@@ -32,15 +32,29 @@ const AuthenticationScreen = ({navigation , route}) => {
   }
   const Login = async ()=> {
        try{
-        goToFeatures()
-        return
+
           setLoading(true)
           setReady(false)
-          const result = await dispatch(login(credentials))
-          console.log({result})
-          console.log('response:,', result.payload.response)
-          if(!result.payload?.success)
-            throw new Error(result.payload.response)
+          let args = {
+            "user": credentials.email,
+            "password": credentials.password
+          }
+          console.log('credentials:', args)
+          dispatch(login(args)).then(({payload})=>{
+            console.log('response login:', payload)
+          })
+          return
+          console.log('response:,', result?.payload)
+          if(!result?.payload){
+            console.log('result.payload:', result.payload)
+            // toastMessage({
+            //   type: "error",
+            //   text1: "Authentification",
+            //   text2: result.payload,
+            //   visibilityTime: 3000,
+            //   tag: "authentication"
+            // })
+          }             
           else{
             goToFeatures()
             updateLocalUser({
@@ -77,12 +91,12 @@ const AuthenticationScreen = ({navigation , route}) => {
           setRememberMe(true)
         }
       }catch(e){
-
+        log(`[authentication] - ${e.message}`, 'error')
+        console.log('user:', e)
       }
   }
 
   useEffect(() => {
-    return
      AsyncStorage.getItem('token').then(token =>{
       if(token){
         setIsCheckingUser(true)

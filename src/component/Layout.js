@@ -25,6 +25,7 @@ const Stack = createNativeStackNavigator();
 function Layout() {
   const { log } = useLogger()
   const current_user = useSelector(getCurrentUser)
+  console.log("current_user", current_user)
   let uiParams = useSelector(getUiParams)
   let dispatch = useDispatch()
 
@@ -43,7 +44,6 @@ function Layout() {
   }, [])
 
   useEffect(()=>{
-    console.log('request permissionn not')
     initFirebaseMessaging()
   }, [])
   return (
@@ -61,9 +61,9 @@ function Layout() {
               </View>
             )
         })}
-        initialRouteName={current_user ? "Features" : "Login"}>
+        >
         {
-          current_user ? (
+          false ? (
             <>
               <Stack.Screen
                 name="Features"
