@@ -1,36 +1,30 @@
-import { request } from "../../../api"
-const root = 'authentication'
-
+import { request } from "../../../api";
+const root = "authentication";
 
 export async function _login(credentials) {
-    try{
-        return await request(`/user/login`, {
-            method: 'post',
-            data: credentials
-        })
-    }catch(e){
-        console.log('error _login:', e)
-        return {success: false , response: e}
-    }
+  return await request(`/user/login`, {
+    method: "post",
+    data: credentials,
+  });
 }
 
 export async function _signin(credentials) {
-    return await request(`${root}/signin`, {
-        method: 'post',
-        data: credentials
-    })
+  return await request(`${root}/signin`, {
+    method: "post",
+    data: credentials,
+  });
 }
 
 export async function _logOut(userId) {
-    return await request(`${root}/logout`)
+  return await request(`${root}/logout`);
 }
 
 export async function _checkUser(token) {
-    return await request(`user/checkUserToken`, {
-      method: 'post',
-      data: {token},
-    })
+  return await request(`user/checkUserToken`, {
+    method: "post",
+    data: { token },
+  });
 }
-export async function _fetchUserAuthorizations(id){
-    return await request(`users/authorizations?id=${id}`)
+export async function _fetchUserAuthorizations(id) {
+  return await request(`users/authorizations?id=${id}`);
 }

@@ -1,12 +1,20 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert , Dimensions, ScrollView} from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Dimensions,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {CameraView, Camera, useCameraPermissions ,  } from "expo-camera";
+import { CameraView, Camera, useCameraPermissions } from "expo-camera";
 import { useRef, useState } from "react";
 import { useEffect } from "react";
 import { Image } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Audio } from "expo-av";
-import * as ImagePicker from 'expo-image-picker'
+import * as ImagePicker from "expo-image-picker";
 import {
   getOpenPhotoView,
   setPhoto,
@@ -17,7 +25,6 @@ import {
 import { ActivityIndicator, Button } from "react-native-paper";
 import { manipulateAsync, FlipType, SaveFormat } from "expo-image-manipulator";
 import { compressBase64, moveFileToDocument } from "../../../core/utils/file";
-
 
 export const GuidLines = {
   base: 18,
@@ -49,7 +56,7 @@ const CameraScreen = ({
   enginDetail,
   height,
 }) => {
-  const [type, setType] = useState('back');
+  const [type, setType] = useState("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [audioPermission, requestAudioPermission] = Audio.usePermissions();
   const [images, setImages] = useState([]);
@@ -60,48 +67,48 @@ const CameraScreen = ({
   const [cameraMode, setCameraMode] = useState("picture");
   const [scanResult, setScanResult] = useState("");
   const canScan = useRef(false);
-  const [pickType , setPickType] = useState('')
-  const [isTimeout , setIsTimeout] = useState(false)
+  const [pickType, setPickType] = useState("");
+  const [isTimeout, setIsTimeout] = useState(false);
   let [params, setParams] = useState({});
+
+  console.log("pickType", pickType);
 
   const dispatch = useDispatch();
 
   const [show, setShow] = useState(true);
 
   function toggleCameraType() {
-    setType((current) =>
-      current === 'back' ? 'front' : 'back'
-    );
+    setType((current) => (current === "back" ? "front" : "back"));
   }
 
   const pickImageAsync = async () => {
-    setPickType('gallery')
+    setPickType("gallery");
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       quality: 0.8,
       allowsMultipleSelection: true,
       // base64: true,
     });
     if (!result.canceled) {
       let assets = await Promise.all(
-        result.assets.map( async o => {
-          let obj = {...o , uri: o.uri };
-          if(obj?.uri){
-             let uri = moveFileToDocument(obj.uri);
-             if(uri) obj.uri = uri
-             let base64Cpmpresed = await compressBase64(obj.uri)
-             obj.base64 = base64Cpmpresed || obj.base64
+        result.assets.map(async (o) => {
+          let obj = { ...o, uri: o.uri };
+          if (obj?.uri) {
+            let uri = moveFileToDocument(obj.uri);
+            if (uri) obj.uri = uri;
+            let base64Cpmpresed = await compressBase64(obj.uri);
+            obj.base64 = base64Cpmpresed || obj.base64;
           }
-          return obj
+          return obj;
         })
-      ) 
-      validate(assets)
+      );
+      validate(assets);
     } else {
-      console.log('error:', )
+      console.log("error:");
       // alert('You did not select any image.');
-      onCancel()
+      onCancel();
     }
-  }
+  };
 
   useEffect(() => {
     setCameraMode(["picture", "scan"].includes(mode) ? mode : "camera");
@@ -128,9 +135,9 @@ const CameraScreen = ({
       : undefined;
   }, [sound]);
 
-  const addImage = (image)=>{
-    setImages(prev => [...prev , image])
-  }
+  const addImage = (image) => {
+    setImages((prev) => [...prev, image]);
+  };
 
   const takePhoto = async () => {
     let options = {
@@ -139,37 +146,37 @@ const CameraScreen = ({
       exif: false,
     };
     let photo = await photoRef.current.takePictureAsync(options);
-    photo = {...photo }
-    if(photo?.uri){
+    photo = { ...photo };
+    if (photo?.uri) {
       let uri = moveFileToDocument(photo?.uri);
-      if(uri) photo.uri = uri;
-      let base64Cpmpresed = await compressBase64(photo?.uri)
-      photo.base64 = base64Cpmpresed || photo.base64
+      if (uri) photo.uri = uri;
+      let base64Cpmpresed = await compressBase64(photo?.uri);
+      photo.base64 = base64Cpmpresed || photo.base64;
     }
     addImage(photo);
   };
 
-  const removeImage = (index)=>{
-     setImages(prev =>{
-       let t = [...prev]
-       t.splice(index , 1)
-       return t
-     })
-  }
+  const removeImage = (index) => {
+    setImages((prev) => {
+      let t = [...prev];
+      t.splice(index, 1);
+      return t;
+    });
+  };
   const onCancel = (index) => {
-     setImages([]);
-     setPickType('')
-     setIsTimeout(false)
-     if(typeof onHide == 'function') onHide();
+    setImages([]);
+    setPickType("");
+    setIsTimeout(false);
+    if (typeof onHide == "function") onHide();
   };
 
   const validate = async (_images) => {
-    _images = _images || [...images]
+    _images = _images || [...images];
     setUploading(true);
     if (typeof onImage == "function") {
       onImage([..._images]);
     }
-    onCancel()
+    onCancel();
     dispatch(setPhoto(_images));
     setUploading(false);
   };
@@ -192,11 +199,11 @@ const CameraScreen = ({
     }, 4000);
   };
 
-  const startTimer = ()=>{
-    setTimeout(()=>{
-      setIsTimeout(true)
-    }, 2000)
-  }
+  const startTimer = () => {
+    setTimeout(() => {
+      setIsTimeout(true);
+    }, 2000);
+  };
 
   useEffect(() => {
     requestPermission();
@@ -206,14 +213,14 @@ const CameraScreen = ({
     setShow(open);
   }, [open]);
 
-  useEffect(()=>{
-    if(visible) startTimer()
-  },[visible])
+  useEffect(() => {
+    if (visible) startTimer();
+  }, [visible]);
 
   useEffect(() => {
     if (!show) {
       dispatch(setPhoto(null));
-      setPickType('')
+      setPickType("");
     }
   }, [show]);
 
@@ -229,21 +236,21 @@ const CameraScreen = ({
     else setParams(extraInfo);
   }, [picParams, from, extraInfo]);
 
-  useEffect(()=>{
-    if(isTimeout && pickType == '') onCancel()
-  },[pickType , isTimeout])
+  useEffect(() => {
+    if (isTimeout && pickType == "") onCancel();
+  }, [pickType, isTimeout]);
 
-  if (!visible) return null;
+  if (false) return null;
   return (
     <View
-       className=""
+      className=""
       style={[
         styles.container,
         // style,
-        {
-          flex: !enginDetail ? 1 : 0,
-          justifyContent: !enginDetail ? "center" : null
-        },
+        // {
+        //   flex: !enginDetail ? 1 : 0,
+        //   justifyContent: !enginDetail ? "center" : null
+        // },
       ]}
     >
       {permission?.granted !== true ? (
@@ -256,144 +263,158 @@ const CameraScreen = ({
         </View>
       ) : null}
       {permission?.granted === true && (
-        <View style={{flex: 1}}>
-            { pickType == '' &&
-              (<View style={{height: 100 , elevation: 20}} className=" bg-white rounded-t-2xl ">
-                {/* <View className="items-end">
+        <View className=" w-full" style={{ flex: 1 }}>
+          {pickType == "" && (
+            <View className="flex-1">
+              {/* <View className="items-end">
                   <Ionicons name="close-circle-outline"  />
                 </View> */}
-                <View className="flex-row items-center justify-center h-full">
-                  <TouchableOpacity onPress={e =>{
-                    setPickType('camera')
-                  }} style={{width: 60 , height: 60}} className="bg-gray-400 justify-center items-center">
-                      <Ionicons name='camera-outline' size={40} color={'#fff'} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={pickImageAsync} style={{width: 60 , height: 60}} className="bg-blue-400 ml-5 justify-center items-center">
-                      <Ionicons name='image-outline' size={40} color={'#fff'} />
-                  </TouchableOpacity>
-                </View>
-              </View>)
-            }
-            {
-              pickType == 'camera' && (
-                  <CameraView
-                    barCodeScannerSettings={{ barCodeTypes: ["qr", "barecode"] }}
-                    onBarCodeScanned={onBarcodeScanned}
-                    facing={type}
+              <View className="flex-row items-center justify-around flex-1">
+                <TouchableOpacity
+                  onPress={(e) => {
+                    setPickType("camera");
+                  }}
+                  style={{ width: 80, height: 80 }}
+                  className="bg-gray-400 justify-center items-center"
+                >
+                  <Ionicons name="camera-outline" size={40} color={"#fff"} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={pickImageAsync}
+                  style={{ width: 80, height: 80 }}
+                  className="bg-blue-400 ml-5 justify-center items-center"
+                >
+                  <Ionicons name="image-outline" size={40} color={"#fff"} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          {pickType == "camera" && (
+            <CameraView
+              barCodeScannerSettings={{ barCodeTypes: ["qr", "barecode"] }}
+              onBarCodeScanned={onBarcodeScanned}
+              facing={type}
+              style={{
+                height: style?.height || GuidLines.windowHeight,
+                width: GuidLines.windowWidth,
+                zIndex: 120000,
+                position: "relative",
+              }}
+              ref={photoRef}
+            >
+              <View
+                style={{
+                  position: "absolute",
+                  zIndex: 50,
+                  width: "100%",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  // top: 200,
+                  // top: openPhoto ? 30 :  0,
+                  paddingHorizontal: GuidLines.base,
+                  paddingVertical: GuidLines.small,
+                }}
+              >
+                {mode === "scan" && (
+                  <View
                     style={{
-                      height: style?.height || 450,
-                      zIndex: 120000,
-                      position: "relative",
+                      marginTop: "20%",
                     }}
-                    ref={photoRef}
+                    className="flex-1 justify-center items-center "
                   >
-                    <View
+                    <Image
                       style={{
-                        position: "absolute",
-                        zIndex: 50,
-                        width: "100%",
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        // top: 200,
-                        // top: openPhoto ? 30 :  0,
-                        paddingHorizontal: GuidLines.base,
-                        paddingVertical: GuidLines.small,
+                        width: 300,
+                        height: 300,
                       }}
-                    >
-                      {mode === "scan" && (
-                        <View
-                          style={{
-                            marginTop: "20%",
-                          }}
-                          className="flex-1 justify-center items-center "
-                        >
-                          
-                          <Image
-                            style={{
-                              width: 300,
-                              height: 300,
-                            }}
-                            source={require("./assets/images/Square.png")}
-                            resizeMode="cover"
-                          />
-                        </View>
-                      )}
-                      
-                      {mode !== "scan" && (
-                        <View>
-                          <Ionicons
-                            name="close-outline"
-                            color={GuidLines.colorRed}
-                            size={GuidLines.large}
-                            onPress={onCancel}
-                          />
-                        </View>
-                      )}
-                      {mode !== "scan" && (
-                        <Ionicons
-                          name="camera-reverse"
-                          onPress={toggleCameraType}
-                          color="#fff"
-                          size={GuidLines.large}
-                        />
-                      )}
-                      {images.length > 0 && !uploading && (
-                        <Ionicons
-                          name="checkmark-outline"
-                          color="#fff"
-                          size={30}
-                          onPress={e => validate()}
-                        />
-                      )}
-                      {uploading && <ActivityIndicator color="orange" size={"small"} />}
-                    </View>
-                    
-                    {cameraMode === "scan" ? null : (
-                      <View
-                        style={{
-                          position: "absolute",
-                          zIndex: 2,
-                          width: "100%",
-                          bottom: 0,
-                          margin: cameraMode == "scan" ? 0 : 10,
-                          alignItems: "center",
-                        }}
-                      >
-                        <TouchableOpacity
-                          onPress={takePhoto}
-                          style={[
-                            styles.actionBtn,
-                            { backgroundColor: 'orange' },
-                          ]}
-                        >
-                          <Ionicons name="camera-outline" color={"white"} size={30} />
-                        </TouchableOpacity>
-                        <ScrollView style={{width: 'auto' , marginTop: 10 }} className="flex-row" horizontal={true}>
-                            {images.length > 0 && (
-                                  images.map((img , idx)=> (
-                                    <View key={idx} className="ml-2">
-                                      <Image
-                                        source={{ uri: img.uri }}
-                                        width={50}
-                                        height={50}
-                                      />
-                                      <Ionicons onPress={e => removeImage(idx)} style={{position: 'absolute' , zIndex: 3, left: '30%' , top: '30%'}} name="close-outline" color={"red"} size={25} />
-                                    </View>
-                                  ))
-                              )}
-                        </ScrollView>
-                      </View>
-                    )}
-                  </CameraView>
-              )
-            }
-            
-        </View>
-        
-      )}
+                      source={require("./assets/images/Square.png")}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
 
-      
-       
+                {mode !== "scan" && (
+                  <View>
+                    <Ionicons
+                      name="close-outline"
+                      color={GuidLines.colorRed}
+                      size={GuidLines.large}
+                      onPress={onCancel}
+                    />
+                  </View>
+                )}
+                {mode !== "scan" && (
+                  <Ionicons
+                    name="camera-reverse"
+                    onPress={toggleCameraType}
+                    color="#fff"
+                    size={GuidLines.large}
+                  />
+                )}
+                {images.length > 0 && !uploading && (
+                  <Ionicons
+                    name="checkmark-outline"
+                    color="#fff"
+                    size={30}
+                    onPress={(e) => validate()}
+                  />
+                )}
+                {uploading && (
+                  <ActivityIndicator color="orange" size={"small"} />
+                )}
+              </View>
+
+              {cameraMode === "scan" ? null : (
+                <View
+                  style={{
+                    position: "absolute",
+                    zIndex: 2,
+                    width: "100%",
+                    bottom: 0,
+                    margin: cameraMode == "scan" ? 0 : 10,
+                    alignItems: "center",
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={takePhoto}
+                    style={[styles.actionBtn, { backgroundColor: "orange" }]}
+                  >
+                    <Ionicons name="camera-outline" color={"white"} size={30} />
+                  </TouchableOpacity>
+                  <ScrollView
+                    style={{ width: "auto", marginTop: 10 }}
+                    className="flex-row"
+                    horizontal={true}
+                  >
+                    {images.length > 0 &&
+                      images.map((img, idx) => (
+                        <View key={idx} className="ml-2">
+                          <Image
+                            source={{ uri: img.uri }}
+                            width={50}
+                            height={50}
+                          />
+                          <Ionicons
+                            onPress={(e) => removeImage(idx)}
+                            style={{
+                              position: "absolute",
+                              zIndex: 3,
+                              left: "30%",
+                              top: "30%",
+                            }}
+                            name="close-outline"
+                            color={"red"}
+                            size={25}
+                          />
+                        </View>
+                      ))}
+                  </ScrollView>
+                </View>
+              )}
+            </CameraView>
+          )}
+        </View>
+      )}
     </View>
   );
 };
@@ -403,7 +424,11 @@ export default CameraScreen;
 const styles = StyleSheet.create({
   container: {
     position: "relative",
-    // justifyContent: "center",
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    width: GuidLines.windowWidth,
+    height: GuidLines.windowHeight,
   },
   actionBtn: {
     width: 50,
