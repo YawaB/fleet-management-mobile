@@ -39,29 +39,36 @@ export const login = createAsyncThunk(
 
 export const checkUser = createAsyncThunk(
   `${slice_name}/checkUser`,
-  async (_args, { dispatch, getState }) => {
-    const { mode } = getState()[slice_name];
-    console.log("checking..!.");
-    let res = { success: false, response: null };
-    if (mode == "test") {
-      let token = await AsyncStorage.getItem("token");
-      if (token) {
-        res = {
-          success: true,
-          response: JSON.parse(await AsyncStorage.getItem("user")),
-        };
+  async (token, { dispatch, getState }) => {
+    try {
+      if (!token) {
+        console.warn("No token provided for user validation");
+        return false;
       }
-    } else {
-      res = await _checkUser(_args);
-    }
 
-    if (res.success) {
-      dispatch(setCurrentUser(res?.result));
-      // dispatch(fetchUserAuthorizations())
-      await AsyncStorage.setItem("token", res?.key);
-      await AsyncStorage.setItem("user", JSON.stringify(res?.result));
+      const res = await _checkUser(token);
+
+      if (res?.data?.success && res?.data?.result) {
+        // Update current user in Redux state
+        dispatch(setCurrentUser(res.data.result));
+
+        // Store updated user data and token
+        await AsyncStorage.setItem("token", res.data.key || token);
+        await AsyncStorage.setItem("user", JSON.stringify(res.data.result));
+
+        // Fetch user authorizations
+        await dispatch(fetchUserAuthorizations());
+
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Error validating user:", error);
+      // Clear invalid auth data
+      await AsyncStorage.multiRemove(["token", "user"]);
+      return false;
     }
-    return res?.success;
   }
 );
 
@@ -69,14 +76,22 @@ export const logout = createAsyncThunk(
   `${slice_name}/logout`,
   async (_args, { dispatch, getState }) => {
     try {
-      const res = await _logOut();
-      await AsyncStorage.removeItem("token");
+      // Clear all auth-related data
+      await AsyncStorage.multiRemove([
+        "token",
+        "user",
+        "rememberMe",
+        "savedCredentials",
+      ]);
+
+      // Clear Redux state
       dispatch(setCurrentUser(null));
-      console.log("logout:", res);
-      return res;
-    } catch (e) {
-      console.log("error:", e.message);
-      return { error: true, message: e.message };
+      dispatch(setUserAuthorizations([]));
+
+      return true;
+    } catch (error) {
+      console.error("Error during logout:", error);
+      return false;
     }
   }
 );
@@ -87,8 +102,8 @@ export const fetchUserAuthorizations = createAsyncThunk(
     let { current_user } = getState()[slice_name];
     const res = await _fetchUserAuthorizations(current_user?.id);
     console.log("authorizations:", res);
-    if (res.success)
-      dispatch(setUserAuthorizations(res?.response?.actions || []));
+    if (res?.data?.success)
+      dispatch(setUserAuthorizations(res?.data?.actions || []));
     return res;
   }
 );
@@ -97,11 +112,7 @@ export const setUserToken = createAction(`${slice_name}/setUserToken`);
 
 export const authSlice = createSlice({
   initialState: {
-    current_user: {
-      fullname: "John Doe",
-      login: "admin",
-      password: "ys25_@2022",
-    },
+    current_user: null,
     user_token: null,
     is_admin: false,
     users: [{ login: "admin", password: "ys25_@2022" }],

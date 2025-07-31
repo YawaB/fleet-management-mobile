@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Switch, TextInput } from "react-native-paper";
 import Styles from "../../../styles/index";
 import bgImage from "../../../../assets/ATS_LOGO_lg.png";
-import { checkUser, login } from "../slice/auth.slice";
+import { checkUser, login, setCurrentUser } from "../slice/auth.slice";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoadingComponent from "../../../component/Shared/LoadingComponent/LoadingComponent";
@@ -94,20 +94,47 @@ const AuthenticationScreen = ({ navigation, route }) => {
     }
   };
 
-  useEffect(() => {
-    AsyncStorage.getItem("token").then((token) => {
-      if (token) {
-        setIsCheckingUser(true);
-        dispatch(checkUser()).then(({ payload }) => {
-          if (payload) goToFeatures();
-          setTimeout(() => setIsCheckingUser(false), 2000);
-        });
-      } else {
+  const validateAuth = async () => {
+    try {
+      console.log("validateAuth");
+      setIsCheckingUser(true);
+      const token = await AsyncStorage.getItem("token");
+      const savedUser = await AsyncStorage.getItem("user");
+      console.log("token:", token);
+      console.log("savedUser:", savedUser);
+      if (!token) {
         setIsCheckingUser(false);
+        return;
       }
-    });
+
+      // Check if we have both token and user data
+      if (token && savedUser) {
+        const parsedUser = JSON.parse(savedUser);
+        // Validate token with backend
+        console.log("token if:", token);
+        const { payload } = await dispatch(checkUser(token));
+
+        if (payload) {
+          // Token is valid, restore user session
+          dispatch(setCurrentUser(parsedUser));
+          goToFeatures();
+        } else {
+          // Token invalid, clear storage
+          await AsyncStorage.multiRemove(["token", "user"]);
+        }
+      }
+    } catch (error) {
+      console.error("Auth validation error:", error);
+      await AsyncStorage.multiRemove(["token", "user"]);
+    } finally {
+      setIsCheckingUser(false);
+    }
+  };
+
+  useEffect(() => {
+    validateAuth();
     setCredentialFromLocal();
-  }, [route]);
+  }, []);
 
   useEffect(() => {
     let r = true;

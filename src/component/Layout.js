@@ -21,6 +21,7 @@ import useLogger from "../hook/Logger/useLogger";
 import LoggerScreen from "../modules/Logger/LoggerScreen";
 import { navigationRef } from "../core/utils/navigation";
 import CameraScreen from "./Shared/CameraScreen/CameraScreen";
+import { useTranslation } from "react-i18next";
 
 const Stack = createNativeStackNavigator();
 function Layout() {
@@ -29,6 +30,7 @@ function Layout() {
   console.log("current_user", current_user);
   let uiParams = useSelector(getUiParams);
   let dispatch = useDispatch();
+  const { t } = useTranslation();
 
   useEffect(() => {
     SqliteModule.init({
@@ -70,7 +72,11 @@ function Layout() {
             <Stack.Screen
               name="Features"
               component={FeatureScreen}
-              options={{ headerShown: false, headerTitle: "Les logs" }}
+              options={{
+                header: () => (
+                  <MenuComponent visibleBack={true} title={t("feutures")} />
+                ),
+              }}
             />
             <Stack.Screen
               name="FeaturesTab"
@@ -90,7 +96,9 @@ function Layout() {
             <Stack.Screen
               name="CameraScreen"
               component={CameraScreen}
-              options={{ headerShown: false, headerTitle: "Les logs" }}
+              options={{
+                header: () => <MenuComponent title={"Prendre une photo"} />,
+              }}
             />
           </>
         ) : (

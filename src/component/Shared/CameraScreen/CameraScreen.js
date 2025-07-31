@@ -20,11 +20,13 @@ import {
   setPhoto,
   setSavePhoto,
   getSavePhoto,
+  _uploadBase64,
 } from "./slice/photo.slice";
 
 import { ActivityIndicator, Button } from "react-native-paper";
 import { manipulateAsync, FlipType, SaveFormat } from "expo-image-manipulator";
 import { compressBase64, moveFileToDocument } from "../../../core/utils/file";
+import { _saveFile } from "./api";
 
 export const GuidLines = {
   base: 18,
@@ -54,6 +56,7 @@ const CameraScreen = ({
   mode,
   onScan,
   enginDetail,
+  onUploadFinished,
   height,
 }) => {
   const [type, setType] = useState("back");
@@ -156,6 +159,51 @@ const CameraScreen = ({
     addImage(photo);
   };
 
+  const upload = async (image) => {
+    // const img = await compressImage(image);
+    try {
+      const compressedImage = await manipulateAsync(
+        image.uri,
+        [{ resize: { width: image.width * 0.8, height: image.height * 0.8 } }],
+        { compress: 0.5, format: SaveFormat.JPEG, base64: true }
+      );
+      let x = Math.floor(Math.random() * 10000000 + 1);
+      let options = {
+        srcID: 0,
+        desc: 0,
+        src: 0,
+        id: 0,
+      };
+      console.log("image", compressedImage);
+      Object.assign(options, params);
+      let uploadRes = await _uploadBase64(compressedImage?.base64, {
+        name: options.srcID + options.desc + options.src + "_" + x,
+      });
+
+      console.log("uploadRes", uploadRes);
+
+      let saveRes = null;
+
+      if (uploadRes?.data?.success) {
+        let obj = {
+          src: options.src,
+          srcID: options.srcID,
+          desc: options.desc,
+          path: uploadRes.result,
+          id: options.id,
+        };
+        saveRes = await _saveFile(obj);
+        console.log("saveRes", saveRes);
+      }
+
+      if (typeof onUploadFinished == "function") {
+        onUploadFinished(saveRes?.data?.[0], uploadRes);
+      }
+    } catch (err) {
+      console.log("upload", err);
+    }
+  };
+
   const removeImage = (index) => {
     setImages((prev) => {
       let t = [...prev];
@@ -176,6 +224,7 @@ const CameraScreen = ({
     if (typeof onImage == "function") {
       onImage([..._images]);
     }
+    await upload(_images[0]);
     onCancel();
     dispatch(setPhoto(_images));
     setUploading(false);
@@ -370,7 +419,7 @@ const CameraScreen = ({
                     position: "absolute",
                     zIndex: 2,
                     width: "100%",
-                    bottom: 0,
+                    bottom: "10%",
                     margin: cameraMode == "scan" ? 0 : 10,
                     alignItems: "center",
                   }}
