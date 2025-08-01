@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import React, { useCallback, useEffect, useState } from "react";
+import { colors } from '../../../theme/colors';
 import Ionicons from "@expo/vector-icons/Ionicons.js";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser } from "../../Authentication/slice/auth.slice";
@@ -102,7 +103,7 @@ const FeatureScreen = ({ navigation, route }) => {
   console.log(features, "features");
 
   return (
-    <View style={{ flex: 1 }} className="bg-orange-500">
+    <View style={{ flex: 1, backgroundColor: colors.primary }}>
       <View
         style={{ padding: 6, flex: 1 }}
         className="bg-white   rounded-t-2xl"
@@ -154,7 +155,7 @@ const FeatureScreen = ({ navigation, route }) => {
                   <MaterialCommunityIcons
                     name="truck-check"
                     size={24}
-                    color="#ff9500"
+                    color={colors.primary}
                   />
                   <Text style={styles.cardTitle}>{t("nxt_mec_check")}</Text>
                 </View>
@@ -162,7 +163,7 @@ const FeatureScreen = ({ navigation, route }) => {
                   <MaterialCommunityIcons
                     name="calendar"
                     size={20}
-                    color="#666"
+                    color={colors.gray[600]}
                   />
                   <Text style={styles.infoText}>{t("schedule_service")}</Text>
                 </View>
@@ -170,12 +171,12 @@ const FeatureScreen = ({ navigation, route }) => {
                   <MaterialCommunityIcons
                     name="account"
                     size={20}
-                    color="#666"
+                    color={colors.gray[600]}
                   />
                   <Text style={styles.infoText}>John Smith (Mechanic)</Text>
                 </View>
                 <View style={styles.infoRow}>
-                  <MaterialCommunityIcons name="phone" size={20} color="#666" />
+                  <MaterialCommunityIcons name="phone" size={20} color={colors.gray[600]} />
                   <Text style={styles.infoText}>+1 234-567-8900</Text>
                 </View>
                 <Button
@@ -195,7 +196,7 @@ const FeatureScreen = ({ navigation, route }) => {
                   <MaterialCommunityIcons
                     name="car-info"
                     size={24}
-                    color="#ff9500"
+                    color={colors.primary}
                   />
                   <Text style={styles.cardTitle}>{t("vh_details")}</Text>
                 </View>
@@ -232,7 +233,7 @@ const FeatureScreen = ({ navigation, route }) => {
                   <MaterialCommunityIcons
                     name="calendar-clock"
                     size={24}
-                    color="#ff9500"
+                    color={colors.primary}
                   />
                   <Text style={styles.cardTitle}>{t("schedule_service")}</Text>
                 </View>
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
   },
   scheduleButton: {
     marginTop: 12,
-    backgroundColor: "#ff9500",
+    backgroundColor: colors.blueSecondary,
   },
   scheduleItem: {
     flexDirection: "row",
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dateBadge: {
-    backgroundColor: "#ff9500",
+    backgroundColor: colors.primary,
     padding: 8,
     borderRadius: 8,
     width: 70,

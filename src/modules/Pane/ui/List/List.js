@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { View, ScrollView, StyleSheet, Alert } from "react-native";
 import {
@@ -7,228 +7,285 @@ import {
   Card,
   Text,
   Chip,
-  List,
-  useTheme,
 } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { fetchPannes, getPanes, removePanne } from "../../slice/panne.slice";
+import { useDispatch, useSelector } from "react-redux";
+import { colors } from '../../../../theme/colors';
 
 function PaneList({ navigation }) {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const navigateToEditor = (incident) => {
-    navigation.navigate("Editor", { incident });
+  const dispatch = useDispatch();
+  const panes = useSelector(getPanes);
+
+  const navigateToEditor = (pane) => {
+    navigation.navigate("Editor", { pane });
   };
 
-  const handleDelete = (incident) => {
+  const handleDelete = (pane) => {
     Alert.alert(
-      t("delete_confirmation"),
-      `${t("delete_message")} "${incident.title}"?`,
+      'Delete Incident',
+      `Are you sure you want to delete incident "${pane.name}"?`,
       [
         {
-          text: t("cancel"),
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: t("delete"),
+          text: 'Delete',
           onPress: () => {
-            // Add your delete logic here
-            console.log("Deleting incident:", incident.id);
+            // TODO: Add delete logic here
+            console.log('Deleting pane:', pane.id);
+            dispatch(removePanne({id: pane.id})).then(({ payload }) => {
+              if (payload) {
+                dispatch(fetchPannes());
+              }
+            });
           },
-          style: "destructive",
+          style: 'destructive',
         },
       ],
       { cancelable: true }
     );
   };
 
-  // Sample data - replace with actual data from your backend
-  const incidents = [
-    {
-      id: 1,
-      title: "Panne NEW CAR",
-      dateMec: "2025-07-24",
-      dateDec: "2025-07-25",
-      driver: {
-        name: "John Doe",
-        phone: "+212 666-123456",
-      },
-      vehicleReg: "123 ABC 45",
-      category: "Électrique",
-      description: "Problème de batterie - ne démarre pas",
-      status: "En attente",
-    },
-    // Add more sample incidents as needed
-  ];
-
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case "Électrique":
-        return "#2196F3";
-      case "Mécanique":
-        return "#4CAF50";
-      case "Carrosserie":
-        return "#FF9800";
-      default:
-        return theme.colors.primary;
-    }
-  };
-
-  const renderIncidentCard = (incident) => (
-    <Card key={incident.id} style={styles.card}>
+  const renderPaneCard = (pane) => (
+    <Card
+      style={styles.card}
+      onPress={() => navigateToEditor(pane)}
+      key={pane.id}
+    >
+      <Card.Cover 
+        source={{ uri: pane.image || 'https://picsum.photos/700' }}
+        style={styles.cardImage}
+      />
       <Card.Content>
-        <Text variant="titleLarge" style={styles.title}>
-          {incident.title}
-        </Text>
-
-        <View style={styles.dateContainer}>
-          <List.Item
-            title="Date MEC"
-            description={incident.dateMec}
-            left={(props) => <List.Icon {...props} icon="calendar" />}
-            style={styles.dateItem}
-          />
-          <List.Item
-            title="Date DEC"
-            description={incident.dateDec}
-            left={(props) => <List.Icon {...props} icon="calendar-clock" />}
-            style={styles.dateItem}
-          />
+        <View className="">
+          <View className="flex flex-row items-center gap-2 mt-4">
+            <Text variant="titleMedium" style={styles.title}>{pane.name}</Text>
+            <Chip
+              className="flex items-center justify-center"
+              style={[
+                { backgroundColor: pane.categoryBgColor || colors.primary }
+              ]}
+              textStyle={{ color: pane.categoryColor || '#fff' }}
+            >
+              {pane.CategoryTypeName}
+            </Chip>
+          </View>
         </View>
-
-        <List.Item
-          title={incident.driver.name}
-          description={incident.driver.phone}
-          left={(props) => <List.Icon {...props} icon="account" />}
-        />
-
-        <List.Item
-          title={incident.vehicleReg}
-          left={(props) => <List.Icon {...props} icon="car" />}
-        />
-
-        <View style={styles.chipContainer}>
-          <Chip
-            style={[
-              styles.categoryChip,
-              { backgroundColor: getCategoryColor(incident.category) },
-            ]}
-            textStyle={{ color: "white" }}
-          >
-            {incident.category}
-          </Chip>
-          <Chip style={styles.statusChip} icon="clock-outline">
-            {incident.status}
-          </Chip>
-        </View>
-
-        {incident.description && (
-          <Text variant="bodyMedium" style={styles.description}>
-            {incident.description}
+        <Divider style={styles.divider} />
+        <View style={styles.infoRow}>
+          <MaterialCommunityIcons name="car" size={20} color={colors.gray[600]} />
+          <Text variant="bodyMedium" style={styles.infoText}>
+            {pane.marque} - {pane.licensePlate}
           </Text>
+        </View>
+        <View style={styles.infoRow}>
+          <MaterialCommunityIcons name="alert" size={20} color={colors.gray[600]} />
+          <Text variant="bodyMedium" style={styles.infoText}>
+            {pane.Symptome}
+          </Text>
+        </View>
+        {pane.Description && (
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="text" size={20} color={colors.gray[600]} />
+            <Text variant="bodyMedium" style={styles.infoText}>
+              {pane.Description}
+            </Text>
+          </View>
         )}
+        <View style={styles.cardFooter}>
+          <Chip 
+          className="flex items-center justify-center"
+          textStyle={{ color: '#fff' }}
+            style={{ 
+              backgroundColor: pane.panneImmobilisante === 'oui' ? '#EF4444' : '#10B981'
+            }}
+          >
+            {pane.panneImmobilisante === 'oui' ? 'Immobilizing' : 'Not Immobilizing'}
+          </Chip>
+        </View>
       </Card.Content>
-      <Divider className="mt-3" />
-      <Card.Actions style={styles.cardActions}>
+      <Card.Actions>
         <Button
           icon="pencil"
           mode="text"
-          onPress={() => navigateToEditor(incident)}
+          onPress={() => navigateToEditor(pane)}
         >
-          {t("edit")}
+          Edit
         </Button>
         <Button
           icon="delete"
           mode="text"
-          textColor="#dc3545"
-          onPress={() => handleDelete(incident)}
+          textColor="#dc2626"
+          onPress={() => handleDelete(pane)}
         >
-          {t("delete")}
+          Delete
         </Button>
       </Card.Actions>
     </Card>
   );
 
+  useEffect(() => {
+    dispatch(fetchPannes());
+  }, []);
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View className="flex flex-row justify-between items-center p-4">
         <Text variant="titleMedium" style={styles.headerTitle}>
           Incidents
         </Text>
         <Button
           mode="text"
           icon="plus"
-          onPress={navigateToEditor}
+          onPress={() => navigateToEditor()}
           style={styles.addButton}
         >
-          Ajouteré
+          {t("add_incident")}
         </Button>
       </View>
       <Divider />
-      <ScrollView style={styles.scrollView}>
-        {incidents.map(renderIncidentCard)}
+      <ScrollView style={styles.content}>
+        {panes.map((pane) => renderPaneCard(pane))}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cardActions: {
-    justifyContent: "flex-end",
-    paddingRight: 8,
+  cardImage: {
+    height: 150,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#f5f5f5',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 16,
-    backgroundColor: "white",
-  },
-  headerTitle: {
-    fontWeight: "bold",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   addButton: {
-    borderRadius: 20,
+    borderRadius: 8,
   },
-  scrollView: {
+  content: {
+    flex: 1,
+    padding: 16,
+    paddingBottom: 16,
+  },
+  card: {
+    marginBottom: 16,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flex: 1,
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  title: {
+    fontWeight: 'bold',
+  },
+  statusChip: {
+
+    height: 28,
+  },
+  immobilizeChip: {
+    height: 28,
+  },
+  divider: {
+    marginVertical: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  infoText: {
+    flex: 1,
+    color: colors.gray[700],
+  },
+  cardFooter: {
+    marginTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  addButton: {
+    borderRadius: 8,
+  },
+  content: {
     flex: 1,
     padding: 16,
   },
   card: {
     marginBottom: 16,
+    borderRadius: 12,
     elevation: 2,
   },
-  title: {
-    fontWeight: "bold",
-    marginBottom: 8,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  dateContainer: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  dateItem: {
+  titleContainer: {
     flex: 1,
-  },
-  chipContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    marginTop: 8,
   },
-  categoryChip: {
-    borderRadius: 16,
+  title: {
+    fontWeight: 'bold',
   },
   statusChip: {
-    backgroundColor: "#FFA000",
-    borderRadius: 16,
+    height: 28,
   },
-  description: {
-    marginTop: 16,
-    color: "#666",
+  immobilizeChip: {
+    height: 28,
   },
+  divider: {
+    marginVertical: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  infoText: {
+    flex: 1,
+    color: colors.gray[700],
+  },
+  cardFooter: {
+    marginTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
 });
 
 export default PaneList;

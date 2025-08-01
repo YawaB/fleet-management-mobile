@@ -1,6 +1,8 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { I18nManager } from 'react-native';
+import { configureLanguage } from '../utils/languageUtils';
 
 // Function to get the initial language
 async function getInitialLanguage() {
@@ -16,6 +18,7 @@ async function getInitialLanguage() {
 // Initialize i18n
 async function initI18n() {
   const initialLanguage = await getInitialLanguage();
+  await configureLanguage(initialLanguage);
   
   i18n
     .use(initReactI18next)

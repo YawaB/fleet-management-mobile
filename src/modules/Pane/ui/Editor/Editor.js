@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { colors } from '../../../../theme/colors';
 import { View, ScrollView, StyleSheet, Image } from "react-native";
 import {
   TextInput,
@@ -19,7 +20,10 @@ import {
   getPanneTypes,
   getVehicles,
 } from "../../slice/panne.slice";
+import { getPhoto, setPhoto } from "../../../../component/Shared/CameraScreen/slice/photo.slice";
 import { useDispatch, useSelector } from "react-redux";
+import { uploadFile } from "../../../../core/utils/file";
+import { useRoute } from "@react-navigation/native";
 
 function PaneEditor({ navigation }) {
   const [formData, setFormData] = useState({
@@ -30,7 +34,16 @@ function PaneEditor({ navigation }) {
     description: "",
     photo: null,
     audio: null,
+    audioId: null,
+    imageId: null
   });
+
+  
+  const photo = useSelector(getPhoto);
+
+  const route = useRoute();
+  
+ 
   const [recording, setRecording] = useState();
   const [sound, setSound] = useState();
   const [isRecording, setIsRecording] = useState(false);
@@ -51,7 +64,6 @@ function PaneEditor({ navigation }) {
     304: ["Autre problème détecté", "Symptôme non identifié"], // autre
   };
 
-  console.log("formData", formData);
 
   const handleAudioRecord = async () => {
     try {
@@ -59,7 +71,28 @@ function PaneEditor({ navigation }) {
         setIsRecording(false);
         await recording.stopAndUnloadAsync();
         const uri = recording.getURI();
-        setFormData((prev) => ({ ...prev, audio: { uri } }));
+        
+        // Upload the audio file
+        const uploadResult = await uploadFile(uri, {
+          srcID: 0,
+          desc: 'audio',
+          src: 'pannes',
+          extension: 'm4a',
+          model: 'audio'
+        });
+
+        console.log("uploadResult", uploadResult);
+
+        if (uploadResult.success) {
+          setFormData((prev) => ({ 
+            ...prev, 
+            audio: { 
+              uri,
+            }, 
+            audioId: uploadResult.save.data.result[0]?.id
+          }));
+        }
+        
         setRecording(undefined);
       } else {
         await Audio.requestPermissionsAsync();
@@ -80,13 +113,15 @@ function PaneEditor({ navigation }) {
 
   const handleSave = () => {
     let args = {
+      name: formData.name,
       id: 0,
-      vehiculeId: formData.immatriculation,
+      VehiculeId: formData.immatriculation,
       CategoryTypeId: formData.category,
       Symptome: formData.symptom,
       Description: formData.description,
       panneImmobilisante: formData.isImmobilizing,
-      audio: formData.audio,
+      audioId: formData.audioId,
+      imageId: formData.imageId
     };
     console.log("args handleSave", args);
     dispatch(createOrUpdatePanne(args)).then(({ payload }) => {
@@ -108,19 +143,85 @@ function PaneEditor({ navigation }) {
 
   const handlePhotoUpload = async (type) => {
     if (type === "camera") {
-      navigation.navigate("CameraScreen");
+      navigation.navigate("CameraScreen", {
+        src: "pannes",
+        srcID: 0,
+        desc: "image",
+      });
     }
   };
+
+  const initialFormData = {
+    immatriculation: "",
+    category: "",
+    symptom: "",
+    isImmobilizing: "non",
+    description: "",
+    photo: null,
+    audio: null,
+    imageId: null,
+    audioId: null
+  };
+
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Reset form data when screen is focused, except when returning with a photo
+      if (!photo) {
+        dispatch(setPhoto([]));
+        setFormData(initialFormData);
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, photo]);
 
   useEffect(() => {
     dispatch(fetchVehicles());
     dispatch(fetchPanneTypes());
   }, []);
 
+  useEffect(() => {
+    if (route.params?.pane) {
+      console.log("route.params?.pane", route.params?.pane);
+      let params = {
+        name: route.params?.pane?.name,
+        immatriculation: route.params?.pane?.VehiculeId,
+        category: route.params?.pane?.CategoryTypeId,
+        symptom: route.params?.pane?.Symptome,
+        isImmobilizing: route.params?.pane?.panneImmobilisante,
+        description: route.params?.pane?.Description,
+        photo: null,
+        audio: null,
+        imageId: null,
+        audioId: null
+      }
+      setFormData(params);
+    }
+  }, [route.params]);
+
+  useEffect(() => {
+    if (photo && photo.length > 0) {
+      console.log("photo useEffect", photo);
+      setFormData(prev => ({ ...prev, photo: photo[0], imageId: photo[0].imageId }));
+    }
+  }, [photo]);
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
-        <View className="flex flex-col gap-1">
+        <View className="flex flex-col gap-1"><View className="flex flex-col ">
+            <Text className="text-gray-500 font-bold pb-1">
+            Name            
+            </Text>
+            <TextInput
+              mode="outlined"
+              style={styles.input}
+              placeholder="Name"
+              value={formData.name}
+              onChangeText={(text) => setFormData({ ...formData, name: text })}
+            />
+          </View>
           <View className="flex flex-col ">
             <Text className="text-gray-500 font-bold pb-1">
               N° Immatriculation
@@ -128,7 +229,7 @@ function PaneEditor({ navigation }) {
             <Dropdown
               style={[
                 styles.dropdown,
-                categoryFocus && { borderColor: "#f97316" },
+                categoryFocus && { borderColor: colors.primary },
               ]}
               placeholderStyle={styles.placeholderStyle}
               selectedTextStyle={styles.selectedTextStyle}
@@ -152,7 +253,7 @@ function PaneEditor({ navigation }) {
             <Dropdown
               style={[
                 styles.dropdown,
-                categoryFocus && { borderColor: "#f97316" },
+                categoryFocus && { borderColor: colors.primary },
               ]}
               placeholderStyle={styles.placeholderStyle}
               selectedTextStyle={styles.selectedTextStyle}
@@ -176,7 +277,7 @@ function PaneEditor({ navigation }) {
             <Dropdown
               style={[
                 styles.dropdown,
-                symptomFocus && { borderColor: "#f97316" },
+                symptomFocus && { borderColor: colors.primary },
               ]}
               placeholderStyle={styles.placeholderStyle}
               selectedTextStyle={styles.selectedTextStyle}
@@ -240,7 +341,7 @@ function PaneEditor({ navigation }) {
             <View style={styles.photoPreviewContainer}>
               <Image
                 source={{ uri: formData.photo.uri }}
-                style={styles.photoPreview}
+                style={{ width: 100, height: 100 }}
                 resizeMode="cover"
               />
               <IconButton
@@ -378,6 +479,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   input: {
+    backgroundColor: "white",
     marginBottom: 16,
   },
   label: {

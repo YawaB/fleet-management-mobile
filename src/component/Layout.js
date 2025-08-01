@@ -14,6 +14,8 @@ import { useEffect } from "react";
 import SqliteModule from "../core/modules/SqliteModule";
 import { requestGeolocationCurrentPosition } from "../core/api/geolocation";
 import Toast from "react-native-toast-message";
+import React from "react";
+import { colors } from '../theme/colors';
 import { bindEvents, unbindEvents } from "../socket/socket";
 import { getAndSaveFcmToken, initFirebaseMessaging } from "../firebase";
 import { createFile, readFile } from "../core/utils/file";
@@ -51,7 +53,7 @@ function Layout() {
   }, []);
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar backgroundColor={"#f97316"} />
+      <StatusBar backgroundColor={colors.primary} />
       <Portal>
         <Toast />
         {uiParams.showLoader && (

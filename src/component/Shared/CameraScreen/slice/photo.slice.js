@@ -45,11 +45,6 @@ export const savePhoto = createAsyncThunk(
   }
 );
 
-export const getPhoto = (state) => state[name].photo;
-export const getPhotos = (state) => state[name].photos;
-export const getOpenPhotoView = (state) => state[name].open;
-export const getSavePhoto = (state) => state[name].save;
-export const getSavePhotoResult = (state) => state[name].save_result;
 const photoSlice = createSlice({
   name,
   initialState: {
@@ -59,8 +54,12 @@ const photoSlice = createSlice({
     save: true,
     params: null,
     save_result: null,
+    imageParams: { id: 0, image: null },
   },
   reducers: {
+    setImageParams: (state, { payload }) => {
+      state.imageParams = payload;
+    },
     setPhoto: (state, { payload }) => {
       state.photo = payload;
     },
@@ -85,6 +84,13 @@ const photoSlice = createSlice({
   },
 });
 
+export const getPhoto = (state) => state[name].photo;
+export const getPhotos = (state) => state[name].photos;
+export const getOpenPhotoView = (state) => state[name].open;
+export const getSavePhoto = (state) => state[name].save;
+export const getSavePhotoResult = (state) => state[name].save_result;
+export const getImageParams = (state) => state[name].imageParams;
+
 export const {
   setPhoto,
   setPhotos,
@@ -92,6 +98,7 @@ export const {
   setOpenPhotoView,
   setSavePhoto,
   setSavePhotoResult,
+  setImageParams,
 } = photoSlice.actions;
 
 export default photoSlice.reducer;

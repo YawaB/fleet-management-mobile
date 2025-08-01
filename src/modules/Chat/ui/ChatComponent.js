@@ -89,7 +89,7 @@ function ChatComponent({obj , onBack}) {
 
   return (
     <View style={{flex: 1}}>
-        <View className="items-center justify-around bg-orange-500 p-2 flex-row ">
+        <View className="items-center justify-around p-2 flex-row" style={{ backgroundColor: colors.primary }}>
          <Ionicons name='arrow-undo-outline' color={'white'} size={24} onPress={onReturn} />
          <Text className="text-white text-sm font-semibold ml-5">{obj?.label}</Text>
          <View className="">

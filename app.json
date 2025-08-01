@@ -1,10 +1,10 @@
 {
-  "name": "ATSystem",
-  "displayName": "ATSystem",
-  "icon": "./assets/logo.png",
+  "name": "Fleet Management",
+  "displayName": "Fleet Management",
+  "icon": "./assets/fleet_logo.png",
   "expo": {
-    "name": "ATSystem",
-    "slug": "ATSystem",
+    "name": "Fleet Management",
+    "slug": "fleet-management",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
@@ -36,7 +36,7 @@
       ]
     ],
     "splash": {
-      "image": "./assets/ATS_LOGO_lg.png",
+      "image": "./assets/fleet_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -45,7 +45,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/fleet_logo.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

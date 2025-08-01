@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View, Image, ImageBackground } from "react-native";
+import { colors } from '../../../theme/colors';
 import React, { useEffect, useState } from "react";
 import { Button, Switch, TextInput } from "react-native-paper";
 import Styles from "../../../styles/index";
-import bgImage from "../../../../assets/ATS_LOGO_lg.png";
+import bgImage from "../../../../assets/fleet_logo.png";
 import { checkUser, login, setCurrentUser } from "../slice/auth.slice";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -150,7 +151,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
   return isCheckingUser ? (
     <LoadingComponent
       label={"CONNEXION..."}
-      style={{ backgroundColor: "#f97316" }}
+      style={{ backgroundColor: colors.primary }}
       iconColor="#fff"
     />
   ) : (
@@ -160,18 +161,19 @@ const AuthenticationScreen = ({ navigation, route }) => {
           {/* {APP_NAME} */}
         </Text>
 
-        <Image source={bgImage} style={{ width: 400, height: 100 }} />
-        <Text className="text-orange-600">
+        <Image resizeMode="contain" source={bgImage} style={{ width: 400, height: 100 }} />
+        <Text style={{ color: colors.primary }}>
           {/* Le future commence maintenant */}
         </Text>
       </View>
       <View
-        className="bg-orange-500 rounded-t-2xl p-2"
+        className="rounded-t-2xl p-2" 
         style={{
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
           elevation: 4,
+          backgroundColor: colors.primary
         }}
       >
         <View
@@ -214,7 +216,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
               />
             </View>
             <Button
-              className="bg-gray-600"
+              className="bg-blue-500"
               contentStyle={{ height: 60 }}
               elevation={4}
               disabled={!ready}

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { _cratePanne, _fetchTypes, _fetchVehicles } from "../api";
+import { _cratePanne, _fetchPannes, _fetchTypes, _fetchVehicles, _removePanne } from "../api";
 import { toastMessage } from "../../../core/ui";
 
 
@@ -46,34 +46,83 @@ export const fetchVehicles = createAsyncThunk(
   );
 
 
+export const fetchPannes = createAsyncThunk(
+  `${slice_name}/fetchPannes`,
+  async (_args, { dispatch, getState }) => {
+    try {
+      const res = await _fetchPannes();
+      console.log("fetchPannes res:", res);
+      if (res?.data?.success) {
+        dispatch(setPanes(res?.data?.result || []));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.log("fetchPannes error:", e);
+      return { error: true, message: e.message };
+    }
+  }
+);
+
+export const removePanne = createAsyncThunk(
+  `${slice_name}/removePanne`,
+  async (_args, { dispatch, getState }) => {
+    try {
+      const res = await _removePanne(_args);
+      console.log("removePanne res:", res);
+      if (res?.data?.success) {
+        toastMessage({
+          text1: "SUCCÈS",
+          text2: res?.data?.result?.[0]?.msg,
+          tag: 'location',
+          type: 'success'
+        })
+        return true;
+      }
+      toastMessage({
+        text1: "ERREUR",
+        text2: res?.data?.result?.[0]?.msg,
+        tag: 'location',
+        type: 'error'
+      })
+      return false;
+    } catch (e) {
+      console.log("removePanne error:", e);
+      return { error: true, message: e.message };
+    }
+  }
+);
+
+
 export const createOrUpdatePanne = createAsyncThunk(
   `${slice_name}/createOrUpdateTask`,
   async (_args, { dispatch, getState }) => {
     try {
       let res = null;
       res = await _cratePanne(_args);
+      console.log("createOrUpdatePanne res:", res);
       if (res?.data?.result?.[0].typeMsg === "success") {
         toastMessage({
-          show: true,
-          severity: "success",
-          summary: "SUCCÈS",
-          detail: res?.data?.result?.[0]?.msg,
+          text1: "SUCCÈS",
+          text2: res?.data?.result?.[0]?.msg,
+          tag: 'location',
+          type: 'success'
         })
         return true;
       }
       toastMessage({
-        show: true,
-        severity: "error",
-        summary: "ERREUR",
-        detail: res?.data?.result?.[0]?.msg,
+        text1: "ERREUR",
+        text2: res?.data?.result?.[0]?.msg,
+        tag: 'location',
+        type: 'error'
       })
       return false;
     } catch (e) {
       toastMessage({
-        show: true,
-        severity: "error",
-        summary: "ERREUR",
-        detail: e.message,
+        text1: "ERREUR",
+        text2: e.message,
+        tag: 'location',
+        type: 'error'
       })
       return { error: true, message: e.message };
     }
@@ -88,6 +137,7 @@ export const paneslice = createSlice({
     panes: [],
     vehicles: [],
     panneTypes: [],
+
   },
   name: slice_name,
   reducers: {

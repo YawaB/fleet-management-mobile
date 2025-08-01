@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React, { useState, useEffect } from "react";
+import { colors } from '../theme/colors';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
@@ -122,7 +123,7 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
 
   return (
     <>
-      <View className="flex-row py-3 px-4 bg-orange-500 justify-between items-center shadow-3">
+      <View className="flex-row py-3 px-4 justify-between items-center shadow-3" style={{ backgroundColor: colors.primary }}>
         {!visibleBack && (
           <Ionicons
             name="arrow-undo-outline"

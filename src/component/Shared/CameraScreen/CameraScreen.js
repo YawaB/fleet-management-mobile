@@ -27,6 +27,7 @@ import { ActivityIndicator, Button } from "react-native-paper";
 import { manipulateAsync, FlipType, SaveFormat } from "expo-image-manipulator";
 import { compressBase64, moveFileToDocument } from "../../../core/utils/file";
 import { _saveFile } from "./api";
+import { useRoute, useNavigation } from "@react-navigation/native";
 
 export const GuidLines = {
   base: 18,
@@ -79,6 +80,11 @@ const CameraScreen = ({
   const dispatch = useDispatch();
 
   const [show, setShow] = useState(true);
+
+  const route = useRoute();
+  const navigation = useNavigation();
+
+  console.log("route camera", route);
 
   function toggleCameraType() {
     setType((current) => (current === "back" ? "front" : "back"));
@@ -189,11 +195,23 @@ const CameraScreen = ({
           src: options.src,
           srcID: options.srcID,
           desc: options.desc,
-          path: uploadRes.result,
+          path: uploadRes?.data?.result,
           id: options.id,
         };
+        console.log("obj camera", obj);
         saveRes = await _saveFile(obj);
         console.log("saveRes", saveRes);
+        if (saveRes?.data?.success && Array.isArray(saveRes?.data?.result)) {
+          const updatedImage = { 
+            ...image, 
+            uploaded: true, 
+            imageId: saveRes.data.result[0]?.id,
+            path: saveRes.data.result[0]?.path 
+          };
+          console.log("saveRes object", updatedImage);
+          dispatch(setPhoto([updatedImage]));
+          navigation?.goBack();
+        }
       }
 
       if (typeof onUploadFinished == "function") {
@@ -224,10 +242,10 @@ const CameraScreen = ({
     if (typeof onImage == "function") {
       onImage([..._images]);
     }
+    // Don't dispatch setPhoto here since it will be handled in upload function
     await upload(_images[0]);
-    onCancel();
-    dispatch(setPhoto(_images));
     setUploading(false);
+    onCancel();
   };
 
   const onBarcodeScanned = (barcodeInfos) => {
@@ -281,9 +299,10 @@ const CameraScreen = ({
   }, []);
 
   useEffect(() => {
-    if (from == "global") setParams(picParams);
-    else setParams(extraInfo);
-  }, [picParams, from, extraInfo]);
+    // if (from == "global") setParams(picParams);
+    // else setParams(extraInfo);
+    if (route?.params) setParams(route.params);
+  }, [route.params]);
 
   useEffect(() => {
     if (isTimeout && pickType == "") onCancel();
