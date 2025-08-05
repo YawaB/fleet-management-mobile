@@ -1,7 +1,7 @@
 import { StatusBar, Text, View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AuthenticationScreen from "../modules/Authentication/ui/AuthenticationComponent";
-import FeatureScreen from "../modules/Feature/ui/FeatureScreen";
+import BottomTabs from "../navigation/BottomTabs";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser } from "../modules/Authentication/slice/auth.slice";
 import FeatureTab from "./FeatureTab";
@@ -73,12 +73,10 @@ function Layout() {
           <>
             <Stack.Screen
               name="Features"
-              component={FeatureScreen}
-              options={{
-                header: () => (
-                  <MenuComponent visibleBack={true} title={t("feutures")} />
-                ),
-              }}
+              component={BottomTabs}
+              options={({ route }) => ({
+                header: () => null,
+              })}
             />
             <Stack.Screen
               name="FeaturesTab"
