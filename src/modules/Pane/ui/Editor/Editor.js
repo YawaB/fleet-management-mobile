@@ -114,7 +114,7 @@ function PaneEditor({ navigation }) {
   const handleSave = () => {
     let args = {
       name: formData.name,
-      id: 0,
+      id: route.params?.pane?.id || 0,
       VehiculeId: formData.immatriculation,
       CategoryTypeId: formData.category,
       Symptome: formData.symptom,

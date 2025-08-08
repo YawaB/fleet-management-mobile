@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { View, ScrollView, StyleSheet, Alert } from "react-native";
 import {
@@ -12,6 +12,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { fetchPannes, getPanes, removePanne } from "../../slice/panne.slice";
 import { useDispatch, useSelector } from "react-redux";
 import { colors } from '../../../../theme/colors';
+import { useFocusEffect } from "@react-navigation/native";
 
 function PaneList({ navigation }) {
   const { t } = useTranslation();
@@ -56,13 +57,19 @@ function PaneList({ navigation }) {
       key={pane.id}
     >
       <Card.Cover 
-        source={{ uri: pane.image || 'https://picsum.photos/700' }}
+        source={{ uri: process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + pane.image || 'https://picsum.photos/700' }}
         style={styles.cardImage}
       />
       <Card.Content>
         <View className="">
-          <View className="flex flex-row items-center gap-2 mt-4">
-            <Text variant="titleMedium" style={styles.title}>{pane.name}</Text>
+          <View className="flex flex-row items-center gap-2 mt-2">
+            <Text
+              numberOfLines={1}
+              variant="titleMedium"
+              style={styles.title}
+            >
+              {pane.name.length > 20 ? `${pane.name.slice(0, 17)}...` : pane.name}
+            </Text>
             <Chip
               className="flex items-center justify-center"
               style={[
@@ -127,9 +134,15 @@ function PaneList({ navigation }) {
     </Card>
   );
 
-  useEffect(() => {
-    dispatch(fetchPannes());
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        dispatch(fetchPannes());
+      } catch (err) {
+        console.log("Error fetch panes", err.message);
+      }
+    }, [])
+  );
 
   return (
     <View style={styles.container}>

@@ -1,21 +1,36 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import FeatureScreen from '../modules/Feature/ui/FeatureScreen';
-import ChatScreen from '../modules/Chat/ui/ChatScreen';
 import { colors } from '../theme/colors';
 import { useTranslation } from "react-i18next";
+import ChatScreenStack from '../modules/Chat/ui/ChatScreenStack';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import MenuComponent from '../component/MenuComponent';
 
 const Tab = createBottomTabNavigator();
 
 function BottomTabs() {
   const { t } = useTranslation();
 
+
+  function getRoutName(route) {
+    const routeName = getFocusedRouteNameFromRoute(route);
+    const noDisplayValues = [
+      "DetailChat"
+      
+    ];
+    const display = noDisplayValues.includes(routeName);
+    if (display) {
+      return "none";
+    }
+    return "flex";
+  }
+
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.gray[600],
-        headerShown: false
       }}
     >
       <Tab.Screen
@@ -26,17 +41,20 @@ function BottomTabs() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="view-grid" color={color} size={size} />
           ),
+          header: () => <MenuComponent visibleBack={true} title={t('Features')} />
         }}
       />
       <Tab.Screen
         name="Chat"
-        component={ChatScreen}
-        options={{
+        component={ChatScreenStack}
+        options={({ route }) => ({
           tabBarLabel: t('Chat'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="chat" color={color} size={size} />
           ),
-        }}
+          headerShown: false,
+          tabBarStyle: { display: getRoutName(route) }
+        })}
       />
     </Tab.Navigator>
   );

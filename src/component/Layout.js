@@ -51,6 +51,8 @@ function Layout() {
   useEffect(() => {
     initFirebaseMessaging();
   }, []);
+
+  
   return (
     <View style={{ flex: 1 }}>
       <StatusBar backgroundColor={colors.primary} />
