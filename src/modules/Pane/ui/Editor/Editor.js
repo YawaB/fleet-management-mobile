@@ -71,7 +71,7 @@ function PaneEditor({ navigation }) {
         setIsRecording(false);
         await recording.stopAndUnloadAsync();
         const uri = recording.getURI();
-        
+        console.log("handleAudioRecord uri", uri);
         // Upload the audio file
         const uploadResult = await uploadFile(uri, {
           srcID: 0,
@@ -81,14 +81,11 @@ function PaneEditor({ navigation }) {
           model: 'audio'
         });
 
-        console.log("uploadResult", uploadResult);
 
         if (uploadResult.success) {
           setFormData((prev) => ({ 
             ...prev, 
-            audio: { 
-              uri,
-            }, 
+            audio: uri,
             audioId: uploadResult.save.data.result[0]?.id
           }));
         }
@@ -163,6 +160,18 @@ function PaneEditor({ navigation }) {
     audioId: null
   };
 
+  const playOrStopAudio = async () => {
+    if (isPlaying) {
+      await soundRef.current.pauseAsync();
+    } else {
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + formData.audio },
+        { shouldPlay: true, progressUpdateIntervalMillis: 500 }
+      );
+      setSound(sound);
+      setIsPlaying(true);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -191,18 +200,20 @@ function PaneEditor({ navigation }) {
         symptom: route.params?.pane?.Symptome,
         isImmobilizing: route.params?.pane?.panneImmobilisante,
         description: route.params?.pane?.Description,
-        photo: null,
-        audio: null,
-        imageId: null,
-        audioId: null
+        
+        photo: route.params?.pane?.image,
+        audio: route.params?.pane?.audio,
+        imageId: route.params?.pane?.imageId,
+        audioId: route.params?.pane?.audioId
       }
       setFormData(params);
+    }else{
+      setFormData(initialFormData);
     }
-  }, [route.params]);
+  }, [route.params?.pane]);
 
   useEffect(() => {
     if (photo && photo.length > 0) {
-      console.log("photo useEffect", photo);
       setFormData(prev => ({ ...prev, photo: photo[0], imageId: photo[0].imageId }));
     }
   }, [photo]);
@@ -340,7 +351,7 @@ function PaneEditor({ navigation }) {
           {formData.photo ? (
             <View style={styles.photoPreviewContainer}>
               <Image
-                source={{ uri: formData.photo.uri }}
+                source={{ uri: formData.photo?.uri || process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + formData.photo }}
                 style={{ width: 100, height: 100 }}
                 resizeMode="cover"
               />
@@ -378,24 +389,7 @@ function PaneEditor({ navigation }) {
               <View style={styles.audioPreview}>
                 <Button
                   mode="text"
-                  onPress={async () => {
-                    if (sound) {
-                      if (isPlaying) {
-                        await sound.stopAsync();
-                        setIsPlaying(false);
-                      } else {
-                        await sound.playAsync();
-                        setIsPlaying(true);
-                      }
-                    } else {
-                      const { sound } = await Audio.Sound.createAsync({
-                        uri: formData.audio.uri,
-                      });
-                      setSound(sound);
-                      await sound.playAsync();
-                      setIsPlaying(true);
-                    }
-                  }}
+                  onPress={playOrStopAudio}
                   icon={isPlaying ? "pause" : "play"}
                 >
                   {isPlaying ? "Pause" : "Écouter"}

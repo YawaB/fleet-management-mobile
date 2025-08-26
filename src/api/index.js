@@ -18,6 +18,8 @@ export async function request(url, params) {
     params.headers["Authorization"] = "Bearer " + token;
     params.headers["x-socket"] = await AsyncStorage.getItem("x-socket");
 
+    console.log("url", url)
+
     let userInfos = {
       userID: "2111",
     };
@@ -32,6 +34,7 @@ export async function request(url, params) {
       ...defaultConfigs,
       userInfos,
     };
+    console.log("_axios url", _axios.defaults.baseURL)
     let res = await _axios(url, params);
     console.log("response request:", res);
     res = res || { data: {} };
