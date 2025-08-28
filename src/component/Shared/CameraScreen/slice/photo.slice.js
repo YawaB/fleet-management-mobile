@@ -14,11 +14,23 @@ export const _uploadBase64 = async (base64, options) => {
   };
 
   Object.assign(defaults, options);
-
-  return await request("file/upload", {
+  console.log("defaults payload", {
+    files:base64,
+    model: defaults.model,
+    path: defaults.path,
+    name:
+      defaults.name ||
+      defaults.srcID +
+        defaults.desc +
+        defaults.src +
+        "_" +
+        defaults.x +
+        ".png",
+  });
+  return await request("file/uploadMultiple", {
     method: "post",
     data: {
-      base64,
+      files:base64,
       model: defaults.model,
       path: defaults.path,
       name:
