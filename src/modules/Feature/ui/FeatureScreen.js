@@ -19,10 +19,13 @@ import IDatePicker from "../../../component/Shared/IDatePicker/IDatePicker";
 import { useFocusEffect } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { GuidLines } from "../../../component/Shared/CameraScreen/CameraScreen";
+import { fetchPannes, getPanes } from "../../Pane/slice/panne.slice";
 
 const FeatureScreen = ({ navigation, route }) => {
   let current_user = useSelector(getCurrentUser);
   let features = useSelector(getfeatures);
+  const panes = useSelector(getPanes);
   let [stats, setStats] = useState([]);
   const dispatch = useDispatch();
 
@@ -39,11 +42,11 @@ const FeatureScreen = ({ navigation, route }) => {
     });
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      // dispatch(fetchfeatures())
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     // dispatch(fetchfeatures())
+  //   }, [])
+  // );
 
   useFocusEffect(
     useCallback(() => {
@@ -84,6 +87,7 @@ const FeatureScreen = ({ navigation, route }) => {
 
   useFocusEffect(
     useCallback(() => {
+      dispatch(fetchPannes());
       (async () => {
         let period = await AsyncStorage.getItem("dashboard_period");
         onDashPeriodChanged(period || moment());
@@ -100,7 +104,6 @@ const FeatureScreen = ({ navigation, route }) => {
     }
   }, [route, features]);
 
-  console.log(features, "features");
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.primary }}>
@@ -110,7 +113,7 @@ const FeatureScreen = ({ navigation, route }) => {
       >
         <View className="flex-row flex-wrap pt-5">
           {features.map((o) => (
-            <View key={o.label} className="p-2" style={{ width: "50%" }}>
+            <View key={o.label} className="p-2" style={{ width: "100%" }}>
               <TouchableOpacity
                 onPress={() => onFeatureSelected(o)}
                 activeOpacity={0.9}
@@ -132,7 +135,7 @@ const FeatureScreen = ({ navigation, route }) => {
                     />
                   </TouchableOpacity>
                   <Text className="font-bold text-xl" style={{ color: "#fff" }}>
-                    {t(o.code)}
+                    {t(o.code) + " " + (panes?.length || 0)}
                   </Text>
                 </View>
                 <Text style={{ color: "#fff" }}>
@@ -148,6 +151,39 @@ const FeatureScreen = ({ navigation, route }) => {
             <Text className="font-semibold text-xl text-gray-700 mb-4">
               {t("vh_info")}
             </Text>
+
+            <Card className="mb-5" style={[styles.card, styles.cardMarginTop]}>
+              <Card.Content>
+                <View style={styles.cardHeader}>
+                  <MaterialCommunityIcons
+                    name="calendar-clock"
+                    size={24}
+                    color={colors.primary}
+                  />
+                  <Text style={styles.cardTitle}>{t("schedule_service")}</Text>
+                </View>
+                <View style={styles.scheduleItem}>
+                  <View style={styles.dateBadge}>
+                    <Text style={styles.dateText}>AUG 15</Text>
+                  </View>
+                  <View style={styles.scheduleDetails}>
+                    <Text style={styles.scheduleTitle}>{t("mec_check")}</Text>
+                    <Text style={styles.scheduleTime}>09:00 AM</Text>
+                  </View>
+                </View>
+                <View style={styles.scheduleItem}>
+                  <View style={styles.dateBadge}>
+                    <Text style={styles.dateText}>SEP 01</Text>
+                  </View>
+                  <View style={styles.scheduleDetails}>
+                    <Text style={styles.scheduleTitle}>
+                      {t("tire_rotation")}
+                    </Text>
+                    <Text style={styles.scheduleTime}>02:30 PM</Text>
+                  </View>
+                </View>
+              </Card.Content>
+            </Card>
 
             <Card style={styles.card}>
               <Card.Content>
@@ -227,38 +263,7 @@ const FeatureScreen = ({ navigation, route }) => {
               </Card.Content>
             </Card>
 
-            <Card className="mb-5" style={[styles.card, styles.cardMarginTop]}>
-              <Card.Content>
-                <View style={styles.cardHeader}>
-                  <MaterialCommunityIcons
-                    name="calendar-clock"
-                    size={24}
-                    color={colors.primary}
-                  />
-                  <Text style={styles.cardTitle}>{t("schedule_service")}</Text>
-                </View>
-                <View style={styles.scheduleItem}>
-                  <View style={styles.dateBadge}>
-                    <Text style={styles.dateText}>AUG 15</Text>
-                  </View>
-                  <View style={styles.scheduleDetails}>
-                    <Text style={styles.scheduleTitle}>{t("mec_check")}</Text>
-                    <Text style={styles.scheduleTime}>09:00 AM</Text>
-                  </View>
-                </View>
-                <View style={styles.scheduleItem}>
-                  <View style={styles.dateBadge}>
-                    <Text style={styles.dateText}>SEP 01</Text>
-                  </View>
-                  <View style={styles.scheduleDetails}>
-                    <Text style={styles.scheduleTitle}>
-                      {t("tire_rotation")}
-                    </Text>
-                    <Text style={styles.scheduleTime}>02:30 PM</Text>
-                  </View>
-                </View>
-              </Card.Content>
-            </Card>
+            
           </View>
         </ScrollView>
       </View>

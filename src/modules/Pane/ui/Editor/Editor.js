@@ -20,10 +20,13 @@ import {
   getPanneTypes,
   getVehicles,
 } from "../../slice/panne.slice";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { getPhoto, setPhoto } from "../../../../component/Shared/CameraScreen/slice/photo.slice";
 import { useDispatch, useSelector } from "react-redux";
 import { uploadFile } from "../../../../core/utils/file";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
+import moment from "moment";
+import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 
 function PaneEditor({ navigation }) {
   const [formData, setFormData] = useState({
@@ -55,6 +58,7 @@ function PaneEditor({ navigation }) {
 
   const vehicles = useSelector(getVehicles);
   const panneTypes = useSelector(getPanneTypes);
+  const currentUser = useSelector(getCurrentUser);
 
   const symptoms = {
     280: ["Ne démarre pas", "Bruit anormal", "Perte de puissance"], // mécanique
@@ -118,7 +122,8 @@ function PaneEditor({ navigation }) {
       Description: formData.description,
       panneImmobilisante: formData.isImmobilizing,
       audioId: formData.audioId,
-      imageId: JSON.parse(formData.imageId)
+      imageId: formData.imageId,
+      declarantId: currentUser?.userID.toString(),
     };
     console.log("args handleSave", args);
     dispatch(createOrUpdatePanne(args)).then(({ payload }) => {
@@ -149,6 +154,7 @@ function PaneEditor({ navigation }) {
   };
 
   const initialFormData = {
+    name: `panne_${moment().format("DD/MM/YYYY HH:mm")}`,
     immatriculation: "",
     category: "",
     symptom: "",
@@ -161,11 +167,14 @@ function PaneEditor({ navigation }) {
   };
 
   const playOrStopAudio = async () => {
+    setIsPlaying(!isPlaying);
     if (isPlaying) {
       await soundRef.current.pauseAsync();
     } else {
+
+      const audioUrl = formData.audio.startsWith("file:///") ? formData.audio : process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + formData.audio;
       const { sound } = await Audio.Sound.createAsync(
-        { uri: process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + formData.audio },
+        { uri: audioUrl },
         { shouldPlay: true, progressUpdateIntervalMillis: 500 }
       );
       setSound(sound);
@@ -333,6 +342,20 @@ function PaneEditor({ navigation }) {
                     <View style={{ width: '100%', height: '100%', borderRadius: 8, backgroundColor: '#e5e7eb' }} />
                   )
                 )}
+                {/* Index badge */}
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    left: -8,
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    borderRadius: 10,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 10 }}>{idx + 1}</Text>
+                </View>
                 <IconButton
                   icon="close-circle"
                   size={18}
@@ -360,26 +383,61 @@ function PaneEditor({ navigation }) {
 
     if (!imageSources.length) return null;
 
+    // Build current ids list (aligned by index) from formData or route params
+    let currentIds = [];
+    try {
+      if (formData?.imageId) {
+        const parsed = typeof formData.imageId === 'string' ? JSON.parse(formData.imageId) : formData.imageId;
+        if (Array.isArray(parsed)) currentIds = parsed;
+      } else if (route?.params?.pane?.imageId) {
+        const parsed = typeof route.params.pane.imageId === 'string' ? JSON.parse(route.params.pane.imageId) : route.params.pane.imageId;
+        if (Array.isArray(parsed)) currentIds = parsed;
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+
+    const removeAtExisting = (idx) => {
+      const nextImages = imageSources.filter((_, i) => i !== idx);
+      const nextIds = (currentIds || []).filter((_, i) => i !== idx);
+      setFormData((prev) => ({
+        ...prev,
+        photo: nextImages,
+        imageId: nextIds.length ? JSON.stringify(nextIds) : null,
+      }));
+    };
+
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
         {imageSources.map((uri, idx) => (
-          <Image
-            key={`img-${idx}`}
-            source={{ uri }}
-            style={{ width: 100, height: 100, borderRadius: 8, marginRight: 8 }}
-            resizeMode="cover"
-          />
+          <View key={`img-${idx}`} style={{ width: 100, height: 100, marginRight: 8, position: 'relative' }}>
+            <Image
+              source={{ uri }}
+              style={{ width: '100%', height: '100%', borderRadius: 8 }}
+              resizeMode="cover"
+            />
+            {/* Index badge */}
+            <View
+              style={{
+                position: 'absolute',
+                top: -8,
+                left: -8,
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                borderRadius: 10,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 10 }}>{idx + 1}</Text>
+            </View>
+            <IconButton
+              icon="close-circle"
+              size={18}
+              style={{ position: 'absolute', top: -8, right: -8 }}
+              onPress={() => removeAtExisting(idx)}
+            />
+          </View>
         ))}
-        {/* {videoSources.map((uri, idx) => (
-          <Video
-            key={`vid-${idx}`}
-            source={{ uri }}
-            style={{ width: 100, height: 100, borderRadius: 8, backgroundColor: '#000', marginRight: 8 }}
-            resizeMode="cover"
-            useNativeControls
-            isMuted
-          />
-        ))} */}
       </ScrollView>
     );
   };
@@ -387,7 +445,7 @@ function PaneEditor({ navigation }) {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       // Reset form data when screen is focused, except when returning with a photo
-      if (!photo) {
+      if (route.params?.pane?.new) {
         dispatch(setPhoto([]));
         setFormData(initialFormData);
       }
@@ -401,7 +459,7 @@ function PaneEditor({ navigation }) {
     dispatch(fetchPanneTypes());
   }, []);
 
-  console.log("route.params?.pane use", route.params?.pane);
+  console.log("route.params?.new", route.params);
 
 
 
@@ -423,6 +481,7 @@ function PaneEditor({ navigation }) {
       audio: pane.audio,
       imageId: pane.imageId,
       audioId: pane.audioId,
+      
     };
 
     setFormData(params);
@@ -457,13 +516,11 @@ function PaneEditor({ navigation }) {
     if (photo && photo.length > 0) {
       // Build a preview photo value and aggregate uploaded image IDs
       const firstPath = photo[0]?.path?.uri || photo[0]?.path || photo[0]?.uri || null;
-      const ids = photo
-        .filter((x) => x?.uploaded && x?.imageId)
-        .map((x) => x.imageId);
+      console.log("photo firstPath", photo);
       const next = {
         ...formData,
         photo: firstPath,
-        imageId: ids.length ? JSON.stringify(ids) : null,
+        imageId: photo[0]?.imageId,
       };
       console.log("prev use", next);
       setFormData(next);
@@ -533,6 +590,15 @@ function PaneEditor({ navigation }) {
                 console.log("item Dropdown", item);
                 setFormData({ ...formData, category: item.uid, symptom: "" });
                 setCategoryFocus(false);
+              }}
+              renderItem={(item) => {
+                console.log("item Dropdown", item);
+                return (
+                  <View className="flex flex-row items-center gap-2 p-2">
+                    <FontAwesome name={item?.iconreact || "cog"} size={24} color={item.backgroundColor} />
+                    <Text>{item?.label || "test"}</Text>
+                  </View>
+                );
               }}
             />
           </View>

@@ -49,8 +49,13 @@ export const fetchVehicles = createAsyncThunk(
 export const fetchPannes = createAsyncThunk(
   `${slice_name}/fetchPannes`,
   async (_args, { dispatch, getState }) => {
+    const { current_user } = getState()["auth"];
+    console.log("current_user", current_user);
+    let dataArgs = {
+      userId: current_user?.userID,
+    };
     try {
-      const res = await _fetchPannes();
+      const res = await _fetchPannes(dataArgs);
       console.log("fetchPannes res:", res);
       if (res?.data?.success) {
         dispatch(setPanes(res?.data?.result || []));

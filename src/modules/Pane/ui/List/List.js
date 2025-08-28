@@ -20,6 +20,7 @@ function PaneList({ navigation }) {
   const panes = useSelector(getPanes);
 
   const navigateToEditor = (pane) => {
+    console.log("pane navigateToEditor", pane);
     navigation.navigate("Editor", { pane });
   };
 
@@ -114,7 +115,6 @@ function PaneList({ navigation }) {
 
         const sources = normalize(pane?.images || pane?.image);
         if (sources.length > 1) {
-          console.log("sources > 1", sources);
           return (
             <FlatList
               horizontal
@@ -127,7 +127,7 @@ function PaneList({ navigation }) {
                   source={{ uri: item }}
                   style={{
                     width: 300,
-                    height: 250,
+                    height: 150,
                     borderColor: "white",
                     borderWidth: 2,
                     
@@ -200,6 +200,12 @@ function PaneList({ navigation }) {
           >
             {pane.panneImmobilisante === 'oui' ? 'Immobilizing' : 'Not Immobilizing'}
           </Chip>
+          <Button
+            icon="calendar-arrow-right"
+            mode="contained"
+          >
+            {t("plan")}
+          </Button>
         </View>
       </Card.Content>
       <Card.Actions>
@@ -222,15 +228,15 @@ function PaneList({ navigation }) {
     </Card>
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      try {
-        dispatch(fetchPannes());
-      } catch (err) {
-        console.log("Error fetch panes", err.message);
-      }
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     try {
+  //       dispatch(fetchPannes());
+  //     } catch (err) {
+  //       console.log("Error fetch panes", err.message);
+  //     }
+  //   }, [])
+  // );
 
   return (
     <View style={styles.container}>
@@ -241,7 +247,7 @@ function PaneList({ navigation }) {
         <Button
           mode="text"
           icon="plus"
-          onPress={() => navigateToEditor()}
+          onPress={() => navigateToEditor({new: true})}
           style={styles.addButton}
         >
           {t("add_incident")}
@@ -257,7 +263,7 @@ function PaneList({ navigation }) {
 
 const styles = StyleSheet.create({
   cardImage: {
-    height: 250,
+    height: 150,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
@@ -377,7 +383,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   carouselContainer: {
-    height: 200,
+    height: 150,
   },
   carouselImage: {
     width: '100%',

@@ -239,7 +239,7 @@ const CameraScreen = ({
             const payload = imageItems.map((item, idx) => ({
               ...item,
               uploaded: true,
-              imageId: saveRes.data.result[idx]?.id,
+              ...(idx === 0 && { imageId: JSON.parse(saveRes.data.result?.[idx]?.id || "[]") }),
               path: saveRes.data.result[idx]?.path,
             }));
             console.log("saveRes objects", payload);
@@ -383,14 +383,14 @@ const CameraScreen = ({
 
   useEffect(() => {
     if (!show) {
-      dispatch(setPhoto(null));
+      // Do not clear selected photos here; PaneEditor needs them after navigation
       setPickType("");
     }
   }, [show]);
 
   useEffect(() => {
     return () => {
-      dispatch(setPhoto(null));
+      // Keep selected photos in Redux so the caller (PaneEditor) can render them
       dispatch(setSavePhoto(true));
     };
   }, []);
