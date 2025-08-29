@@ -19,7 +19,7 @@ export const featureslice = createSlice({
   initialState: {
     features: [
         {code: "pane" ,label: 'Panes' , description: 'Gestion des panes' , icon: 'home-outline' , color: 'blue', route: 'Panes'},
-        {code: "dashboard",label: 'Dashboard' , description: 'Tableau de bord',icon: 'analytics', color: "green",  route: 'Dashboard'}
+        // {code: "dashboard",label: 'Dashboard' , description: 'Tableau de bord',icon: 'analytics', color: "green",  route: 'Dashboard'}
     ],
     local_features: [
         {code: "panes" ,label: 'Site' },

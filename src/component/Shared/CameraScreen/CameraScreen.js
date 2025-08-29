@@ -28,6 +28,7 @@ import { manipulateAsync, FlipType, SaveFormat } from "expo-image-manipulator";
 import { compressBase64, moveFileToDocument } from "../../../core/utils/file";
 import { _saveFile } from "./api";
 import { useRoute, useNavigation } from "@react-navigation/native";
+import * as FileSystem from "expo-file-system";
 
 export const GuidLines = {
   base: 18,
@@ -93,24 +94,32 @@ const CameraScreen = ({
   const pickImageAsync = async () => {
     setPickType("gallery");
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
       quality: 0.8,
       allowsMultipleSelection: true,
-      // base64: true,
+      videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+      base64: true,  
     });
     if (!result.canceled) {
       let assets = await Promise.all(
         result.assets.map(async (o) => {
           let obj = { ...o, uri: o.uri };
+          const isVideo = (o?.type === "video") || (typeof o?.mimeType === "string" && o.mimeType.startsWith("video"));
           if (obj?.uri) {
             let uri = moveFileToDocument(obj.uri);
             if (uri) obj.uri = uri;
-            let base64Cpmpresed = await compressBase64(obj.uri);
-            obj.base64 = base64Cpmpresed || obj.base64;
+            if (!isVideo) {
+              let base64Cpmpresed = await compressBase64(obj.uri);
+              obj.base64 = base64Cpmpresed || obj.base64;
+            } else {
+              obj.type = "video";
+            }
           }
+
           return obj;
         })
       );
+      console.log("assets", assets);
       validate(assets);
     } else {
       console.log("error:");
@@ -153,6 +162,7 @@ const CameraScreen = ({
       // base64: true,
       quality: 1,
       exif: false,
+      
     };
     let photo = await photoRef.current.takePictureAsync(options);
     photo = { ...photo };
@@ -168,11 +178,97 @@ const CameraScreen = ({
   const upload = async (image) => {
     // const img = await compressImage(image);
     try {
-      const compressedImage = await manipulateAsync(
-        image.uri,
-        [{ resize: { width: image.width * 0.8, height: image.height * 0.8 } }],
-        { compress: 0.5, format: SaveFormat.JPEG, base64: true }
-      );
+      console.log("image upload", image);
+      if(Array.isArray(image) && image.length > 0) {
+        const imageItems = image.filter((it) => it?.type !== "video");
+        // const videoItems = image.filter((it) => it?.type === "video");
+        console.log("imageItems", imageItems);
+        // console.log("videoItems", videoItems);
+        let compressedImages = await Promise.all(
+          imageItems.map(async (img) => {
+            const compressedImage = await manipulateAsync(
+              img.uri,
+              [{ resize: { width: img.width * 0.8, height: img.height * 0.8 } }],
+              { compress: 0.5, format: SaveFormat.JPEG, base64: true }
+            );
+            return compressedImage;
+          })
+        );
+        console.log("compressedImages", compressedImages);
+
+        // Read video files as base64 (no compression via image-manipulator)
+        // const videoBase64s = await Promise.all(
+        //   videoItems.map(async (vid) => {
+        //     try {
+        //       const b64 = await FileSystem.readAsStringAsync(vid.uri, { encoding: FileSystem.EncodingType.Base64 });
+        //       return b64;
+        //     } catch (e) {
+        //       console.log("video base64 error", e?.message);
+        //       return null;
+        //     }
+        //   })
+        // );
+        // const validVideoBase64s = videoBase64s.filter(Boolean);
+
+        let x = Math.floor(Math.random() * 10000000 + 1);
+        let options = {
+          srcID: 0,
+          desc: 0,
+          src: 0,
+          id: 0,
+        };
+        Object.assign(options, params);
+        const imageBase64s = compressedImages.map((img) => img.base64);
+        let uploadRes = await _uploadBase64(imageBase64s, {
+          name: options.srcID + options.desc + options.src + "_" + x,
+        });
+        console.log("uploadRes", uploadRes);
+
+        if (uploadRes?.data?.success) {
+          navigation.goBack();
+          let obj = {
+            src: options.src,
+            srcID: options.srcID,
+            desc: options.desc,
+            path: uploadRes?.data?.result,
+            id: options.id,
+          };
+          console.log("obj camera", obj);
+          saveRes = await _saveFile(obj);
+          console.log("saveRes", saveRes);
+          if (saveRes?.data?.success && Array.isArray(saveRes?.data?.result)) {
+            const payload = imageItems.map((item, idx) => ({
+              ...item,
+              uploaded: true,
+              ...(idx === 0 && { imageId: JSON.parse(saveRes.data.result?.[idx]?.id || "[]") }),
+              path: saveRes.data.result[idx]?.path,
+            }));
+            console.log("saveRes objects", payload);
+            dispatch(setPhoto(payload));
+            // navigation?.goBack();
+          }
+        }
+        return
+      }
+      // Single item upload (image or video)
+      let base64Payload = null;
+      let width = image.width, height = image.height;
+      if (image?.type === 'video') {
+        try {
+          base64Payload = await FileSystem.readAsStringAsync(image.uri, { encoding: FileSystem.EncodingType.Base64 });
+        } catch (e) {
+          console.log('single video base64 error', e?.message);
+        }
+      } else {
+        const compressedImage = await manipulateAsync(
+          image.uri,
+          [{ resize: { width: image.width * 0.8, height: image.height * 0.8 } }],
+          { compress: 0.5, format: SaveFormat.JPEG, base64: true }
+        );
+        base64Payload = compressedImage?.base64;
+        width = compressedImage?.width || width;
+        height = compressedImage?.height || height;
+      }
       let x = Math.floor(Math.random() * 10000000 + 1);
       let options = {
         srcID: 0,
@@ -180,9 +276,9 @@ const CameraScreen = ({
         src: 0,
         id: 0,
       };
-      console.log("image", compressedImage);
+      console.log("single payload prepared, isVideo:", image?.type === 'video');
       Object.assign(options, params);
-      let uploadRes = await _uploadBase64(compressedImage?.base64, {
+      let uploadRes = await _uploadBase64(base64Payload, {
         name: options.srcID + options.desc + options.src + "_" + x,
       });
 
@@ -202,14 +298,14 @@ const CameraScreen = ({
         saveRes = await _saveFile(obj);
         console.log("saveRes", saveRes);
         if (saveRes?.data?.success && Array.isArray(saveRes?.data?.result)) {
-          const updatedImage = { 
+          const updatedMedia = { 
             ...image, 
             uploaded: true, 
             imageId: saveRes.data.result[0]?.id,
             path: saveRes.data.result[0]?.path 
           };
-          console.log("saveRes object", updatedImage);
-          dispatch(setPhoto([updatedImage]));
+          console.log("saveRes object", updatedMedia);
+          dispatch(setPhoto([updatedMedia]));
           navigation?.goBack();
         }
       }
@@ -237,13 +333,15 @@ const CameraScreen = ({
   };
 
   const validate = async (_images) => {
+    console.log("validate images", _images);
     _images = _images || [...images];
     setUploading(true);
     if (typeof onImage == "function") {
       onImage([..._images]);
     }
+    console.log("_images", _images);
     // Don't dispatch setPhoto here since it will be handled in upload function
-    await upload(_images[0]);
+    await upload(_images);
     setUploading(false);
     onCancel();
   };
@@ -286,14 +384,14 @@ const CameraScreen = ({
 
   useEffect(() => {
     if (!show) {
-      dispatch(setPhoto(null));
+      // Do not clear selected photos here; PaneEditor needs them after navigation
       setPickType("");
     }
   }, [show]);
 
   useEffect(() => {
     return () => {
-      dispatch(setPhoto(null));
+      // Keep selected photos in Redux so the caller (PaneEditor) can render them
       dispatch(setSavePhoto(true));
     };
   }, []);

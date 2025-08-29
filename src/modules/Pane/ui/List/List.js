@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { View, ScrollView, StyleSheet, Alert } from "react-native";
+import { View, ScrollView, StyleSheet, Alert, Image, FlatList } from "react-native";
 import {
   Button,
   Divider,
@@ -20,6 +20,7 @@ function PaneList({ navigation }) {
   const panes = useSelector(getPanes);
 
   const navigateToEditor = (pane) => {
+    console.log("pane navigateToEditor", pane);
     navigation.navigate("Editor", { pane });
   };
 
@@ -53,13 +54,100 @@ function PaneList({ navigation }) {
   const renderPaneCard = (pane) => (
     <Card
       style={styles.card}
-      onPress={() => navigateToEditor(pane)}
       key={pane.id}
     >
-      <Card.Cover 
-        source={{ uri: process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + pane.image || 'https://picsum.photos/700' }}
-        style={styles.cardImage}
-      />
+      {(() => {
+        const baseUrl = process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE || "";
+
+        const isImagePath = (p) =>
+          typeof p === "string" && /\.(png|jpe?g|webp|gif|bmp|heic|heif)$/i.test(p);
+
+        const parseMaybeJsonArray = (s) => {
+          try {
+            if (typeof s === "string" && s.trim().startsWith("[")) {
+              const arr = JSON.parse(s);
+              return Array.isArray(arr) ? arr : [];
+            }
+          } catch (e) {
+            // ignore
+          }
+          return [];
+        };
+
+        const normalize = (items) => {
+          console.log("items list", items);
+          if (!items) return [];
+          const arr = Array.isArray(items) ? items : [items];
+          const out = [];
+          for (const it of arr) {
+            if (!it) continue;
+            console.log("it list", typeof  it);
+            if (typeof it === "object") {
+              if (it.uri && isImagePath(it.uri)) out.push(it.uri);
+              else if (it.path && isImagePath(it.path)) out.push(it.path);
+              else if (it.src) {
+                if (typeof it.src === "string" && it.src.trim().startsWith("[")) {
+                  const parsed = parseMaybeJsonArray(it.src);
+                  parsed.forEach((p) => {
+                    if (typeof p === "string" && isImagePath(p.src)) {
+                      out.push(baseUrl + p.src);
+                    }
+                  });
+                } else if (typeof it.src === "string" && isImagePath(it.src)) {
+                  out.push(it.src.startsWith("http") || it.src.startsWith("file") ? it.src : baseUrl + it.src);
+                }
+              }
+            } else if (typeof it === "string") {
+              const parsed = parseMaybeJsonArray(it);
+              if (parsed.length) {
+                parsed.forEach((p) => {
+                  console.log("p list", p);
+                  if (isImagePath(p.src)) out.push(baseUrl + p.src);
+                });
+              } else if (isImagePath(it)) {
+                out.push(it.startsWith("http") || it.startsWith("file") ? it : baseUrl + it);
+              }
+            }
+          }
+          // dedupe
+          return Array.from(new Set(out));
+        };
+
+        const sources = normalize(pane?.images || pane?.image);
+        if (sources.length > 1) {
+          return (
+            <FlatList
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              data={sources}
+              keyExtractor={(uri, idx) => `${pane.id}-${idx}`}
+              renderItem={({ item }) => (
+                <Image
+                  source={{ uri: item }}
+                  style={{
+                    width: 300,
+                    height: 150,
+                    borderColor: "white",
+                    borderWidth: 2,
+                    
+                  }}
+                  resizeMode="cover"
+                />
+              )}
+              style={styles.carouselContainer}
+            />
+          );
+        }
+
+        const single = sources[0] || (pane?.image ? baseUrl + pane.image : 'https://picsum.photos/700');
+        return (
+          <Card.Cover
+            source={{ uri: single }}
+            style={styles.cardImage}
+          />
+        );
+      })()}
       <Card.Content>
         <View className="">
           <View className="flex flex-row items-center gap-2 mt-2">
@@ -112,6 +200,13 @@ function PaneList({ navigation }) {
           >
             {pane.panneImmobilisante === 'oui' ? 'Immobilizing' : 'Not Immobilizing'}
           </Chip>
+          <Button
+            icon="calendar-arrow-right"
+            mode="contained"
+            onPress={() => navigation.navigate('Plan', { pane })}
+          >
+            {t("plan")}
+          </Button>
         </View>
       </Card.Content>
       <Card.Actions>
@@ -134,15 +229,15 @@ function PaneList({ navigation }) {
     </Card>
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      try {
-        dispatch(fetchPannes());
-      } catch (err) {
-        console.log("Error fetch panes", err.message);
-      }
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     try {
+  //       dispatch(fetchPannes());
+  //     } catch (err) {
+  //       console.log("Error fetch panes", err.message);
+  //     }
+  //   }, [])
+  // );
 
   return (
     <View style={styles.container}>
@@ -153,7 +248,7 @@ function PaneList({ navigation }) {
         <Button
           mode="text"
           icon="plus"
-          onPress={() => navigateToEditor()}
+          onPress={() => navigateToEditor({new: true})}
           style={styles.addButton}
         >
           {t("add_incident")}
@@ -288,17 +383,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     gap: 8,
   },
-  infoText: {
-    flex: 1,
-    color: colors.gray[700],
+  carouselContainer: {
+    height: 150,
   },
-  cardFooter: {
-    marginTop: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  carouselImage: {
+    width: '100%',
+    height: '100%',
   },
-
 });
 
 export default PaneList;
