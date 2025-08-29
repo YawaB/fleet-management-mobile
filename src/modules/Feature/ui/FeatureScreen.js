@@ -215,14 +215,14 @@ const FeatureScreen = ({ navigation, route }) => {
                   <MaterialCommunityIcons name="phone" size={20} color={colors.gray[600]} />
                   <Text style={styles.infoText}>+1 234-567-8900</Text>
                 </View>
-                <Button
+                {/* <Button
                   mode="contained"
                   onPress={() => {}}
                   style={styles.scheduleButton}
                   icon="calendar-clock"
                 >
                   {t("schedule_service")}
-                </Button>
+                </Button> */}
               </Card.Content>
             </Card>
 

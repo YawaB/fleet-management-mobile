@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import MenuComponent from "../../../component/MenuComponent";
 import PaneList from "./List/List";
 import PaneEditor from "./Editor/Editor";
+import PlanScreen from "./Plan/Plan";
 
 const BottomTab = createBottomTabNavigator();
 const PaneComponent = () => {
@@ -39,6 +40,17 @@ const PaneComponent = () => {
           ),
         })}
         component={PaneEditor}
+      />
+      <BottomTab.Screen
+        name="Plan"
+        options={() => ({
+          header: ({ navigation }) => (
+            <View>
+              <MenuComponent title="Plan d'action" navigator={navigation} />
+            </View>
+          ),
+        })}
+        component={PlanScreen}
       />
     </BottomTab.Navigator>
   );

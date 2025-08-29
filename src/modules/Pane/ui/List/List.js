@@ -203,6 +203,7 @@ function PaneList({ navigation }) {
           <Button
             icon="calendar-arrow-right"
             mode="contained"
+            onPress={() => navigation.navigate('Plan', { pane })}
           >
             {t("plan")}
           </Button>

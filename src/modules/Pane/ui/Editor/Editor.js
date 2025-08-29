@@ -15,6 +15,7 @@ import { Audio, Video } from "expo-av";
 import CameraScreen from "../../../../component/Shared/CameraScreen/CameraScreen";
 import {
   createOrUpdatePanne,
+  fetchPannes,
   fetchPanneTypes,
   fetchVehicles,
   getPanneTypes,
@@ -29,17 +30,7 @@ import moment from "moment";
 import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 
 function PaneEditor({ navigation }) {
-  const [formData, setFormData] = useState({
-    immatriculation: "",
-    category: "",
-    symptom: "",
-    isImmobilizing: "non",
-    description: "",
-    photo: null,
-    audio: null,
-    audioId: null,
-    imageId: null
-  });
+  
 
   
   const photo = useSelector(getPhoto);
@@ -59,6 +50,19 @@ function PaneEditor({ navigation }) {
   const vehicles = useSelector(getVehicles);
   const panneTypes = useSelector(getPanneTypes);
   const currentUser = useSelector(getCurrentUser);
+
+  const [formData, setFormData] = useState({
+    immatriculation: currentUser?.vehiculeId,
+    category: "",
+    symptom: "",
+    isImmobilizing: "non",
+    description: "",
+    photo: null,
+    audio: null,
+    audioId: null,
+    imageId: null
+  });
+  console.log("currentUser", currentUser);
 
   const symptoms = {
     280: ["Ne démarre pas", "Bruit anormal", "Perte de puissance"], // mécanique
@@ -129,7 +133,7 @@ function PaneEditor({ navigation }) {
     dispatch(createOrUpdatePanne(args)).then(({ payload }) => {
       if (payload) {
         setFormData({
-          immatriculation: "",
+          immatriculation: currentUser?.vehiculeId,
           category: "",
           symptom: "",
           isImmobilizing: "non",
@@ -137,6 +141,7 @@ function PaneEditor({ navigation }) {
           photo: null,
           audio: null,
         });
+        dispatch(fetchPannes());
         navigation.goBack();
       }
     });
@@ -155,7 +160,7 @@ function PaneEditor({ navigation }) {
 
   const initialFormData = {
     name: `panne_${moment().format("DD/MM/YYYY HH:mm")}`,
-    immatriculation: "",
+    immatriculation: currentUser?.vehiculeId,
     category: "",
     symptom: "",
     isImmobilizing: "non",
@@ -448,7 +453,7 @@ function PaneEditor({ navigation }) {
       if (route.params?.pane?.new) {
         dispatch(setPhoto([]));
         setFormData(initialFormData);
-      }
+      } 
     });
 
     return unsubscribe;
@@ -459,7 +464,6 @@ function PaneEditor({ navigation }) {
     dispatch(fetchPanneTypes());
   }, []);
 
-  console.log("route.params?.new", route.params);
 
 
 
@@ -527,7 +531,6 @@ function PaneEditor({ navigation }) {
     }
   }, [photo]);
 
-  console.log("formData", formData);
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>

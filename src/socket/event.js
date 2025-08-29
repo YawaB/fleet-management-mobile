@@ -11,8 +11,12 @@ export const socketEvents = {
   },
   new_message: (data , dispatch)=>{
     console.log('new chatss:', data)
-    if(data.data){
-      dispatch(setNewChat(data.data))
-    }
+    // if(data.data){
+    //   dispatch(setNewChat(data.data))
+    // }
+  },
+  new_location: (data , dispatch)=>{
+    console.log('new_location:', data)
+    // dispatch(setNewChat(data.data))
   }
 }

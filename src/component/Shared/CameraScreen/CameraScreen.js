@@ -225,6 +225,7 @@ const CameraScreen = ({
         console.log("uploadRes", uploadRes);
 
         if (uploadRes?.data?.success) {
+          navigation.goBack();
           let obj = {
             src: options.src,
             srcID: options.srcID,
@@ -244,7 +245,7 @@ const CameraScreen = ({
             }));
             console.log("saveRes objects", payload);
             dispatch(setPhoto(payload));
-            navigation?.goBack();
+            // navigation?.goBack();
           }
         }
         return

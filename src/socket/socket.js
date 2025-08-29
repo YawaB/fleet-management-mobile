@@ -5,10 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 
 let params = {}
-if (process.env.REACT_APP_SOCKET_URL) {
-  params.path = process.env.REACT_APP_SOCKET_ROOT
+if (process.env.EXPO_PUBLIC_REACT_APP_SOCKET_URL) {
+  params.path = process.env.EXPO_PUBLIC_REACT_APP_SOCKET_ROOT
 }//process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_API_URL 
-export const socket = io( APP_API_BASE )
+export const socket = io( process.env.EXPO_PUBLIC_REACT_APP_SOCKET_URL , params )
 
 let isBind = false
 
