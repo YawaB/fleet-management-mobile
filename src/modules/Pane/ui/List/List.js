@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { View, ScrollView, StyleSheet, Alert, Image, FlatList } from "react-native";
+import { View, ScrollView, StyleSheet, Alert, Image, FlatList, Linking, TouchableOpacity } from "react-native";
 import {
   Button,
   Divider,
@@ -150,7 +150,7 @@ function PaneList({ navigation }) {
       })()}
       <Card.Content>
         <View className="">
-          <View className="flex flex-row items-center gap-2 mt-2">
+          <View className="flex flex-col items-start gap-2 mt-2">
             <Text
               numberOfLines={1}
               variant="titleMedium"
@@ -158,6 +158,20 @@ function PaneList({ navigation }) {
             >
               {pane.name.length > 20 ? `${pane.name.slice(0, 17)}...` : pane.name}
             </Text>
+            {/* Status chip if available */}
+            <View className="flex flex-row items-center gap-2">
+
+            {(() => {
+              console.log("pane status", pane);
+              if (!pane.statusLabel) return null;
+              // simple color mapping
+              
+              return (
+                <Chip className="flex items-center justify-center" style={[styles.statusChip, { backgroundColor: pane.bgColor }]} textStyle={{ color: '#fff' }}>
+                  {pane.statusLabel}
+                </Chip>
+              );
+            })()}
             <Chip
               className="flex items-center justify-center"
               style={[
@@ -167,6 +181,7 @@ function PaneList({ navigation }) {
             >
               {pane.CategoryTypeName}
             </Chip>
+            </View>
           </View>
         </View>
         <Divider style={styles.divider} />
@@ -190,6 +205,49 @@ function PaneList({ navigation }) {
             </Text>
           </View>
         )}
+        {/* Responsable name */}
+        {(() => {
+          const responsableName =
+            pane.responsablePanneFullName
+            ||
+            pane.declarantName ||
+            pane.responsable ||
+            pane.userName ||
+            pane.declarant ||
+            pane.fullName;
+          if (!responsableName) return null;
+          return (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="account" size={20} color={colors.gray[600]} />
+              <Text variant="bodyMedium" style={styles.infoText}>
+                {responsableName
+                }
+              </Text>
+            </View>
+          );
+        })()}
+        {/* Phone number with tap-to-call */}
+        {(() => {
+          const phone =
+            pane.contact ||
+            pane.phone ||
+            pane.telephone ||
+            pane.phoneNumber ||
+            pane.tel;
+          if (!phone) return null;
+          const cleanPhone = String(phone).replace(/\s+/g, '');
+          const makeCall = () => Linking.openURL(`tel:${cleanPhone}`).catch(() => {});
+          return (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="phone" size={20} color={colors.gray[600]} />
+              <TouchableOpacity onPress={makeCall}>
+                <Text variant="bodyMedium" style={[styles.infoText, { color: colors.primary, textDecorationLine: 'underline' }]}> 
+                  {phone}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })()}
         <View style={styles.cardFooter}>
           <Chip 
           className="flex items-center justify-center"

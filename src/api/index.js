@@ -15,13 +15,16 @@ export async function request(url, params) {
     params.headers = params.headers || {};
     params.url = url;
     const token = await AsyncStorage.getItem("token");
+    let userInf = await AsyncStorage.getItem("user");
+    userInf = JSON.parse(userInf);
+    console.log("userInf", userInf);
     params.headers["Authorization"] = "Bearer " + token;
     params.headers["x-socket"] = await AsyncStorage.getItem("x-socket");
 
-    console.log("url", url)
+    console.log("url", url);
 
     let userInfos = {
-      userID: "2111",
+      userID: userInf?.userID,
     };
     params.params = {
       ...params.params,
@@ -34,7 +37,7 @@ export async function request(url, params) {
       ...defaultConfigs,
       userInfos,
     };
-    console.log("_axios url", _axios.defaults.baseURL)
+    console.log("_axios url", _axios.defaults.baseURL);
     let res = await _axios(url, params);
     console.log("response request:", res);
     res = res || { data: {} };
