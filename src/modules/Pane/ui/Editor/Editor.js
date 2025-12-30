@@ -642,12 +642,10 @@ function PaneEditor({ navigation }) {
               onFocus={() => setCategoryFocus(true)}
               onBlur={() => setCategoryFocus(false)}
               onChange={(item) => {
-                console.log("item Dropdown", item);
                 setFormData({ ...formData, category: item.uid, symptom: "" });
                 setCategoryFocus(false);
               }}
               renderItem={(item) => {
-                console.log("item Dropdown", item);
                 return (
                   <View className="flex flex-row items-center gap-2 p-2">
                     <FontAwesome

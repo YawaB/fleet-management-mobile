@@ -13,9 +13,8 @@ import { getUiParams } from "../store/slice/ui";
 import { useEffect } from "react";
 import SqliteModule from "../core/modules/SqliteModule";
 import { requestGeolocationCurrentPosition } from "../core/api/geolocation";
-import Toast from "react-native-toast-message";
 import React from "react";
-import { colors } from '../theme/colors';
+import { colors } from "../theme/colors";
 import { bindEvents, unbindEvents } from "../socket/socket";
 import { getAndSaveFcmToken, initFirebaseMessaging } from "../firebase";
 import { createFile, readFile } from "../core/utils/file";
@@ -24,6 +23,7 @@ import LoggerScreen from "../modules/Logger/LoggerScreen";
 import { navigationRef } from "../core/utils/navigation";
 import CameraScreen from "./Shared/CameraScreen/CameraScreen";
 import { useTranslation } from "react-i18next";
+import ToastComponent from "./Shared/ToastComponent/ToastComponent";
 
 const Stack = createNativeStackNavigator();
 function Layout() {
@@ -52,17 +52,17 @@ function Layout() {
     initFirebaseMessaging();
   }, []);
 
-  
   return (
     <View style={{ flex: 1 }}>
       <StatusBar backgroundColor={colors.primary} />
       <Portal>
-        <Toast />
+        <ToastComponent />
         {uiParams.showLoader && (
           <LoadingComponent style={{ backgroundColor: "rgba(0,0,0,.1)" }} />
         )}
       </Portal>
       <Stack.Navigator
+        initialRouteName={current_user ? "Features" : "Login"}
         screenOptions={({ route }) => ({
           header: () => (
             <View>
@@ -71,47 +71,35 @@ function Layout() {
           ),
         })}
       >
-        {current_user ? (
-          <>
-            <Stack.Screen
-              name="Features"
-              component={BottomTabs}
-              options={({ route }) => ({
-                header: () => null,
-              })}
-            />
-            <Stack.Screen
-              name="FeaturesTab"
-              component={FeatureTab}
-              options={{ headerTitle: "Les logs", headerShown: false }}
-            />
-            <Stack.Screen
-              name="Login"
-              component={AuthenticationScreen}
-              options={{ headerShown: false, headerTitle: "Les logs" }}
-            />
-            <Stack.Screen
-              name="Logger"
-              component={LoggerScreen}
-              options={{ headerTitle: "Les logs" }}
-            />
-            <Stack.Screen
-              name="CameraScreen"
-              component={CameraScreen}
-              options={{
-                header: () => <MenuComponent title={"Prendre une photo"} />,
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <Stack.Screen
-              name="Login"
-              component={AuthenticationScreen}
-              options={{ headerShown: false, headerTitle: "Les logs" }}
-            />
-          </>
-        )}
+        <Stack.Screen
+          name="Features"
+          component={BottomTabs}
+          options={({ route }) => ({
+            header: () => null,
+          })}
+        />
+        <Stack.Screen
+          name="FeaturesTab"
+          component={FeatureTab}
+          options={{ headerTitle: "Les logs", headerShown: false }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={AuthenticationScreen}
+          options={{ headerShown: false, headerTitle: "Les logs" }}
+        />
+        <Stack.Screen
+          name="Logger"
+          component={LoggerScreen}
+          options={{ headerTitle: "Les logs" }}
+        />
+        <Stack.Screen
+          name="CameraScreen"
+          component={CameraScreen}
+          options={{
+            header: () => <MenuComponent title={"Prendre une photo"} />,
+          }}
+        />
       </Stack.Navigator>
     </View>
   );
