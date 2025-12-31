@@ -13,21 +13,21 @@ import moment from "moment/moment";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTaskList, getTasks, startTaskOrStop } from "../slice/slice";
 import { useFocusEffect } from "@react-navigation/native";
-
-const FILTERS = [
-  { label: "All", value: "all" },
-  { label: "Late", value: "overdue" },
-  { label: "Today", value: "today" },
-  { label: "In progress", value: "in_progress" },
-];
+import { useTranslation } from "react-i18next";
 
 const TaskListScreen = ({ navigation }) => {
-  const [activeFilter, setActiveFilter] = useState(FILTERS[0].value);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const { t } = useTranslation();
 
   const taskList = useSelector(getTasks);
 
   const dispatch = useDispatch();
-
+  const FILTERS = [
+    { label: t("all"), value: "all" },
+    { label: t("late"), value: "overdue" },
+    { label: t("today"), value: "today" },
+    { label: t("in_progress"), value: "in_progress" },
+  ];
   moment.locale("fr");
 
   const handleOpenDetails = (task) => {
@@ -50,8 +50,11 @@ const TaskListScreen = ({ navigation }) => {
     console.log(task, "task handleStart");
     let args = {
       srcObject: "Tasks",
-      srcId: task.id,
-      status: task._raw.statusName === "terminer" ? "start" : "end",
+      srcId: task.TaskId,
+      status:
+        task?.statusName === "terminer" || task?.statusName === "created"
+          ? "start"
+          : "end",
     };
     dispatch(startTaskOrStop(args));
     return;

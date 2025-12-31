@@ -13,9 +13,9 @@ export const fetchTaskList = createAsyncThunk(
       console.log(user, "user fetchTaskList");
       const res = await _fetchTaskList(_args);
       console.log(res, "res fetchTaskList");
-      if (Array.isArray(res.data.result || res))
-        dispatch(setTasks(res.data.result || res));
-      return res;
+      const tasks = res?.data?.result ?? res?.data ?? res;
+      if (Array.isArray(tasks)) dispatch(setTasks(tasks));
+      return Array.isArray(tasks) ? tasks : [];
     } catch (err) {
       console.log("Error fetch tasks", err.message);
     }

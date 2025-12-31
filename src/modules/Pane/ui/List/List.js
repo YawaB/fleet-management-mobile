@@ -27,9 +27,10 @@ function PaneList({ navigation }) {
   };
 
   const handleDelete = (pane) => {
+    const paneName = typeof pane?.name === "string" ? pane.name : "";
     Alert.alert(
       "Delete Incident",
-      `Are you sure you want to delete incident "${pane.name}"?`,
+      `Are you sure you want to delete incident "${paneName}"?`,
       [
         {
           text: "Cancel",
@@ -106,7 +107,7 @@ function PaneList({ navigation }) {
               }
             } else if (typeof it === "string") {
               const parsed = parseMaybeJsonArray(it);
-              if (parsed.length) {
+              if (parsed?.length) {
                 parsed.forEach((p) => {
                   console.log("p list", p);
                   if (isImagePath(p.src)) out.push(baseUrl + p.src);
@@ -125,7 +126,7 @@ function PaneList({ navigation }) {
         };
 
         const sources = normalize(pane?.images || pane?.image);
-        if (sources.length > 1) {
+        if (sources?.length > 1) {
           return (
             <FlatList
               horizontal
@@ -159,9 +160,13 @@ function PaneList({ navigation }) {
         <View className="">
           <View className="flex flex-col items-start gap-2 mt-2">
             <Text numberOfLines={1} variant="titleMedium" style={styles.title}>
-              {pane.name.length > 20
-                ? `${pane.name.slice(0, 17)}...`
-                : pane.name}
+              {(() => {
+                const paneName =
+                  typeof pane?.name === "string" ? pane.name : "";
+                return paneName?.length > 20
+                  ? `${paneName?.slice(0, 17)}...`
+                  : paneName;
+              })()}
             </Text>
             {/* Status chip if available */}
             <View className="flex flex-row items-center gap-2">

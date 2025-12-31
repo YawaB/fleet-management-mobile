@@ -8,7 +8,7 @@ const defaultConfigs = { auth_key: "1234", app: "PSWEB" };
 
 export async function request(url, params) {
   try {
-    params = Object.keys(params || {}).length > 0 ? params : {};
+    params = Object.keys(params || {})?.length > 0 ? params : {};
     params.method = params.method || "get";
     params.data = params.data || {};
     params.params = params.params || {};

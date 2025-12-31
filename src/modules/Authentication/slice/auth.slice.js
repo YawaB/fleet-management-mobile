@@ -129,7 +129,7 @@ export const authSlice = createSlice({
       payload = _.cloneDeep(payload);
       payload.is_admin =
         _.intersection(payload?.rolesname || [], ["super_admin", "admin"])
-          .length > 0;
+          ?.length > 0;
       payload.is_super_admin = (payload?.rolesname || []).includes(
         "super_admin"
       );

@@ -13,6 +13,7 @@ import moment from "moment";
 import "moment/locale/fr";
 import { useDispatch } from "react-redux";
 import { saveOrUpdateTask } from "../slice/slice";
+import { useTranslation } from "react-i18next";
 
 const formatFullDateFr = (date) => {
   if (!date) return "";
@@ -46,26 +47,6 @@ const getDelayDays = (plannedDate) => {
   return Math.max(0, days);
 };
 
-const StatusBadge = ({ status }) => {
-  const { label, className } = useMemo(() => {
-    switch (status) {
-      case "EN COURS":
-        return { label: "EN COURS", className: "bg-blue-600" };
-      case "EN RETARD":
-        return { label: "EN RETARD", className: "bg-red-600" };
-      case "À FAIRE":
-      default:
-        return { label: "À FAIRE", className: "bg-amber-600" };
-    }
-  }, [status]);
-
-  return (
-    <View className={`px-3 py-1 rounded-full ${className}`}>
-      <Text className="text-white text-xs font-bold">{label}</Text>
-    </View>
-  );
-};
-
 const CalendarDay = ({ label, disabled, selected, onPress }) => {
   if (!label) {
     return <View className="h-10 w-10" />;
@@ -97,13 +78,20 @@ const TaskSummaryCard = ({ task }) => {
             className="flex-1 text-lg font-bold text-slate-900"
             numberOfLines={3}
           >
-            {task.title}
+            {task.taskName}
           </Text>
-          <StatusBadge status={task.status} />
+          <View
+            style={{ backgroundColor: task.bgColor }}
+            className="px-3 py-1 rounded-full "
+          >
+            <Text className="text-white text-xs font-bold">
+              {task.statusLabel}
+            </Text>
+          </View>
         </View>
 
         <Text className="mt-2 text-sm text-slate-600" numberOfLines={2}>
-          {task.type} • {task.location}
+          {task.licensePlate}
         </Text>
       </Card.Content>
     </Card>
@@ -210,6 +198,8 @@ const TaskDetail = ({ navigation, route }) => {
 
   console.log(task, "task");
 
+  const { t } = useTranslation();
+
   const [selectedDate, setSelectedDate] = useState(null);
   const [reason, setReason] = useState("");
   const [attachments, setAttachments] = useState([]);
@@ -239,9 +229,9 @@ const TaskDetail = ({ navigation, route }) => {
 
     const taskData = {
       id: task.id,
-      name: task._raw.taskName,
-      vehiculeId: task._raw.vehiculeId,
-      description: reason || task._raw.description,
+      name: task.taskName,
+      vehiculeId: task.vehiculeId,
+      description: reason || task.description,
       plannedDate: moment(selectedDate).format("YYYY-MM-DD"),
     };
     console.log(taskData, "handleConfirm");
@@ -321,7 +311,7 @@ const TaskDetail = ({ navigation, route }) => {
 
           <View className="mt-5">
             <Text className="text-sm font-semibold text-slate-700">
-              Date Creation
+              {t("created")}
             </Text>
             <View className="mt-2 bg-white rounded-2xl p-4 flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
@@ -331,7 +321,7 @@ const TaskDetail = ({ navigation, route }) => {
                   color="#475569"
                 />
                 <Text className="text-sm text-slate-700">
-                  Créée le {formatFullDateFr(task._raw.createdAt)}
+                  {t("created")} {formatFullDateFr(task.createdAt)}
                 </Text>
               </View>
             </View>
@@ -339,7 +329,7 @@ const TaskDetail = ({ navigation, route }) => {
 
           <View className="mt-5">
             <Text className="text-sm font-semibold text-slate-700">
-              Date limite
+              {t("deadline")}
             </Text>
             <View className="mt-2 bg-white rounded-2xl p-4 flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
@@ -349,7 +339,7 @@ const TaskDetail = ({ navigation, route }) => {
                   color="#475569"
                 />
                 <Text className="text-sm text-slate-700">
-                  {formatFullDateFr(task._raw.deadline)}
+                  {formatFullDateFr(task.deadline)}
                 </Text>
               </View>
             </View>
@@ -357,7 +347,7 @@ const TaskDetail = ({ navigation, route }) => {
 
           <View className="mt-5">
             <Text className="text-sm font-semibold text-slate-700">
-              Nouvelle date souhaitée
+              {t("new_deadline")}
             </Text>
             <View className="mt-2">
               <EmbeddedCalendar
@@ -378,8 +368,8 @@ const TaskDetail = ({ navigation, route }) => {
                 />
                 <Text className="text-sm text-slate-700">
                   {selectedDate
-                    ? `Sélectionnée : ${formatFullDateFr(selectedDate)}`
-                    : "Aucune date sélectionnée"}
+                    ? `${t("selected_date")}: ${formatFullDateFr(selectedDate)}`
+                    : t("no_date_selected")}
                 </Text>
               </View>
             </View>
@@ -394,7 +384,8 @@ const TaskDetail = ({ navigation, route }) => {
                   color="#dc2626"
                 />
                 <Text className="text-sm font-semibold text-red-600">
-                  Retard : {delayDays} jour{delayDays === 1 ? "" : "s"}
+                  {t("late_by")} {delayDays}{" "}
+                  {t("day_plural", { count: delayDays })}
                 </Text>
               </View>
             </View>
@@ -403,9 +394,9 @@ const TaskDetail = ({ navigation, route }) => {
           <View className="mt-5">
             <View className="flex-row items-center justify-between">
               <Text className="text-sm font-semibold text-slate-700">
-                Motif du changement
+                {t("change_reason")}
               </Text>
-              <Text className="text-xs text-slate-400">Optionnel</Text>
+              <Text className="text-xs text-slate-400">{t("optional")}</Text>
             </View>
 
             <View className="mt-2 mb-6">
@@ -424,9 +415,9 @@ const TaskDetail = ({ navigation, route }) => {
           <View className="mt-5 mb-6">
             <View className="flex-row items-center justify-between">
               <Text className="text-sm font-semibold text-slate-700">
-                Pièces jointes
+                {t("attachments")}
               </Text>
-              <Text className="text-xs text-slate-400">PDF, Excel, ...</Text>
+              <Text className="text-xs text-slate-400">{t("pdf_excel")}</Text>
             </View>
 
             <View className="mt-2 bg-white rounded-2xl p-4">
@@ -453,7 +444,7 @@ const TaskDetail = ({ navigation, route }) => {
                   textColor="#000000"
                   compact
                 >
-                  Importer
+                  {t("select_files")}
                 </Button>
               </View>
 
@@ -502,10 +493,10 @@ const TaskDetail = ({ navigation, route }) => {
           textColor="#000000"
           className="rounded-2xl"
         >
-          Confirmer le changement
+          {t("confirm_change")}
         </Button>
         <Button mode="text" onPress={handleGoBack} className="mt-2">
-          Annuler
+          {t("cancel")}
         </Button>
       </View>
     </KeyboardAvoidingView>

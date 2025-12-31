@@ -75,7 +75,7 @@ const TaskCard = ({
                   color="#475569"
                 />
                 <Text className="text-sm font-semibold text-slate-700">
-                  {t("Created")} {formatReadableDate(task?.createdAt)}
+                  {t("created")} {formatReadableDate(task?.createdAt)}
                 </Text>
               </View>
             </View>
@@ -89,7 +89,7 @@ const TaskCard = ({
                 color="#475569"
               />
               <Text className="text-sm font-semibold text-slate-700">
-                {t("Planned")} {formatReadableDate(task.plannedDate)}
+                {t("Deadline_date")} {formatReadableDate(task.plannedDate)}
               </Text>
             </View>
           </View>

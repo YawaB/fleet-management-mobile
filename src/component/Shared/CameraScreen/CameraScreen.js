@@ -170,7 +170,7 @@ const CameraScreen = ({
   const upload = async (image) => {
     // const img = await compressImage(image);
     try {
-      if (Array.isArray(image) && image.length > 0) {
+      if (Array.isArray(image) && image?.length > 0) {
         const imageItems = image.filter((it) => it?.type !== "video");
         // const videoItems = image.filter((it) => it?.type === "video");
         // console.log("videoItems", videoItems);
@@ -659,7 +659,7 @@ const CameraScreen = ({
                     size={GuidLines.large}
                   />
                 )}
-                {images.length > 0 && !uploading && (
+                {images?.length > 0 && !uploading && (
                   <Ionicons
                     name="checkmark-outline"
                     color="#fff"
@@ -718,7 +718,7 @@ const CameraScreen = ({
                     className="flex-row"
                     horizontal={true}
                   >
-                    {images.length > 0 &&
+                    {images?.length > 0 &&
                       images.map((img, idx) => (
                         <View key={idx} className="ml-2">
                           <Image
