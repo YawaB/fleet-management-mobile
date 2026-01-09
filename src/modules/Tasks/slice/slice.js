@@ -28,11 +28,11 @@ export const startTaskOrStop = createAsyncThunk(
     try {
       const res = await _startTaskOrStop(_args);
       console.log(res, "res startTaskOrStop");
-      if (res.data.detail.recordset[0].typeMsg === "success") {
+      if (res?.data?.typeMsg === "success") {
         dispatch(fetchTaskList());
         dispatch(
           setToast({
-            message: res.data.detail.recordset[0].msg,
+            message: res?.data?.msg,
             type: "success",
           })
         );

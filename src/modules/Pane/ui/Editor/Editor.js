@@ -37,6 +37,7 @@ import { uploadFile } from "../../../../core/utils/file";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
 import moment from "moment";
 import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
+import { useTranslation } from "react-i18next";
 
 function PaneEditor({ navigation }) {
   const photo = useSelector(getPhoto);
@@ -60,7 +61,10 @@ function PaneEditor({ navigation }) {
 
   const newLoad = useRef(false);
 
+  const { t } = useTranslation();
+
   const [formData, setFormData] = useState({
+    name: `panne_${moment().format("DD_MM_YYYY_HH:mm:ss")}`,
     immatriculation: currentUser?.vehiculeId,
     category: "",
     symptom: "",
@@ -127,7 +131,7 @@ function PaneEditor({ navigation }) {
 
   const handleSave = () => {
     let args = {
-      name: formData.name,
+      name: formData?.name,
       id: route.params?.pane?.id || 0,
       VehiculeId: formData.immatriculation,
       CategoryTypeId: formData.category,
@@ -218,7 +222,6 @@ function PaneEditor({ navigation }) {
       return [];
     };
 
-    // Normalize any incoming items into a list of image URI strings
     const normalize = (items) => {
       console.log("items normalize", items);
       if (!items) return [];
@@ -276,7 +279,6 @@ function PaneEditor({ navigation }) {
       return Array.from(new Set(out));
     };
 
-    // If user has selected assets in CameraScreen (Redux photo), show them with remove buttons
     if (Array.isArray(photo) && photo.length > 0) {
       console.log("photo func", typeof photo);
       const resolvePreview = (item) => {
@@ -409,21 +411,16 @@ function PaneEditor({ navigation }) {
       );
     }
 
-    // Otherwise, fallback to normalized sources (e.g., when editing an existing pane)
     let imageSources = [];
-    // let videoSources = [];
     if (formData?.photo) {
       console.log("formData.photo", formData.photo);
       imageSources = normalize(formData.photo);
-      // videoSources = normalizeVideos(formData.photo);
     } else if (route?.params?.pane?.images) {
       imageSources = normalize(route.params.pane.images);
-      // videoSources = normalizeVideos(route.params.pane.images);
     }
 
     if (!imageSources.length) return null;
 
-    // Build current ids list (aligned by index) from formData or route params
     let currentIds = [];
     try {
       if (formData?.imageId) {
@@ -502,10 +499,7 @@ function PaneEditor({ navigation }) {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
-      // Reset form data when screen is focused, except when returning with a photo
-      console.log("route.params", route.params);
       if (route.params?.pane?.new && !newLoad.current) {
-        console.log("reset form data");
         dispatch(setPhoto([]));
         setFormData(initialFormData);
         newLoad.current = true;
@@ -522,22 +516,22 @@ function PaneEditor({ navigation }) {
 
   useEffect(() => {
     const pane = route.params?.pane;
-    // if (!pane) {
-    //   setFormData(initialFormData);
-    //   return;
-    // }
+    if (!pane) {
+      setFormData(initialFormData);
+      return;
+    }
 
     const params = {
-      name: pane.name,
-      immatriculation: pane.VehiculeId,
-      category: pane.CategoryTypeId,
-      symptom: pane.Symptome,
-      isImmobilizing: pane.panneImmobilisante,
-      description: pane.Description,
-      photo: pane.images,
-      audio: pane.audio,
-      imageId: pane.imageId,
-      audioId: pane.audioId,
+      name: pane?.name,
+      immatriculation: pane?.VehiculeId,
+      category: pane?.CategoryTypeId,
+      symptom: pane?.Symptome,
+      isImmobilizing: pane?.panneImmobilisante,
+      description: pane?.Description,
+      photo: pane?.images,
+      audio: pane?.audio,
+      imageId: pane?.imageId,
+      audioId: pane?.audioId,
     };
 
     setFormData(params);
@@ -568,18 +562,15 @@ function PaneEditor({ navigation }) {
   // );
 
   useEffect(() => {
-    console.log("photo useEffect", photo);
     if (photo && photo.length > 0) {
       // Build a preview photo value and aggregate uploaded image IDs
       const firstPath =
         photo[0]?.path?.uri || photo[0]?.path || photo[0]?.uri || null;
-      console.log("photo firstPath", photo);
       const next = {
         ...formData,
         photo: firstPath,
         imageId: photo[0]?.imageId,
       };
-      console.log("prev use", next);
       setFormData(next);
     }
   }, [photo]);
@@ -589,7 +580,7 @@ function PaneEditor({ navigation }) {
       <ScrollView style={styles.content}>
         <View className="flex flex-col gap-1">
           <View className="flex flex-col ">
-            <Text className="text-gray-500 font-bold pb-1">Name</Text>
+            <Text className="text-gray-500 font-bold pb-1">{t("name")}</Text>
             <TextInput
               mode="outlined"
               style={styles.input}
@@ -600,7 +591,7 @@ function PaneEditor({ navigation }) {
           </View>
           <View className="flex flex-col ">
             <Text className="text-gray-500 font-bold pb-1">
-              N° Immatriculation
+              {t("immatriculation")}
             </Text>
             <Dropdown
               style={[
@@ -625,7 +616,9 @@ function PaneEditor({ navigation }) {
             />
           </View>
           <View className="flex flex-col">
-            <Text className="text-gray-500 font-bold pb-1">Catégorie</Text>
+            <Text className="text-gray-500 font-bold pb-1">
+              {t("category")}
+            </Text>
             <Dropdown
               style={[
                 styles.dropdown,
@@ -660,7 +653,7 @@ function PaneEditor({ navigation }) {
             />
           </View>
           {/* Advanced fields moved below under Show More */}
-          <Text className="text-gray-500 font-bold pb-1">Photo</Text>
+          <Text className="text-gray-500 font-bold pb-1">{t("photo")}</Text>
           <Divider />
           <View>{displayImage()}</View>
           <View className=" flex justify-between flex-row">
@@ -670,7 +663,7 @@ function PaneEditor({ navigation }) {
               icon="camera"
               style={styles.photoButton}
             >
-              Camera
+              {t("camera")}
             </Button>
             {formData.photo || (Array.isArray(photo) && photo.length > 0) ? (
               <IconButton
@@ -689,9 +682,7 @@ function PaneEditor({ navigation }) {
           </View>
         </View>
         <View className="flex  justify-start items-start flex-col">
-          <Text className="text-gray-500 font-bold pb-1">
-            Enregistrement audio
-          </Text>
+          <Text className="text-gray-500 font-bold pb-1">{t("audio")}</Text>
           <View
             className="border border-gray-300 rounded-md w-full mt-2"
             style={styles.audioContainer}
@@ -742,7 +733,9 @@ function PaneEditor({ navigation }) {
           {showMore && (
             <View>
               <View className="flex flex-col">
-                <Text className="text-gray-500 font-bold pb-1">Symptômes</Text>
+                <Text className="text-gray-500 font-bold pb-1">
+                  {t("symptom")}
+                </Text>
                 <Dropdown
                   style={[
                     styles.dropdown,
@@ -774,7 +767,7 @@ function PaneEditor({ navigation }) {
               </View>
               <View className="flex flex-col">
                 <Text className="text-gray-500 font-bold pb-1">
-                  Panne immobilisante ?
+                  {t("immobilizing")}
                 </Text>
                 <SegmentedButtons
                   value={formData.isImmobilizing}
@@ -790,11 +783,11 @@ function PaneEditor({ navigation }) {
               </View>
               <View className="flex flex-col">
                 <Text className="text-gray-500 font-bold pb-1">
-                  Descriptif de la panne
+                  {t("description")}
                 </Text>
                 <TextInput
                   mode="outlined"
-                  label="Descriptif de la panne"
+                  label={t("description")}
                   value={formData.description}
                   onChangeText={(text) =>
                     setFormData({ ...formData, description: text })

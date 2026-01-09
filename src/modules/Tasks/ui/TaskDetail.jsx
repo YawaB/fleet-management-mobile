@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   View,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { Button, Card, IconButton, Text, TextInput } from "react-native-paper";
 import moment from "moment";
@@ -201,6 +202,7 @@ const TaskDetail = ({ navigation, route }) => {
   const { t } = useTranslation();
 
   const [selectedDate, setSelectedDate] = useState(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [attachments, setAttachments] = useState([]);
   const [visibleMonth, setVisibleMonth] = useState(
@@ -252,6 +254,21 @@ const TaskDetail = ({ navigation, route }) => {
     setVisibleMonth(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
     );
+  };
+
+  const handleOpenCalendar = () => {
+    const base = selectedDate ?? new Date();
+    setVisibleMonth(new Date(base.getFullYear(), base.getMonth(), 1));
+    setIsCalendarOpen(true);
+  };
+
+  const handleCloseCalendar = () => {
+    setIsCalendarOpen(false);
+  };
+
+  const handleSelectDate = (d) => {
+    setSelectedDate(d);
+    setIsCalendarOpen(false);
   };
 
   const handlePickAttachment = async () => {
@@ -327,7 +344,7 @@ const TaskDetail = ({ navigation, route }) => {
             </View>
           </View>
 
-          <View className="mt-5">
+          {/* <View className="mt-5">
             <Text className="text-sm font-semibold text-slate-700">
               {t("deadline")}
             </Text>
@@ -343,23 +360,16 @@ const TaskDetail = ({ navigation, route }) => {
                 </Text>
               </View>
             </View>
-          </View>
+          </View> */}
 
           <View className="mt-5">
             <Text className="text-sm font-semibold text-slate-700">
-              {t("new_deadline")}
+              {t("deadline")}
             </Text>
-            <View className="mt-2">
-              <EmbeddedCalendar
-                visibleMonth={visibleMonth}
-                selectedDate={selectedDate}
-                onPrevMonth={handlePrevMonth}
-                onNextMonth={handleNextMonth}
-                onSelect={(d) => setSelectedDate(d)}
-              />
-            </View>
-
-            <View className="mt-3 bg-white rounded-2xl p-4 flex-row items-center justify-between">
+            <Pressable
+              className="mt-2 bg-white rounded-2xl p-4 flex-row items-center justify-between"
+              onPress={handleOpenCalendar}
+            >
               <View className="flex-row items-center gap-2">
                 <MaterialCommunityIcons
                   name="calendar-edit"
@@ -369,10 +379,10 @@ const TaskDetail = ({ navigation, route }) => {
                 <Text className="text-sm text-slate-700">
                   {selectedDate
                     ? `${t("selected_date")}: ${formatFullDateFr(selectedDate)}`
-                    : t("no_date_selected")}
+                    : formatFullDateFr(task.deadline)}
                 </Text>
               </View>
-            </View>
+            </Pressable>
           </View>
 
           {isLate ? (
@@ -390,27 +400,6 @@ const TaskDetail = ({ navigation, route }) => {
               </View>
             </View>
           ) : null}
-
-          <View className="mt-5">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-sm font-semibold text-slate-700">
-                {t("change_reason")}
-              </Text>
-              <Text className="text-xs text-slate-400">{t("optional")}</Text>
-            </View>
-
-            <View className="mt-2 mb-6">
-              <TextInput
-                mode="outlined"
-                value={reason}
-                onChangeText={setReason}
-                multiline
-                numberOfLines={5}
-                placeholder="Expliquez la raison du report (ex : pièce manquante, technicien malade)"
-                className="bg-white"
-              />
-            </View>
-          </View>
 
           <View className="mt-5 mb-6">
             <View className="flex-row items-center justify-between">
@@ -481,8 +470,96 @@ const TaskDetail = ({ navigation, route }) => {
               ) : null}
             </View>
           </View>
+
+          {Array.isArray(task?.documents) && task.documents.length > 0 ? (
+            <View className="mt-5">
+              <Text className="text-sm font-semibold text-slate-700">
+                {t("documents")}
+              </Text>
+
+              <View className="mt-2 flex-row flex-wrap" style={{ gap: 8 }}>
+                {task.documents.map((doc, idx) => {
+                  const iconName =
+                    typeof doc?.icon === "string"
+                      ? doc.icon.replace(/^fa-/, "")
+                      : "file";
+                  const label = doc?.label ?? "";
+                  const srcId = doc?.srcId;
+
+                  return (
+                    <View
+                      key={`${doc?.code ?? "doc"}-${srcId ?? idx}`}
+                      className="px-3 py-2 rounded-full flex-row items-center"
+                      style={{ backgroundColor: doc?.color || "#64748b" }}
+                    >
+                      <FontAwesome5 name={iconName} size={14} color="#fff" />
+                      <Text className="text-xs font-semibold text-white ml-2">
+                        {label}
+                        {srcId ? ` • ${srcId}` : ""}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+
+          <View className="mt-5">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-semibold text-slate-700">
+                {t("change_reason")}
+              </Text>
+              <Text className="text-xs text-slate-400">{t("optional")}</Text>
+            </View>
+
+            <View className="mt-2 mb-6">
+              <TextInput
+                mode="outlined"
+                value={reason}
+                onChangeText={setReason}
+                multiline
+                numberOfLines={5}
+                placeholder="Expliquez la raison du report (ex : pièce manquante, technicien malade)"
+                className="bg-white"
+              />
+            </View>
+          </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={isCalendarOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseCalendar}
+      >
+        <Pressable
+          className="flex-1 justify-center px-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+          onPress={handleCloseCalendar}
+        >
+          <Pressable
+            className="bg-[#F8F8F5] rounded-2xl p-3"
+            style={{ maxHeight: "80%" }}
+            onPress={() => {}}
+          >
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-base font-semibold text-slate-900">
+                {t("new_deadline")}
+              </Text>
+              <IconButton icon="close" onPress={handleCloseCalendar} />
+            </View>
+
+            <EmbeddedCalendar
+              visibleMonth={visibleMonth}
+              selectedDate={selectedDate}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              onSelect={handleSelectDate}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <View className="absolute bottom-0 left-0 right-0 bg-[#F8F8F5] px-4 pb-4 pt-3 border-t border-slate-200">
         <Button

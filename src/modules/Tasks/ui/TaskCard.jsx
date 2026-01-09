@@ -15,6 +15,7 @@ const TaskCard = ({
   onChangeDate,
   onRequestHelp,
   onMore,
+  onDone,
 }) => {
   const { t } = useTranslation();
 
@@ -23,8 +24,6 @@ const TaskCard = ({
     if (!m.isValid()) return "";
     return m.locale("fr").format("ddd DD MMM");
   };
-
-  console.log(task, "task in TaskCard");
 
   return (
     <Card className="bg-white rounded-2xl mb-4 overflow-hidden">
@@ -113,8 +112,7 @@ const TaskCard = ({
 
           <Button
             style={{
-              backgroundColor:
-                task?.statusName === "encours" ? "#FF4F00" : "#F9F506",
+              backgroundColor: task?.bgColor,
             }}
             mode="contained"
             onPress={() => onStart(task)}
@@ -126,7 +124,7 @@ const TaskCard = ({
           {task?.statusName === "terminer" && (
             <Button
               mode="outlined"
-              onPress={() => onStart(task)}
+              onPress={() => onDone(task)}
               icon={"check"}
               textColor="#004b23"
               style={{

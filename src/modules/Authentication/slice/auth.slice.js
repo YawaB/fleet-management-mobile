@@ -56,8 +56,8 @@ export const checkUser = createAsyncThunk(
         await AsyncStorage.setItem("token", res.data.key || token);
         await AsyncStorage.setItem("user", JSON.stringify(res.data.result));
 
-        // Fetch user authorizations
-        await dispatch(fetchUserAuthorizations());
+        // // Fetch user authorizations
+        // await dispatch(fetchUserAuthorizations());
 
         return true;
       }

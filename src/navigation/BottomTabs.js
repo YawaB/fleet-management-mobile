@@ -7,6 +7,7 @@ import ChatScreenStack from "../modules/Chat/ui/ChatScreenStack";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import MenuComponent from "../component/MenuComponent";
 import TaskStack from "../modules/Tasks/TaskStack";
+import MainHomeScreenStack from "../modules/MainHome/ui/MainHomeScreenStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -15,7 +16,7 @@ function BottomTabs() {
 
   function getRoutName(route) {
     const routeName = getFocusedRouteNameFromRoute(route);
-    const noDisplayValues = ["DetailChat", "TaskDetails"];
+    const noDisplayValues = ["DetailChat", "TaskDetails", "TaskDetail"];
     const display = noDisplayValues.includes(routeName);
     if (display) {
       return "none";
@@ -32,8 +33,8 @@ function BottomTabs() {
     >
       <Tab.Screen
         name="Features"
-        component={FeatureScreen}
-        options={{
+        component={MainHomeScreenStack}
+        options={({ route }) => ({
           tabBarLabel: t("Features"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons
@@ -42,21 +43,21 @@ function BottomTabs() {
               size={size}
             />
           ),
-          header: () => (
-            <MenuComponent visibleBack={true} title={t("Features")} />
-          ),
-        }}
+          headerShown: false,
+          tabBarStyle: { display: getRoutName(route) },
+        })}
       />
       <Tab.Screen
         name="Task"
         component={TaskStack}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: t("tasks"),
           tabBarIcon: ({ color, size }) => (
             <FontAwesome5 name="tasks" color={color} size={size} />
           ),
           headerShown: false,
-        }}
+          tabBarStyle: { display: getRoutName(route) },
+        })}
       />
       <Tab.Screen
         name="Chat"

@@ -8,6 +8,7 @@ import loggerSlice from "../hook/Logger/slice/logger.slice";
 import paneslice from "../modules/Pane/slice/panne.slice";
 import tasksSlice from "../modules/Tasks/slice/slice";
 import toastSlice from "../component/Shared/ToastComponent/slice/toastSlice";
+import mainHomeSlice from "../modules/MainHome/slice/slice";
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +21,6 @@ export const store = configureStore({
     pannes: paneslice,
     task: tasksSlice,
     toast: toastSlice,
+    mainHome: mainHomeSlice,
   },
 });
