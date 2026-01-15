@@ -4,6 +4,8 @@ import MainHomeComponent from "./MainHomeComponent";
 import DetailMain from "./DetailMain/DetailMain";
 import PaneEditor from "../../Pane/ui/Editor/Editor";
 import { View } from "react-native";
+import TaskDetailHeader from "../../Tasks/ui/TaskDetailHeader";
+import CreateTask from "../../Tasks/ui/CreateTask";
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +37,15 @@ const MainHomeScreenStack = () => {
                 navigator={navigation}
               />
             </View>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="CreateTask"
+        component={CreateTask}
+        options={{
+          header: () => (
+            <TaskDetailHeader visibleBack={true} title="Créer une tâche" />
           ),
         }}
       />

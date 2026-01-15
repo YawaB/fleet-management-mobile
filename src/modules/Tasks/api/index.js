@@ -20,3 +20,10 @@ export async function _startTaskOrStop(data) {
     data,
   });
 }
+
+export async function _fetchTaskStatus(data) {
+  return await request(`tasks/statusList`, {
+    method: "post",
+    data,
+  });
+}

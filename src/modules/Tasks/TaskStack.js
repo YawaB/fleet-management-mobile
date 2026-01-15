@@ -4,6 +4,7 @@ import MenuComponent from "../../component/MenuComponent";
 import TasksScreen from "./ui/TasksScreen";
 import TaskDetail from "./ui/TaskDetail";
 import TaskDetailHeader from "./ui/TaskDetailHeader";
+import CreateTask from "./ui/CreateTask";
 
 const Stack = createNativeStackNavigator();
 

@@ -31,6 +31,7 @@ import { getUiParams } from "../store/slice/ui";
 import { useTranslation } from "react-i18next";
 
 function MenuComponent({ navigator, title, visibleBack = false }) {
+  const { t, i18n } = useTranslation();
   const current_user = useSelector(getCurrentUser);
   let uiParams = useSelector(getUiParams);
   const [visible, setVisible] = useState(false);
@@ -43,7 +44,9 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
         const savedLanguage = await AsyncStorage.getItem("userLanguage");
         const languageToUse = savedLanguage || "fr";
         setSelectedLanguage(languageToUse);
-        i18n.changeLanguage(languageToUse);
+        if (i18n.language !== languageToUse) {
+          i18n.changeLanguage(languageToUse);
+        }
         if (languageToUse === "ar") {
           I18nManager.forceRTL(true);
         } else {
@@ -54,8 +57,7 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
       }
     };
     loadSavedLanguage();
-  }, []);
-  const { t, i18n } = useTranslation();
+  }, [i18n]);
   let navigation = useNavigation();
   let dispatch = useDispatch();
 
@@ -200,7 +202,7 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
           onDismiss={() => setShowLanguageDialog(false)}
         >
           <Dialog.Title style={styles.dialogTitle}>
-            Select Language
+            {t("select_language")}
           </Dialog.Title>
           <Dialog.Content>
             <TouchableOpacity

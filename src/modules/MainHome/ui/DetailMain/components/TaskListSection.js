@@ -1,9 +1,11 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { Text, Card, Chip, Avatar, useTheme } from "react-native-paper";
+import { Text, Card, Chip, Avatar, useTheme, Button } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import { getCurrentUser } from "../../../../Authentication/slice/auth.slice";
 
 const getStatusConfig = (statusName) => {
   switch (statusName?.toLowerCase()) {
@@ -38,26 +40,33 @@ const getStatusConfig = (statusName) => {
 const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const currentUser = useSelector(getCurrentUser);
+  console.log(currentUser, "currentUser");
 
   const tasksArray = Array.isArray(tasks) ? tasks : [];
   const tasksCount = tasksArray.length;
 
   const handleDetailsPress = (task) => {
+    console.log(task, "task handleDetailsPress");
     if (navigation?.navigate) {
       navigation.navigate("Task", {
         screen: "TasksList",
-        params: { searchQuery: task.taskName },
+        params: { searchQuery: task.taskName, id: task.TaskId },
       });
     }
   };
 
   const getInitials = (name) => {
-    if (!name) return "??";
+    if (!name) return "N/A";
     const parts = name.split(" ");
     if (parts.length >= 2) {
       return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
+  };
+
+  const handleCreateTask = () => {
+    navigation?.navigate?.("CreateTask");
   };
 
   return (
@@ -66,6 +75,9 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
         <Text style={styles.title}>
           {t("Tasks")} ({tasksCount})
         </Text>
+        <Button icon="plus" mode="outlined" onPress={handleCreateTask}>
+          {t("create_task")}
+        </Button>
       </View>
 
       {tasksCount === 0 ? (
@@ -78,7 +90,8 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
         const statusConfig = getStatusConfig(task.statusName);
         const isLast = index === tasksArray.length - 1;
         const isActive =
-          task?.statusName === "created" || task?.statusName === "encours";
+          task?.assigned_user_id == currentUser?.userID &&
+          (task?.statusName === "created" || task?.statusName === "encours");
 
         return (
           <View
@@ -185,7 +198,7 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
                     <View style={styles.responsibleRow}>
                       <Avatar.Text
                         size={24}
-                        label={getInitials(task.Responsible)}
+                        label={getInitials(task.assigned_user_name)}
                         style={[
                           styles.avatar,
                           {
@@ -199,12 +212,12 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
                       />
                       <Text
                         style={[
-                          styles.responsibleName,
+                          styles.assigned_user_name,
                           statusConfig.status === "upcoming" &&
                             styles.textUpcoming,
                         ]}
                       >
-                        {task.Responsible}
+                        {task.assigned_user_name}
                       </Text>
                     </View>
                     <Chip

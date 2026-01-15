@@ -16,7 +16,13 @@ function BottomTabs() {
 
   function getRoutName(route) {
     const routeName = getFocusedRouteNameFromRoute(route);
-    const noDisplayValues = ["DetailChat", "TaskDetails", "TaskDetail"];
+    const noDisplayValues = [
+      "DetailChat",
+      "TaskDetails",
+      "TaskDetail",
+      "CreateTask",
+      "AddPanne",
+    ];
     const display = noDisplayValues.includes(routeName);
     if (display) {
       return "none";

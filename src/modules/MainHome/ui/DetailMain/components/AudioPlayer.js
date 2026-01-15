@@ -8,11 +8,6 @@ const AudioPlayer = ({ audios, baseUrl }) => {
   const theme = useTheme();
   const [playingIndex, setPlayingIndex] = useState(null);
   const soundRef = useRef(null);
-
-  if (!audios || audios.length === 0) {
-    return null;
-  }
-
   useEffect(() => {
     return () => {
       if (soundRef.current) {
@@ -20,6 +15,10 @@ const AudioPlayer = ({ audios, baseUrl }) => {
       }
     };
   }, []);
+
+  if (!audios || audios.length === 0) {
+    return null;
+  }
 
   const stopCurrentAudio = async () => {
     if (soundRef.current) {

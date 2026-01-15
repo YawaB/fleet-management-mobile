@@ -22,34 +22,6 @@ const FILTER_OPTIONS = [
   { key: "all", label: "All" },
   { key: "urgent", label: "Urgent" },
 ];
-
-const STATS_DATA = [
-  {
-    id: "1",
-    icon: "calendar-today",
-    label: "Due Today",
-    value: "8",
-    backgroundColor: "#3B82F6",
-    iconColor: "#2563EB",
-  },
-  {
-    id: "2",
-    icon: "alert-circle",
-    label: "High Priority",
-    value: "4",
-    backgroundColor: "#EF4444",
-    iconColor: "#DC2626",
-  },
-  {
-    id: "3",
-    icon: "clock-outline",
-    label: "Pending",
-    value: "12",
-    backgroundColor: "#F97316",
-    iconColor: "#EA580C",
-  },
-];
-
 const DashboardScreen = ({ navigation }) => {
   const theme = useTheme();
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -98,7 +70,7 @@ const DashboardScreen = ({ navigation }) => {
     <View style={styles.headerContainer}>
       <Text style={styles.greeting}>
         {t("hello")},{" "}
-        {currentUser?.fName.toLowerCase() || currentUser?.lName.toLowerCase()}.
+        {(currentUser?.fName || currentUser?.lName || "").toLowerCase()}.
       </Text>
       <Text style={styles.subtitle}>
         {t("you_have")}{" "}

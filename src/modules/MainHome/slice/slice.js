@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { _fetchDashboard, _fetchDetailPanne } from "../api/index.js";
+import {
+  _createTask,
+  _fetchDashboard,
+  _fetchDetailPanne,
+} from "../api/index.js";
 import _ from "lodash";
+import { setToast } from "../../../component/Shared/ToastComponent/slice/toastSlice.js";
 
 const slice_name = "mainHome";
 
@@ -28,6 +33,38 @@ export const fetchDashboard = createAsyncThunk(
       return res?.data?.result[0];
     } catch (error) {
       console.log(error);
+    }
+  }
+);
+
+export const createTask = createAsyncThunk(
+  `${slice_name}/createTask`,
+  async (_args, { dispatch, getState }) => {
+    try {
+      let { detailPanne } = getState()[slice_name];
+      const res = await _createTask(_args);
+      console.log("createTask:", res);
+      if (res.data.result[0].typeMsg === "success") {
+        dispatch(fetchDetailPanne({ id: detailPanne?.id }));
+        dispatch(
+          setToast({
+            message: res?.data?.result?.[0]?.msg,
+            type: "success",
+          })
+        );
+        return true;
+      }
+      dispatch(
+        setToast({
+          message:
+            res?.data?.result?.[0]?.msg ||
+            "Opération échoué. Veuillez réessayer !",
+          type: "error",
+        })
+      );
+      return false;
+    } catch (e) {
+      return { error: true, message: e.message };
     }
   }
 );

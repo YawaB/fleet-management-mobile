@@ -20,8 +20,15 @@ const TaskCard = ({
   const { t } = useTranslation();
 
   const formatReadableDate = (date) => {
-    const m = moment(date);
+    if (!date) return "";
+
+    const raw = typeof date === "string" ? date.trim() : date;
+
+    let m = moment.parseZone(raw);
+    if (!m.isValid()) m = moment.utc(raw);
+    if (!m.isValid()) m = moment(raw);
     if (!m.isValid()) return "";
+
     return m.locale("fr").format("ddd DD MMM");
   };
 
@@ -88,53 +95,61 @@ const TaskCard = ({
                 color="#475569"
               />
               <Text className="text-sm font-semibold text-slate-700">
-                {t("Deadline_date")} {formatReadableDate(task.plannedDate)}
+                {t("Deadline_date")} {formatReadableDate(task?.deadline)}
               </Text>
             </View>
           </View>
         </View>
 
         <View className="mt-4 flex-row items-center justify-between">
-          <View className="flex-row items-center">
-            <IconButton
-              icon="calendar-edit"
-              size={20}
-              onPress={() => onChangeDate(task)}
-              accessibilityLabel="Change date"
-            />
-            <IconButton
-              icon="dots-horizontal"
-              size={20}
-              onPress={() => onMore(task)}
-              accessibilityLabel="More options"
-            />
-          </View>
-
-          <Button
-            style={{
-              backgroundColor: task?.bgColor,
-            }}
-            mode="contained"
-            onPress={() => onStart(task)}
-            icon={task?.statusName === "encours" ? "stop" : "play"}
-            textColor="black"
-          >
-            {t(task?.statusName === "encours" ? "Stop" : "Start")}
-          </Button>
-          {task?.statusName === "terminer" && (
-            <Button
-              mode="outlined"
-              onPress={() => onDone(task)}
-              icon={"check"}
-              textColor="#004b23"
-              style={{
-                borderColor: "#008000",
-              }}
-              // buttonColor="#70e000"
-            >
-              {t("Done")}
-            </Button>
+          {task?.statusName !== "terminer" && (
+            <View className="flex-row items-center">
+              <IconButton
+                icon="calendar-edit"
+                size={20}
+                onPress={() => onChangeDate(task)}
+                accessibilityLabel="Change date"
+              />
+              <IconButton
+                icon="dots-horizontal"
+                size={20}
+                onPress={() => onMore(task)}
+                accessibilityLabel="More options"
+              />
+            </View>
           )}
+
+          {task?.statusName !== "verification" &&
+            task?.statusName !== "valide" && (
+              <View className="flex-row items-center justify-end">
+                {task?.statusName !== "terminer" && (
+                  <Button
+                    style={{
+                      backgroundColor: task?.bgColor,
+                    }}
+                    mode="contained"
+                    onPress={() => onStart(task)}
+                    icon={task?.statusName === "encours" ? "stop" : "play"}
+                    textColor="black"
+                  >
+                    {t(task?.statusName === "encours" ? "Stop" : "Start")}
+                  </Button>
+                )}
+                {task?.statusName === "terminer" && (
+                  <Button
+                    mode="outlined"
+                    onPress={() => onDone(task)}
+                    icon={"check"}
+                    textColor="#004b23"
+                    style={{
+                      borderColor: "#008000",
+                    }}
+                  >
+                    {t("Done")}
+                  </Button>
+                )}
+              </View>
+            )}
         </View>
       </Card.Content>
     </Card>

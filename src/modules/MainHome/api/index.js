@@ -17,3 +17,10 @@ export async function _fetchDashboard(data) {
     data,
   });
 }
+
+export async function _createTask(data) {
+  return await request(`tasks/save`, {
+    method: "post",
+    data,
+  });
+}

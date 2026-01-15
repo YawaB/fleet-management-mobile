@@ -9,11 +9,21 @@ import {
 } from "react-native";
 import { FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { Button, Card, IconButton, Text, TextInput } from "react-native-paper";
+import {
+  Button,
+  Card,
+  Dialog,
+  IconButton,
+  List,
+  Portal,
+  RadioButton,
+  Text,
+  TextInput,
+} from "react-native-paper";
 import moment from "moment";
 import "moment/locale/fr";
 import { useDispatch } from "react-redux";
-import { saveOrUpdateTask } from "../slice/slice";
+import { saveOrUpdateTask, startTaskOrStop } from "../slice/slice";
 import { useTranslation } from "react-i18next";
 
 const formatFullDateFr = (date) => {
@@ -46,6 +56,27 @@ const getDelayDays = (plannedDate) => {
   const diffMs = now.getTime() - planned.getTime();
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   return Math.max(0, days);
+};
+
+const isLightColor = (hex) => {
+  if (typeof hex !== "string") return false;
+  let c = hex.trim();
+  if (!c.startsWith("#")) return false;
+  c = c.slice(1);
+  if (c.length === 3)
+    c = c
+      .split("")
+      .map((ch) => ch + ch)
+      .join("");
+  if (c.length !== 6) return false;
+
+  const r = Number.parseInt(c.slice(0, 2), 16);
+  const g = Number.parseInt(c.slice(2, 4), 16);
+  const b = Number.parseInt(c.slice(4, 6), 16);
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return false;
+
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.7;
 };
 
 const CalendarDay = ({ label, disabled, selected, onPress }) => {
@@ -150,8 +181,11 @@ const EmbeddedCalendar = ({
       </View>
 
       <View className="mt-2 flex-row justify-between">
-        {weekLabels.map((w) => (
-          <View key={w} className="h-6 w-10 items-center justify-center">
+        {weekLabels.map((w, idx) => (
+          <View
+            key={`${w}-${idx}`}
+            className="h-6 w-10 items-center justify-center"
+          >
             <Text className="text-xs font-semibold text-slate-500">{w}</Text>
           </View>
         ))}
@@ -195,19 +229,113 @@ const EmbeddedCalendar = ({
 const TaskDetail = ({ navigation, route }) => {
   const { taskData: taskDataFromParams, task: taskFromParams } =
     route?.params ?? {};
-  const task = taskDataFromParams ?? taskFromParams;
+  let task = taskDataFromParams ?? taskFromParams;
 
   console.log(task, "task");
 
   const { t } = useTranslation();
 
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(
+    moment(task?.plannedDate).toDate() || null
+  );
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [attachments, setAttachments] = useState([]);
   const [visibleMonth, setVisibleMonth] = useState(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
+
+  const taskStatus = useMemo(
+    () => [
+      {
+        statusId: 49,
+        statusName: "created",
+        statusLabel: "Créer",
+        icon: "",
+        iconreact: "",
+        color: "#ffffff",
+        backgroundColor: "#6c757d",
+        isTransitionAllowed: true,
+        isCurrentStatus: false,
+        hasPermission: true,
+        displayOrder: 1,
+      },
+      {
+        statusId: 61,
+        statusName: "encours",
+        statusLabel: "En cours",
+        icon: "",
+        iconreact: "",
+        color: "#ffffff",
+        backgroundColor: "#ffc107",
+        isTransitionAllowed: true,
+        isCurrentStatus: false,
+        hasPermission: true,
+        displayOrder: 1,
+      },
+      {
+        statusId: 63,
+        statusName: "verification",
+        statusLabel: "En vérification",
+        icon: "",
+        iconreact: "circle",
+        color: "",
+        backgroundColor: "",
+        isTransitionAllowed: true,
+        isCurrentStatus: false,
+        hasPermission: true,
+        displayOrder: 1,
+      },
+      {
+        statusId: 62,
+        statusName: "terminer",
+        statusLabel: "Terminer",
+        icon: "",
+        iconreact: "",
+        color: "#ffffff",
+        backgroundColor: "#28a745",
+        isTransitionAllowed: true,
+        isCurrentStatus: false,
+        hasPermission: true,
+        displayOrder: 1,
+      },
+      {
+        statusId: 64,
+        statusName: "valide",
+        statusLabel: "Validé",
+        icon: "fas fa-circle",
+        iconreact: "circle",
+        color: "#000",
+        backgroundColor: "#fff",
+        isTransitionAllowed: true,
+        isCurrentStatus: false,
+        hasPermission: true,
+        displayOrder: 1,
+      },
+    ],
+    []
+  );
+
+  const currentStatusId = useMemo(() => {
+    const direct = task?.statusId ?? task?.statusID ?? task?.StatusId;
+    if (direct !== undefined && direct !== null) return String(direct);
+
+    const match = taskStatus.find(
+      (s) =>
+        s.statusName === task?.statusName || s.statusLabel === task?.statusLabel
+    );
+    return match ? String(match.statusId) : "";
+  }, [
+    task?.StatusId,
+    task?.statusId,
+    task?.statusID,
+    task?.statusLabel,
+    task?.statusName,
+    taskStatus,
+  ]);
+
+  const [selectedStatusId, setSelectedStatusId] = useState(currentStatusId);
 
   const dispatch = useDispatch();
 
@@ -225,6 +353,64 @@ const TaskDetail = ({ navigation, route }) => {
   const handleGoBack = () => {
     if (navigation?.goBack) navigation.goBack();
   };
+
+  const handleOpenStatusDialog = () => {
+    setSelectedStatusId(currentStatusId);
+    setStatusModalVisible(true);
+  };
+
+  const handleCloseStatusDialog = () => {
+    setStatusModalVisible(false);
+  };
+
+  const handleChangeStatus = (status) => {
+    const srcId = task?.TaskId ?? task?.id;
+    if (!srcId) return;
+
+    const args = {
+      srcObject: "Tasks",
+      srcId,
+      status,
+    };
+
+    dispatch(startTaskOrStop(args)).then(({ payload }) => {
+      if (payload) {
+        handleCloseStatusDialog();
+        handleGoBack();
+      }
+    });
+  };
+
+  const handleSelectStatus = (status) => {
+    setSelectedStatusId(String(status.statusId));
+  };
+
+  const handleConfirmStatus = () => {
+    if (!canConfirm) return;
+    let foundStatus = taskStatus.find((s) => s.statusId == selectedStatusId);
+    let args = {
+      srcObject: "Tasks",
+      srcId: task.TaskId,
+      status: foundStatus?.statusName,
+    };
+    console.log(args, "args");
+    dispatch(startTaskOrStop(args)).then(({ payload }) => {
+      if (payload) {
+        let tempTask = {
+          ...task,
+          statusLabel: foundStatus?.statusLabel,
+          statusName: foundStatus?.statusName,
+          bgColor: foundStatus?.backgroundColor,
+          color: foundStatus?.color,
+        };
+        task = tempTask;
+        handleCloseStatusDialog();
+      }
+    });
+  };
+
+  const RadioComponent =
+    Platform.OS === "ios" ? RadioButton.IOS : RadioButton.Android;
 
   const handleConfirm = () => {
     if (!canConfirm) return;
@@ -322,8 +508,9 @@ const TaskDetail = ({ navigation, route }) => {
       <ScrollView
         className="flex-1 mt-2 p-2"
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 180 }}
       >
-        <View className="px-4 pb-28">
+        <View className="px-4 ">
           <TaskSummaryCard task={task} />
 
           <View className="mt-5">
@@ -562,6 +749,9 @@ const TaskDetail = ({ navigation, route }) => {
       </Modal>
 
       <View className="absolute bottom-0 left-0 right-0 bg-[#F8F8F5] px-4 pb-4 pt-3 border-t border-slate-200">
+        <Button mode="outlined" onPress={handleOpenStatusDialog}>
+          {t("update_status")}
+        </Button>
         <Button
           mode="contained"
           onPress={handleConfirm}
@@ -569,6 +759,7 @@ const TaskDetail = ({ navigation, route }) => {
           buttonColor="#F9F506"
           textColor="#000000"
           className="rounded-2xl"
+          style={{ marginTop: 10 }}
         >
           {t("confirm_change")}
         </Button>
@@ -576,6 +767,68 @@ const TaskDetail = ({ navigation, route }) => {
           {t("cancel")}
         </Button>
       </View>
+
+      <Portal>
+        <Dialog
+          visible={statusModalVisible}
+          onDismiss={handleCloseStatusDialog}
+        >
+          <Dialog.Title>{t("update_status")}</Dialog.Title>
+          <Dialog.Content>
+            <View className="flex flex-col gap-3">
+              {taskStatus.map((status) => {
+                const accentColor = status.backgroundColor || "#64748B";
+                const isSelected =
+                  String(status.statusId) === String(selectedStatusId);
+                const selectedTextColor =
+                  status.color ||
+                  (isLightColor(accentColor) ? "#111827" : "#FFFFFF");
+                const unselectedTextColor = accentColor;
+                return (
+                  <Pressable
+                    key={status.statusId}
+                    onPress={() => handleSelectStatus(status)}
+                  >
+                    <View
+                      style={{
+                        minWidth: 150,
+                        borderRadius: 12,
+                        backgroundColor: isSelected ? accentColor : "#F8FAFC",
+                        padding: 12,
+                        borderWidth: 1,
+                        borderColor: isSelected ? accentColor : "#E2E8F0",
+                      }}
+                      className="flex-row items-center gap-2"
+                    >
+                      <View pointerEvents="none">
+                        <RadioComponent
+                          status={isSelected ? "checked" : "unchecked"}
+                          color={selectedTextColor}
+                          uncheckedColor={unselectedTextColor}
+                        />
+                      </View>
+                      <Text
+                        style={{
+                          color: isSelected
+                            ? selectedTextColor
+                            : unselectedTextColor,
+                        }}
+                        className="font-semibold text-base"
+                      >
+                        {status.statusLabel}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={handleCloseStatusDialog}>{t("cancel")}</Button>
+            <Button onPress={handleConfirmStatus}>{t("confirm")}</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </KeyboardAvoidingView>
   );
 };
