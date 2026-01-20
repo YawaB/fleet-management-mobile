@@ -90,6 +90,12 @@ export const saveOrUpdateTask = createAsyncThunk(
         );
         return true;
       }
+      dispatch(
+        setToast({
+          message: res.data.result[0].msg,
+          type: "error",
+        })
+      );
       return false;
     } catch (err) {
       console.log("Error save or update task", err.message);

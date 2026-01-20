@@ -22,6 +22,9 @@ function BottomTabs() {
       "TaskDetail",
       "CreateTask",
       "AddPanne",
+      "UserList",
+      "EngineList",
+      "DetailChat",
     ];
     const display = noDisplayValues.includes(routeName);
     if (display) {

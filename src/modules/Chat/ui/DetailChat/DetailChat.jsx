@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,137 +10,260 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-} from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
-import { Video } from 'expo-av';
-import { socket } from '../../../../socket/socket';
+} from "react-native";
+import { useTranslation } from "react-i18next";
+import { Ionicons } from "@expo/vector-icons";
+import { Video } from "expo-av";
+import { useDispatch, useSelector } from "react-redux";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getDetailMessage, saveConversation } from "../../slice/slice";
+import { socket } from "../../../../socket/socket";
+import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
+import moment from "moment";
 
-// Fake data for messages
-const fakeMessages = [
-  {
-    id: '1',
-    text: 'Hello! How are you?',
-    sender: 'other',
-    timestamp: '09:30 AM',
-  },
-  {
-    id: '2',
-    text: 'I\'m good, thanks! Check out this photo',
-    sender: 'me',
-    timestamp: '09:31 AM',
-    media: {
-      type: 'image',
-      uri: 'https://picsum.photos/200/300',
-    },
-  },
-  {
-    id: '3',
-    text: 'Nice! Here\'s a video from yesterday',
-    sender: 'other',
-    timestamp: '09:32 AM',
-    media: {
-      type: 'video',
-      uri: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    },
-  },
-];
-
-function DetailChat({ route , navigation }) {
-  const { user } = route.params;
+function DetailChat({ route, navigation }) {
+  const { contact, type } = route.params;
   const { t } = useTranslation();
-  const [messages, setMessages] = useState(fakeMessages);
-  const [inputText, setInputText] = useState('');
+  const [localMessages, setLocalMessages] = useState([]);
+  const [inputText, setInputText] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
   const flatListRef = useRef(null);
 
-  const renderMessage = ({ item }) => (
-    <View
-      style={[
-        styles.messageContainer,
-        item.sender === 'me' ? styles.myMessage : styles.otherMessage,
-      ]}
-    >
-      {item.media && (
-        <View style={styles.mediaContainer}>
-          {item.media.type === 'image' ? (
-            <Image source={{ uri: item.media.uri }} style={styles.mediaContent} />
-          ) : (
-            <Video
-              source={{ uri: item.media.uri }}
-              style={styles.mediaContent}
-              useNativeControls
-              resizeMode="contain"
-            />
-          )}
-        </View>
-      )}
-      <Text style={styles.messageText}>{item.text}</Text>
-      <Text style={styles.timestamp}>{item.timestamp}</Text>
-    </View>
-  );
+  const detailMessage = useSelector(getDetailMessage);
+  const currentUser = useSelector(getCurrentUser);
 
-  const handleSend = () => {
+  const dispatch = useDispatch();
+
+  const displayMessages = useMemo(() => {
+    const baseMessages =
+      Array.isArray(detailMessage) && detailMessage.length > 0
+        ? detailMessage
+        : [];
+    return [...baseMessages, ...localMessages];
+  }, [detailMessage, localMessages]);
+
+  const normalizeMessage = (msg) => {
+    const text = typeof msg?.text === "string" ? msg.text : msg?.message;
+    const time = typeof msg?.time === "string" ? msg.time : msg?.datecom;
+    const from = msg?.from;
+    const sender =
+      msg?.sender ||
+      (typeof from === "string" && from.trim() && from !== "-" ? from : "");
+
+    return {
+      id: msg?.id,
+      text: text || "",
+      time: time || "",
+      type: msg?.type,
+      sender,
+      from,
+      userId: msg?.userId,
+    };
+  };
+
+  const resolveImageUrl = (path) => {
+    if (!path) return null;
+    return process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + path;
+  };
+
+  const renderMessage = ({ item }) => {
+    const m = normalizeMessage(item);
+
+    const isMe =
+      m.sender === "me" ||
+      (currentUserId && m.userId != null
+        ? String(m.userId) === currentUserId
+        : false);
+
+    const isSystem =
+      m.type === "log" ||
+      m.sender === "system" ||
+      (type === "engine" &&
+        (m.from === "-" || m.from === "system") &&
+        (m.userId == null || m.userId === ""));
+
+    if (isSystem) {
+      return (
+        <View style={styles.systemMessageContainer}>
+          <View style={styles.systemMessage}>
+            <Text style={styles.systemMessageText}>{m.text}</Text>
+            <Text style={styles.systemTimestamp}>{m.time}</Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View
+        style={[
+          styles.messageContainer,
+          isMe ? styles.myMessage : styles.otherMessage,
+        ]}
+      >
+        <Text style={[styles.messageText, isMe && styles.myMessageText]}>
+          {m.text}
+        </Text>
+        <Text style={[styles.timestamp, isMe && styles.myTimestamp]}>
+          {m.time}
+        </Text>
+      </View>
+    );
+  };
+
+  // const handleSend = () => {
+  //   if (inputText.trim()) {
+  //     const newMessage = {
+  //       id: `local-${Date.now()}`,
+  //       text: inputText,
+  //       sender: "me",
+  //       time: new Date().toLocaleTimeString("fr-FR", {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //       }),
+  //       type: "text",
+  //     };
+  //     socket.emit("new_location_push", { msg: newMessage });
+  //     setLocalMessages([...localMessages, newMessage]);
+  //     setInputText("");
+  //     flatListRef.current?.scrollToEnd();
+  //   }
+  // };
+
+  const handleSend = (text) => {
     if (inputText.trim()) {
-      const newMessage = {
+      let currentDate = new Date();
+      currentDate = moment(currentDate).format("LT");
+      let obj = {
         id: Date.now().toString(),
-        text: inputText,
-        sender: 'me',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        Object: detailMessage?.[0]?.Object,
+        message: inputText,
+        // audioUrl: !!audioUrl,
+        to: "",
+        from: currentUser.userName,
+        subject: detailMessage?.[0]?.Object || "",
+        image: detailMessage?.[0]?.image || "",
+        Read: 1,
+        datecom: currentDate,
+        srcId: detailMessage[0]?.srcId || "",
       };
-      socket.emit("new_location_push", { msg: newMessage });
-      setMessages([...messages, newMessage]);
-      setInputText('');
-      flatListRef.current?.scrollToEnd();
+
+      console.log(obj, "obj sendMessage");
+      dispatch(saveConversation(obj)).then(() => {
+        setInputText("");
+        setLocalMessages([...localMessages, obj]);
+        flatListRef.current?.scrollToEnd();
+      });
     }
   };
 
   const handleMediaPicker = () => {
-    // This will be integrated with CameraScreen later
-    console.log('Open media picker');
+    console.log("Open media picker");
   };
+
+  const getContactInfo = () => {
+    const title = contact?.Object || contact?.name || "";
+    const subtitle =
+      contact?.srcObject && contact?.srcId
+        ? `${contact.srcObject} • ${contact.srcId}`
+        : "";
+    return { title, subtitle };
+  };
+
+  const info = getContactInfo();
+
+  useEffect(() => {
+    const parsed = currentUser;
+    const id = parsed?.userID ?? parsed?.userId;
+    setCurrentUserId(id != null ? String(id) : "");
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity className="mr-4" onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </TouchableOpacity>
-        <Image source={{ uri: user.avatar }} style={styles.headerAvatar} />
-        <Text style={styles.headerName}>{user.name}</Text>
+        {type === "user" ? (
+          <Image
+            source={{
+              uri:
+                resolveImageUrl(contact?.image) || "https://picsum.photos/200",
+            }}
+            style={styles.headerAvatar}
+          />
+        ) : (
+          <View style={styles.engineIcon}>
+            <Ionicons name="car" size={20} color="#d97706" />
+          </View>
+        )}
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerName} numberOfLines={1}>
+            {info.title}
+          </Text>
+          {info.subtitle ? (
+            <Text style={styles.headerSubtitle} numberOfLines={1}>
+              {info.subtitle}
+            </Text>
+          ) : null}
+        </View>
+        <TouchableOpacity style={styles.menuButton}>
+          <Ionicons name="ellipsis-vertical" size={20} color="#6b7280" />
+        </TouchableOpacity>
       </View>
+
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 90}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
+        <View style={styles.todayBadge}>
+          <Text style={styles.todayText}>{t("today") || "Aujourd'hui"}</Text>
+        </View>
+
         <FlatList
           ref={flatListRef}
-          data={messages}
+          data={displayMessages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) =>
+            item?.id?.toString() || `msg-${Math.random()}`
+          }
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
         />
-        
+
         <View style={styles.inputContainer}>
-          <TouchableOpacity onPress={handleMediaPicker} style={styles.mediaButton}>
-            <Ionicons name="image-outline" size={24} color="#666" />
+          <TouchableOpacity
+            onPress={handleMediaPicker}
+            style={styles.mediaButton}
+          >
+            <Ionicons name="image-outline" size={24} color="#6b7280" />
           </TouchableOpacity>
-          
+
           <TextInput
             style={styles.input}
             value={inputText}
             onChangeText={setInputText}
-            placeholder={t('Type a message...')}
+            placeholder={t("type_message") || "Tapez un message..."}
+            placeholderTextColor="#9ca3af"
             multiline
           />
-          
+
           <TouchableOpacity
             onPress={handleSend}
-            style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+            style={[
+              styles.sendButton,
+              !inputText.trim() && styles.sendButtonDisabled,
+            ]}
             disabled={!inputText.trim()}
           >
-            <Ionicons name="send" size={24} color={inputText.trim() ? '#007AFF' : '#CCC'} />
+            <Ionicons
+              name="send"
+              size={22}
+              color={inputText.trim() ? "#3b82f6" : "#d1d5db"}
+            />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -151,15 +274,20 @@ function DetailChat({ route , navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#f9fafb",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#e5e7eb",
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 12,
   },
   headerAvatar: {
     width: 40,
@@ -167,67 +295,125 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 12,
   },
+  engineIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "#fef3c7",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  headerInfo: {
+    flex: 1,
+  },
   headerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+  menuButton: {
+    padding: 4,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  todayBadge: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  todayText: {
+    fontSize: 12,
+    color: "#6b7280",
+    backgroundColor: "#e5e7eb",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   messagesList: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
   },
   messageContainer: {
-    maxWidth: '80%',
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 15,
+    maxWidth: "80%",
+    marginVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
   },
   myMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#48cae4',
+    alignSelf: "flex-end",
+    backgroundColor: "#3b82f6",
   },
   otherMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#E5E5EA',
+    alignSelf: "flex-start",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
   messageText: {
-    color: '#000',
-    fontSize: 16,
+    color: "#1f2937",
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  myMessageText: {
+    color: "#fff",
   },
   timestamp: {
+    fontSize: 11,
+    color: "#6b7280",
+    marginTop: 4,
+    alignSelf: "flex-end",
+  },
+  myTimestamp: {
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  systemMessageContainer: {
+    alignItems: "center",
+    marginVertical: 8,
+  },
+  systemMessage: {
+    backgroundColor: "#1f2937",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    maxWidth: "90%",
+  },
+  systemMessageText: {
+    color: "#10b981",
     fontSize: 12,
-    color: '#666',
-    marginTop: 5,
-    alignSelf: 'flex-end',
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
-  mediaContainer: {
-    marginBottom: 8,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  mediaContent: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
+  systemTimestamp: {
+    color: "#9ca3af",
+    fontSize: 10,
+    marginTop: 4,
+    alignSelf: "flex-end",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#FFF',
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
+    borderTopColor: "#e5e7eb",
   },
   input: {
     flex: 1,
     marginHorizontal: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "#f3f4f6",
     borderRadius: 20,
     fontSize: 16,
     maxHeight: 100,
+    color: "#1f2937",
   },
   mediaButton: {
     padding: 8,

@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -24,6 +25,7 @@ import moment from "moment";
 import "moment/locale/fr";
 import { useDispatch } from "react-redux";
 import { saveOrUpdateTask, startTaskOrStop } from "../slice/slice";
+import { uploadFile } from "../../../core/utils/file";
 import { useTranslation } from "react-i18next";
 
 const formatFullDateFr = (date) => {
@@ -236,12 +238,13 @@ const TaskDetail = ({ navigation, route }) => {
   const { t } = useTranslation();
 
   const [selectedDate, setSelectedDate] = useState(
-    moment(task?.plannedDate).toDate() || null
+    moment(task?.deadline).toDate() || null
   );
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [attachments, setAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
@@ -413,14 +416,11 @@ const TaskDetail = ({ navigation, route }) => {
     Platform.OS === "ios" ? RadioButton.IOS : RadioButton.Android;
 
   const handleConfirm = () => {
-    if (!canConfirm) return;
-
     const taskData = {
-      id: task.id,
-      name: task.taskName,
-      vehiculeId: task.vehiculeId,
-      description: reason || task.description,
-      plannedDate: moment(selectedDate).format("YYYY-MM-DD"),
+      ...task,
+      id: task.TaskId,
+      description: reason || task?.description,
+      deadline: moment(selectedDate).format("YYYY-MM-DD"),
     };
     console.log(taskData, "handleConfirm");
     dispatch(saveOrUpdateTask(taskData)).then(({ payload }) => {
@@ -481,10 +481,50 @@ const TaskDetail = ({ navigation, route }) => {
 
       if (nextAssets.length === 0) return;
 
+      setIsUploading(true);
+
+      const taskId = task?.TaskId ?? task?.id;
+      const uploadedFiles = [];
+
+      for (const asset of nextAssets) {
+        if (!asset?.uri) continue;
+
+        const extension = asset.name?.split(".").pop() || "file";
+        const uploadResult = await uploadFile(asset.uri, {
+          src: "Tasks",
+          srcID: taskId,
+          desc: "attachment",
+          extension: extension,
+          name: asset.name,
+          model: "upload",
+          path: "import/uploads",
+        });
+
+        if (uploadResult?.success) {
+          uploadedFiles.push({
+            uri: asset.uri,
+            name: asset.name,
+            size: asset.size,
+            uploadPath: uploadResult.upload?.data?.result,
+            uploaded: true,
+          });
+        } else {
+          uploadedFiles.push({
+            uri: asset.uri,
+            name: asset.name,
+            size: asset.size,
+            uploaded: false,
+            error: uploadResult?.error,
+          });
+        }
+      }
+
+      setIsUploading(false);
+
       setAttachments((prev) => {
         const existingUris = new Set(prev.map((a) => a?.uri).filter(Boolean));
         const merged = [...prev];
-        for (const a of nextAssets) {
+        for (const a of uploadedFiles) {
           if (!a?.uri || existingUris.has(a.uri)) continue;
           merged.push(a);
           existingUris.add(a.uri);
@@ -492,7 +532,8 @@ const TaskDetail = ({ navigation, route }) => {
         return merged;
       });
     } catch (e) {
-      // no-op
+      setIsUploading(false);
+      console.log("Error picking/uploading attachment:", e);
     }
   };
 
@@ -569,6 +610,11 @@ const TaskDetail = ({ navigation, route }) => {
                     : formatFullDateFr(task.deadline)}
                 </Text>
               </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={22}
+                color="#94a3b8"
+              />
             </Pressable>
           </View>
 
@@ -619,8 +665,12 @@ const TaskDetail = ({ navigation, route }) => {
                   buttonColor="#F9F506"
                   textColor="#000000"
                   compact
+                  disabled={isUploading}
+                  loading={isUploading}
                 >
-                  {t("select_files")}
+                  {isUploading
+                    ? t("uploading") || "Uploading..."
+                    : t("select_files")}
                 </Button>
               </View>
 
@@ -632,12 +682,28 @@ const TaskDetail = ({ navigation, route }) => {
                       className="flex-row items-center justify-between py-2 border-t border-slate-100"
                     >
                       <View className="flex-1 pr-2">
-                        <Text
-                          className="text-sm text-slate-800"
-                          numberOfLines={1}
-                        >
-                          {a.name || "Fichier"}
-                        </Text>
+                        <View className="flex-row items-center gap-1">
+                          <Text
+                            className="text-sm text-slate-800 flex-1"
+                            numberOfLines={1}
+                          >
+                            {a.name || "Fichier"}
+                          </Text>
+                          {a.uploaded === true && (
+                            <MaterialCommunityIcons
+                              name="check-circle"
+                              size={16}
+                              color="#22c55e"
+                            />
+                          )}
+                          {a.uploaded === false && (
+                            <MaterialCommunityIcons
+                              name="alert-circle"
+                              size={16}
+                              color="#ef4444"
+                            />
+                          )}
+                        </View>
                         {typeof a.size === "number" ? (
                           <Text className="text-xs text-slate-400">
                             {(a.size / 1024).toFixed(0)} KB

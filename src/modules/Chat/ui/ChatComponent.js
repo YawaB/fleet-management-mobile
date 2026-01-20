@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   createOrUpdateChat,
   fetchChats,
+  fetchMessagesList,
   getChats,
   getNewChat,
   setNewChat,
@@ -73,7 +74,7 @@ function ChatComponent({ obj, onBack }) {
         fetchChats({
           srcObject: obj.srcObject,
           srcId: obj.srcId || obj.id,
-        })
+        }),
       ).then(({ payload }) => {
         if (Array.isArray(payload?.response)) setMessages(payload?.response);
         dispatch(setUiParams({ showLoader: false }));
@@ -96,6 +97,10 @@ function ChatComponent({ obj, onBack }) {
       setSelectedChatToReply(messages.find((o) => o.id == replyTo));
     }
   }, [replyTo, messages]);
+
+  useEffect(() => {
+    dispatch(fetchMessagesList());
+  }, []);
 
   return (
     <View style={{ flex: 1 }}>

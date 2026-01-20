@@ -162,7 +162,7 @@ const DashboardScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       try {
-        dispatch(fetchPannes());
+        dispatch(fetchPannes({ mobileFilter: true }));
         dispatch(fetchDashboard());
       } catch (err) {
         console.log("Error fetch tasks", err.message);
