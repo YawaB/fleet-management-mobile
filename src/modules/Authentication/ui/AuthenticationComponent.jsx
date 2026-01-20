@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, Image, ImageBackground } from "react-native";
-import { colors } from '../../../theme/colors';
+import { colors } from "../../../theme/colors";
 import React, { useEffect, useState } from "react";
 import { Button, Switch, TextInput } from "react-native-paper";
 import Styles from "../../../styles/index";
@@ -11,6 +11,7 @@ import LoadingComponent from "../../../component/Shared/LoadingComponent/Loading
 import { toastMessage } from "../../../core/ui";
 import { getLocalUser, updateLocalUser } from "../service";
 import useLogger from "../../../hook/Logger/useLogger";
+import { useTranslation } from "react-i18next";
 const mandatories = ["email", "password"];
 
 const AuthenticationScreen = ({ navigation, route }) => {
@@ -19,6 +20,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
+  const { t } = useTranslation();
 
   const { log } = useLogger();
   const dispatch = useDispatch();
@@ -161,19 +163,23 @@ const AuthenticationScreen = ({ navigation, route }) => {
           {/* {APP_NAME} */}
         </Text>
 
-        <Image resizeMode="contain" source={bgImage} style={{ width: 400, height: 100 }} />
+        <Image
+          resizeMode="contain"
+          source={bgImage}
+          style={{ width: 400, height: 100 }}
+        />
         <Text style={{ color: colors.primary }}>
           {/* Le future commence maintenant */}
         </Text>
       </View>
       <View
-        className="rounded-t-2xl p-2" 
+        className="rounded-t-2xl p-2"
         style={{
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
           elevation: 4,
-          backgroundColor: colors.primary
+          backgroundColor: colors.primary,
         }}
       >
         <View
@@ -183,7 +189,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
           <View>
             <View style={Styles.mb20}>
               <Text style={[Styles.h1]} className="text-white">
-                Authentification
+                {t("login_title")}
               </Text>
             </View>
             <View style={{ flexDirection: "column" }}>
@@ -207,7 +213,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
             </View>
             <View className="flex-row items-center justify-between mt-2 mb-2">
               <Text className="text-white font-semibold">
-                Sauvegarder mes informations
+                {t("remember_me")}
               </Text>
               <Switch
                 value={rememberMe}
@@ -226,7 +232,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
               loading={loading}
               mode="contained"
             >
-              CONNEXION
+              {t("login")}
             </Button>
           </View>
         </View>

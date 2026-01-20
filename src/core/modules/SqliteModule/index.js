@@ -42,16 +42,18 @@ export class SQLiteModule {
           displayName: this.configs.displayName || "sqlitedb",
           size: this.configs.size,
           version: this.configs.version,
-          ...(this.configs.extra_options || {})
-        })
+          ...(this.configs.extra_options || {}),
+        });
 
-        this.isInit = this.db != null
-        if(this.db && this.configs.userSql && this.configs.create_user_table){
-          console.log('creatig user table')
-          this.user_table_creation_response = await this.execSQL(this.configs.userSql)
-          console.log('End creating sql')
+        this.isInit = this.db != null;
+        if (this.db && this.configs.userSql && this.configs.create_user_table) {
+          console.log("creatig user table");
+          this.user_table_creation_response = await this.execSQL(
+            this.configs.userSql
+          );
+          console.log("End creating sql");
         }
-        resolve({ db: this.db , usertable:this.user_table_creation_response });
+        resolve({ db: this.db, usertable: this.user_table_creation_response });
       } catch (e) {
         this.isInit = false;
         console.log("error initializing sqlite database:", e.message);
@@ -79,39 +81,39 @@ export class SQLiteModule {
         if (this.db == null)
           throw new Error("[ERROR]:Database not initialized");
         let debug = this.configs.debug;
-        this.db.transaction(function(tx){
+        this.db.transaction(function (tx) {
           tx.executeSql(
             sql,
             params,
             function (t, result) {
               let { rowsAffected, rows, insertId, insertedId } = result;
-              let error = null
-              let list = []
-              try{
-                if(debug) console.log("execSQL :  success", sql);
+              let error = null;
+              let list = [];
+              try {
+                if (debug) console.log("execSQL :  success", sql);
                 list = typeof rows?.raw == "function" ? rows?.raw() : [];
-              }catch(e){
-                console.log('error:', e.message)
-                error = e.message
+              } catch (e) {
+                console.log("error:", e.message);
+                error = e.message;
               }
-              
+
               resolve({
                 success: true,
                 rowsAffected,
                 insertId,
                 response: list,
                 insertedId,
-                error
+                error,
               });
             },
             function (error) {
-              console.log('error:', error.message)
+              console.log("error:", error.message);
               resolve({ success: false, response: error?.message });
             }
           );
         });
       } catch (e) {
-        console.log('eee:', e.message)
+        console.log("eee:", e.message);
         resolve({ success: false, response: e.message });
       }
     });
@@ -167,15 +169,15 @@ export class SQLiteModule {
     }
   }
 
-  async updateLocalUser(data){
+  async updateLocalUser(data) {
     try {
       let users = this.select("LocalUser");
       if (users?.length > 0) {
         let user = users[0];
-        data = { ...user , ...data, id: user.id };
+        data = { ...user, ...data, id: user.id };
       }
       await this.clearTable("LocalUser");
-      return  await this.insert("LocalUser", data)
+      return await this.insert("LocalUser", data);
     } catch (e) {
       return { success: false, result: e.message };
     }
@@ -184,8 +186,8 @@ export class SQLiteModule {
   async getLocalUser() {
     try {
       let users = await this.select("LocalUser");
-      users = users?.response || []
-      console.log('users:', users)
+      users = users?.response || [];
+      console.log("users:", users);
       if (Array.isArray(users) && users?.length > 0) {
         let user = users[0];
         return { success: true, response: user };
@@ -204,7 +206,7 @@ export class SQLiteModule {
       for (let obj of data) {
         try {
           let keys = Object.keys(obj);
-          if (keys.length == 0) {
+          if (keys?.length == 0) {
             output.push({ success: false, response: "No data specified !!!" });
             return;
           }
@@ -233,15 +235,15 @@ export class SQLiteModule {
   async bulkInsert(table, data) {
     try {
       data = Array.isArray(data) ? data : [];
-      if (data.length == 0)
+      if (data?.length == 0)
         return { success: false, response: "No data to insert" };
-      let keys = data.reduce((c , val)=>{
-          let _keys = Object.keys(val)
-          for(let key of _keys) {
-            if(!c.includes(key)) c.push(key)
-          }
-          return c
-      },[])
+      let keys = data.reduce((c, val) => {
+        let _keys = Object.keys(val);
+        for (let key of _keys) {
+          if (!c.includes(key)) c.push(key);
+        }
+        return c;
+      }, []);
 
       if (keys.length == 0) {
         return { success: false, response: "Data with empty value" };
@@ -250,9 +252,11 @@ export class SQLiteModule {
       let valTab = [];
       for (let obj of data) {
         let values = keys.map((key) =>
-          obj[key] === undefined ? 
-                       'null' : 
-                       (typeof obj[key] == "string" ? `'${obj[key]}'` : obj[key])
+          obj[key] === undefined
+            ? "null"
+            : typeof obj[key] == "string"
+            ? `'${obj[key]}'`
+            : obj[key]
         );
 
         valTab.push(`(${values.join(",")})`);
@@ -262,7 +266,7 @@ export class SQLiteModule {
       let sql = "insert into " + table + columns + " values " + values;
       return await this.execSQL(sql);
     } catch (e) {
-      console.log('errorr:', e.message)
+      console.log("errorr:", e.message);
       return { success: false, response: e.message };
     }
   }
@@ -270,7 +274,7 @@ export class SQLiteModule {
   async delete(table, obj = {}, operator = "and") {
     try {
       let keys = Object.keys(obj);
-      if (keys.length == 0) throw new Error("No data specified !!!");
+      if (keys?.length == 0) throw new Error("No data specified !!!");
 
       let valTab = [];
       for (let key of keys) {
@@ -295,7 +299,7 @@ export class SQLiteModule {
     try {
       let valKeys = Object.keys(obj);
       let criteriKeys = Object.keys(criterias);
-      if (valKeys.length == 0) throw "No data specified !!!";
+      if (valKeys?.length == 0) throw "No data specified !!!";
 
       let valTab = [];
       for (let key of valKeys) {
@@ -332,11 +336,13 @@ export class SQLiteModule {
     let comparaison = options?.comparaison || "=";
     let operator = options?.operator || "and";
     let order = options?.order || [];
-    order = order.map(o => o.split(':').join(' ')).join(' ');
-    if(order.length > 0) {
-      order = ' order by ' + order
+    order = order.map((o) => o.split(":").join(" ")).join(" ");
+    if (order?.length > 0) {
+      order = " order by " + order;
     }
-    let columns = (options?.columns || ['*']).map(o => o.split(':').join(' ')).join(',');
+    let columns = (options?.columns || ["*"])
+      .map((o) => o.split(":").join(" "))
+      .join(",");
     try {
       if (obj == undefined || typeof obj != "object") obj = {};
 
@@ -350,10 +356,12 @@ export class SQLiteModule {
 
       let criteria = valTab.join(` ${operator} `);
 
-      let sql = `select ${options?.countOnly ? 'count(*) count' : columns} from  ` + table;
+      let sql =
+        `select ${options?.countOnly ? "count(*) count" : columns} from  ` +
+        table;
       if (criteria != "") sql += " where " + criteria;
-      if(order) sql += order;
-      
+      if (order) sql += order;
+
       let res = await this.execSQL(sql);
 
       return res;
@@ -362,15 +370,13 @@ export class SQLiteModule {
     }
   }
 
-  async count(table , filter){
-     try{
-        let response = await this.select(table , filter ||{} ,{
-            countOnly: true
-        })
-        console.log('response:', response)
-     }catch(e){
-
-     }
+  async count(table, filter) {
+    try {
+      let response = await this.select(table, filter || {}, {
+        countOnly: true,
+      });
+      console.log("response:", response);
+    } catch (e) {}
   }
 }
 

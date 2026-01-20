@@ -29,7 +29,7 @@ function ImageContainerComponent(props) {
                 <View className="items-end px-2">
                     <Ionicons onPress={e=> setVisible(false)} name='close-circle' size={30} color={'red'} />
                 </View>
-                {Array.isArray(props?.images) && props?.images?.length > 1 && (
+                {Array.isArray(props?.images) && props?.images??.length > 1 && (
                     <ScrollView horizontal className="w-full p-2">
                         {props?.images?.map((img , idx)=>(
                             <TouchableOpacity key={idx} className="mx-1" onPress={e=> setModalImage(img)}  >

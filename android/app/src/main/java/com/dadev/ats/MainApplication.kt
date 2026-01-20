@@ -55,7 +55,10 @@ class MainApplication : Application(), ReactApplication {
       load()
     }
 
-    ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    try {
+      ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    } catch (_: IllegalStateException) {
+    }
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

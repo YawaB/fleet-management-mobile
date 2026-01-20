@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React, { useState, useEffect } from "react";
-import { colors } from '../theme/colors';
+import { colors } from "../theme/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
@@ -31,32 +31,33 @@ import { getUiParams } from "../store/slice/ui";
 import { useTranslation } from "react-i18next";
 
 function MenuComponent({ navigator, title, visibleBack = false }) {
+  const { t, i18n } = useTranslation();
   const current_user = useSelector(getCurrentUser);
   let uiParams = useSelector(getUiParams);
   const [visible, setVisible] = useState(false);
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [selectedLanguage, setSelectedLanguage] = useState("fr");
 
   useEffect(() => {
     const loadSavedLanguage = async () => {
       try {
         const savedLanguage = await AsyncStorage.getItem("userLanguage");
-        if (savedLanguage) {
-          setSelectedLanguage(savedLanguage);
-          i18n.changeLanguage(savedLanguage);
-          if (savedLanguage === "ar") {
-            I18nManager.forceRTL(true);
-          } else {
-            I18nManager.forceRTL(false);
-          }
+        const languageToUse = savedLanguage || "fr";
+        setSelectedLanguage(languageToUse);
+        if (i18n.language !== languageToUse) {
+          i18n.changeLanguage(languageToUse);
+        }
+        if (languageToUse === "ar") {
+          I18nManager.forceRTL(true);
+        } else {
+          I18nManager.forceRTL(false);
         }
       } catch (error) {
         console.error("Error loading language preference:", error);
       }
     };
     loadSavedLanguage();
-  }, []);
-  const { t, i18n } = useTranslation();
+  }, [i18n]);
   let navigation = useNavigation();
   let dispatch = useDispatch();
 
@@ -123,7 +124,10 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
 
   return (
     <>
-      <View className="flex-row py-3 px-4 justify-between items-center shadow-3" style={{ backgroundColor: colors.primary }}>
+      <View
+        className="flex-row py-3 px-4 justify-between items-center shadow-3"
+        style={{ backgroundColor: colors.primary }}
+      >
         {!visibleBack && (
           <Ionicons
             name="arrow-undo-outline"
@@ -198,7 +202,7 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
           onDismiss={() => setShowLanguageDialog(false)}
         >
           <Dialog.Title style={styles.dialogTitle}>
-            Select Language
+            {t("select_language")}
           </Dialog.Title>
           <Dialog.Content>
             <TouchableOpacity
