@@ -92,7 +92,7 @@ export async function getAndSaveFcmToken(message) {
 async function onMessageReceived(message , isBackground) {
   try{
      
-      console.log("Message received:",  isBackground);
+      console.log("Message received:", message, isBackground);
       let userID = await AsyncStorage.getItem("userID");
       let currentChatId = await AsyncStorage.getItem("current-chat-id");
     
@@ -105,8 +105,8 @@ async function onMessageReceived(message , isBackground) {
       
 
       // return
-      if(userID != data.userID && (currentChatId != data?.srcId || isBackground)){
-        let title = `Nouveau message - ${data.src} [${data?.Object || data?.srcId}]`
+      if(1 || (userID != data.fromId && (currentChatId != data?.toId || isBackground))){
+        let title = `Nouveau message ${data?.srcObject == 'user' ? `de [${data?.from}]` : `${data.srcObject} [${data?.object || data?.fromId}]`}`
         let body = data?.message
 
         if(!isBackground && displayToastOnMessage){
@@ -117,13 +117,12 @@ async function onMessageReceived(message , isBackground) {
         }
 
         if(isBackground || !displayToastOnMessage){
-          
             let notifeeObj = {
                 title: `<p style="color: #083859ff;"><strong >${title}</strong></p>` ,
-                body:`<p><strong>${data?.from}:</strong> ${body}</p>`,
-                channelId: (data.src+'-'+data?.srcId).toLowerCase(),
-                channelName: (data.src+'-'+data?.Object).toLowerCase(),
-                data,
+                body:`<p>${data?.srcObject != 'user' ? `<strong>${data?.from}:</strong>`: ''} ${body}</p>`,
+                channelId: (data.srcObject+'-'+data?.toId).toLowerCase(),
+                channelName: (data.srcObject+'-'+data?.toId).toLowerCase(),
+                // data,
                 android: {
                   actions: [
                       {
