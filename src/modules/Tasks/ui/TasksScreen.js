@@ -37,7 +37,7 @@ const TaskListScreen = ({ navigation, route }) => {
 
     if (id !== undefined && id !== null && String(id).length > 0) {
       setVisibleTasks(
-        base.filter((task) => String(task?.TaskId) === String(id))
+        base.filter((task) => String(task?.TaskId) === String(id)),
       );
       return;
     }
@@ -52,8 +52,8 @@ const TaskListScreen = ({ navigation, route }) => {
       base.filter((task) =>
         String(task?.taskName || "")
           .toLowerCase()
-          .includes(q)
-      )
+          .includes(q),
+      ),
     );
   }, [id, searchQuery, listTasks]);
 
@@ -150,7 +150,7 @@ const TaskListScreen = ({ navigation, route }) => {
       } catch (err) {
         console.log("Error fetch tasks", err.message);
       }
-    }, [])
+    }, []),
   );
 
   return (

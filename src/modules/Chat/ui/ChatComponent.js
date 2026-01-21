@@ -98,10 +98,6 @@ function ChatComponent({ obj, onBack }) {
     }
   }, [replyTo, messages]);
 
-  useEffect(() => {
-    dispatch(fetchMessagesList());
-  }, []);
-
   return (
     <View style={{ flex: 1 }}>
       <View

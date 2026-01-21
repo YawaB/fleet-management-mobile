@@ -28,3 +28,10 @@ export async function _readMsg(data) {
     data,
   });
 }
+
+export async function _fetchResources(data) {
+  return await request("communication/ressources", {
+    method: "POST",
+    data,
+  });
+}

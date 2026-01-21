@@ -31,10 +31,6 @@ const UserList = () => {
   const messageList = useSelector(getMessageList);
   console.log("messageList", messageList);
 
-  useEffect(() => {
-    dispatch(fetchMessagesList());
-  }, [dispatch]);
-
   const resolveImageUrl = (path) => {
     if (!path) return null;
     return process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + path;
@@ -47,18 +43,20 @@ const UserList = () => {
     const term = searchTerm.toLowerCase();
 
     return conversations.filter((c) => {
-      const title = String(c?.Object || "").toLowerCase();
+      const title = String(c?.label || "").toLowerCase();
       const preview = String(c?.message || "").toLowerCase();
       return title.includes(term) || preview.includes(term);
     });
   }, [messageList, searchTerm]);
+
+  console.log("filteredConversations", filteredConversations);
 
   const handleChatPress = (conv) => {
     const obj = {
       srcId: conv.srcId,
       srcObject: conv?.srcObject || "Engin",
     };
-
+    console.log(conv, "conv handleChatPress");
     dispatch(readMsg({ id: conv.id }));
     dispatch(setSelectedChat(conv));
     dispatch(fetchConversationList(obj));
@@ -75,7 +73,7 @@ const UserList = () => {
       <View style={styles.avatarContainer}>
         <Image
           source={{
-            uri: resolveImageUrl(item.image) || "https://picsum.photos/200",
+            uri: resolveImageUrl(item.image),
           }}
           style={styles.avatar}
         />
@@ -84,7 +82,7 @@ const UserList = () => {
       <View style={styles.chatInfo}>
         <View style={styles.chatHeader}>
           <Text style={styles.userName} numberOfLines={1}>
-            {item.Object}
+            {item.label}
           </Text>
           <Text style={styles.timestamp}>{item.datecom}</Text>
         </View>
@@ -134,7 +132,7 @@ const UserList = () => {
       <FlatList
         data={filteredConversations}
         renderItem={renderChatItem}
-        keyExtractor={(item) => item.id?.toString()}
+        keyExtractor={(item) => item.srcId}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

@@ -16,7 +16,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { Video } from "expo-av";
 import { useDispatch, useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getDetailMessage, saveConversation } from "../../slice/slice";
+import {
+  getDetailMessage,
+  saveConversation,
+  setDetailChat,
+  setSelectedChat,
+} from "../../slice/slice";
 import { socket } from "../../../../socket/socket";
 import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 import moment from "moment";
@@ -31,8 +36,18 @@ function DetailChat({ route, navigation }) {
 
   const detailMessage = useSelector(getDetailMessage);
   const currentUser = useSelector(getCurrentUser);
+  console.log("currentUser", currentUser);
+  console.log("detailMessage", detailMessage);
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setSelectedChat(contact));
+    dispatch(setDetailChat(true));
+    return () => {
+      dispatch(setDetailChat(false));
+    };
+  }, [dispatch, contact]);
 
   const displayMessages = useMemo(() => {
     const baseMessages =
@@ -41,6 +56,7 @@ function DetailChat({ route, navigation }) {
         : [];
     return [...baseMessages, ...localMessages];
   }, [detailMessage, localMessages]);
+  console.log("displayMessages", displayMessages);
 
   const normalizeMessage = (msg) => {
     const text = typeof msg?.text === "string" ? msg.text : msg?.message;
@@ -57,7 +73,7 @@ function DetailChat({ route, navigation }) {
       type: msg?.type,
       sender,
       from,
-      userId: msg?.userId,
+      userId: msg?.srcId,
     };
   };
 
@@ -68,13 +84,13 @@ function DetailChat({ route, navigation }) {
 
   const renderMessage = ({ item }) => {
     const m = normalizeMessage(item);
-
+    console.log("normalizeMessage", m.userId, currentUser?.userID);
+    console.log("currentUser", currentUser);
     const isMe =
-      m.sender === "me" ||
-      (currentUserId && m.userId != null
-        ? String(m.userId) === currentUserId
-        : false);
-
+      currentUser?.userName && m.from != null
+        ? String(m.from) === String(currentUser?.userName)
+        : false;
+    console.log("isMe", isMe);
     const isSystem =
       m.type === "log" ||
       m.sender === "system" ||
@@ -129,22 +145,24 @@ function DetailChat({ route, navigation }) {
   //   }
   // };
 
-  const handleSend = (text) => {
+  const handleSend = () => {
     if (inputText.trim()) {
       let currentDate = new Date();
       currentDate = moment(currentDate).format("LT");
       let obj = {
         id: Date.now().toString(),
-        Object: detailMessage?.[0]?.Object,
+        label: contact?.label,
         message: inputText,
         // audioUrl: !!audioUrl,
-        to: "",
-        from: currentUser.userName,
-        subject: detailMessage?.[0]?.Object || "",
-        image: detailMessage?.[0]?.image || "",
+        to: contact?.srcId || "",
+        from: currentUser?.userID || "",
+        subject: type || "",
+        image: contact?.image || "",
         Read: 1,
         datecom: currentDate,
-        srcId: detailMessage[0]?.srcId || "",
+        srcId: contact?.srcId || "",
+        src: type,
+        userId: currentUser?.userID || "",
       };
 
       console.log(obj, "obj sendMessage");
@@ -156,12 +174,14 @@ function DetailChat({ route, navigation }) {
     }
   };
 
+  console.log("localMessages", localMessages);
+
   const handleMediaPicker = () => {
     console.log("Open media picker");
   };
 
   const getContactInfo = () => {
-    const title = contact?.Object || contact?.name || "";
+    const title = contact?.label || contact?.name || "";
     const subtitle =
       contact?.srcObject && contact?.srcId
         ? `${contact.srcObject} • ${contact.srcId}`
@@ -170,12 +190,6 @@ function DetailChat({ route, navigation }) {
   };
 
   const info = getContactInfo();
-
-  useEffect(() => {
-    const parsed = currentUser;
-    const id = parsed?.userID ?? parsed?.userId;
-    setCurrentUserId(id != null ? String(id) : "");
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -217,7 +231,7 @@ function DetailChat({ route, navigation }) {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 30}
       >
         <View style={styles.todayBadge}>
           <Text style={styles.todayText}>{t("today") || "Aujourd'hui"}</Text>

@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -23,8 +23,8 @@ import {
 } from "react-native-paper";
 import moment from "moment";
 import "moment/locale/fr";
-import { useDispatch } from "react-redux";
-import { saveOrUpdateTask, startTaskOrStop } from "../slice/slice";
+import { useDispatch, useSelector } from "react-redux";
+import { getTasks, saveOrUpdateTask, startTaskOrStop } from "../slice/slice";
 import { uploadFile } from "../../../core/utils/file";
 import { useTranslation } from "react-i18next";
 
@@ -91,8 +91,8 @@ const CalendarDay = ({ label, disabled, selected, onPress }) => {
   const textClass = disabled
     ? "text-slate-300"
     : selected
-    ? "text-black font-bold"
-    : "text-slate-700";
+      ? "text-black font-bold"
+      : "text-slate-700";
 
   return (
     <Pressable disabled={disabled} onPress={onPress}>
@@ -143,12 +143,12 @@ const EmbeddedCalendar = ({
     const first = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth(),
-      1
+      1,
     );
     const last = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth() + 1,
-      0
+      0,
     );
 
     const jsDay = first.getDay();
@@ -201,7 +201,7 @@ const EmbeddedCalendar = ({
               : new Date(
                   visibleMonth.getFullYear(),
                   visibleMonth.getMonth(),
-                  day
+                  day,
                 );
 
           const selected =
@@ -229,16 +229,37 @@ const EmbeddedCalendar = ({
 };
 
 const TaskDetail = ({ navigation, route }) => {
-  const { taskData: taskDataFromParams, task: taskFromParams } =
-    route?.params ?? {};
-  let task = taskDataFromParams ?? taskFromParams;
+  const {
+    taskData: taskDataFromParams,
+    task: taskFromParams,
+    id,
+  } = route?.params ?? {};
+
+  const tasks = useSelector(getTasks);
+  const taskId =
+    id ??
+    taskDataFromParams?.TaskId ??
+    taskFromParams?.TaskId ??
+    taskDataFromParams?.id ??
+    taskFromParams?.id;
+
+  const taskFromStore = useMemo(() => {
+    if (taskId === undefined || taskId === null) return null;
+    return (Array.isArray(tasks) ? tasks : []).find(
+      (t) => String(t?.TaskId ?? t?.taskId ?? t?.id) === String(taskId),
+    );
+  }, [taskId, tasks]);
+
+  let task = taskFromStore ?? taskDataFromParams ?? taskFromParams;
 
   console.log(task, "task");
 
   const { t } = useTranslation();
 
+  if (!task) return null;
+
   const [selectedDate, setSelectedDate] = useState(
-    moment(task?.deadline).toDate() || null
+    moment(task?.deadline).toDate() || null,
   );
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
@@ -246,7 +267,7 @@ const TaskDetail = ({ navigation, route }) => {
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
 
   const taskStatus = useMemo(
@@ -317,7 +338,7 @@ const TaskDetail = ({ navigation, route }) => {
         displayOrder: 1,
       },
     ],
-    []
+    [],
   );
 
   const currentStatusId = useMemo(() => {
@@ -326,7 +347,8 @@ const TaskDetail = ({ navigation, route }) => {
 
     const match = taskStatus.find(
       (s) =>
-        s.statusName === task?.statusName || s.statusLabel === task?.statusLabel
+        s.statusName === task?.statusName ||
+        s.statusLabel === task?.statusLabel,
     );
     return match ? String(match.statusId) : "";
   }, [
@@ -339,6 +361,14 @@ const TaskDetail = ({ navigation, route }) => {
   ]);
 
   const [selectedStatusId, setSelectedStatusId] = useState(currentStatusId);
+
+  useEffect(() => {
+    setSelectedStatusId(currentStatusId);
+  }, [currentStatusId]);
+
+  useEffect(() => {
+    setSelectedDate(moment(task?.deadline).toDate() || null);
+  }, [task?.deadline]);
 
   const dispatch = useDispatch();
 
@@ -432,13 +462,13 @@ const TaskDetail = ({ navigation, route }) => {
 
   const handlePrevMonth = () => {
     setVisibleMonth(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
     );
   };
 
   const handleNextMonth = () => {
     setVisibleMonth(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
     );
   };
 
@@ -476,8 +506,8 @@ const TaskDetail = ({ navigation, route }) => {
       const nextAssets = Array.isArray(result.assets)
         ? result.assets
         : result.uri
-        ? [result]
-        : [];
+          ? [result]
+          : [];
 
       if (nextAssets.length === 0) return;
 
