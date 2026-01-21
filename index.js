@@ -13,5 +13,8 @@ import "react-native-gesture-handler";
 import App from "./App";
 
 import { AppRegistry } from "react-native";
-
+import { initNotifee } from "./src/notification";
+import { initFirebaseEvents } from "./src/firebase";
+initNotifee();
+initFirebaseEvents()
 AppRegistry.registerComponent("FleetManagement", () => App);

@@ -1,101 +1,204 @@
-import { PermissionsAndroid } from 'react-native';
-import { Platform } from 'react-native';
-import { messaging } from './initialize';
-import { toastMessage } from '../core/ui';
-import { saveFcmToken } from './service';
+import { PermissionsAndroid } from "react-native";
+import { Platform } from "react-native";
+// import { messaging } from "./initialize";
+import messaging2 from '@react-native-firebase/messaging';
 
+import { saveFcmToken } from "./service";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { displayNotitication, initNotifee } from "../notification";
+const displayToastOnMessage = false;
 
+let messaging = messaging2();
 async function requestIosNotificationPermission() {
-    console.log('start requestig permission')
   const authStatus = await messaging().requestPermission();
-  console.log('Permission status:', authStatus);
   const enabled =
     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
   if (enabled) {
-    console.log('Authorization status:', authStatus);
+    console.log("Authorization status:", authStatus);
   }
 
-  return enabled
+  return enabled;
 }
 
 async function requestAndroidNotificationPermission() {
-    let permission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-    console.log('Android Permission status:', permission)
-    return permission === PermissionsAndroid.RESULTS.GRANTED
+  let permission = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+  );
+  return permission === PermissionsAndroid.RESULTS.GRANTED;
 }
 
 export async function requestNotificationPermission() {
-    if (Platform.OS === 'ios') {
-        await requestIosNotificationPermission();
-    } else {
-        await requestAndroidNotificationPermission();
-    }
-    return null
+  if (Platform.OS === "ios") {
+    await requestIosNotificationPermission();
+  } else {
+    await requestAndroidNotificationPermission();
+  }
+  return null;
 }
 
 export async function getFcmToken() {
-    console.log('start getting token')
-    // fcmToken = await messaging().getToken()
-    return  await messaging.getToken();
-    // console.log('FCM Token:', fcmToken);
-    return "";
+  // fcmToken = await messaging().getToken()
+  console.log("FCM Token:", await messaging.getToken());
+  return await messaging.getToken();
+  // console.log('FCM Token:', fcmToken);
+  return "";
 }
 
 export async function getAndSaveFcmToken(message) {
-    requestNotificationPermission().then(res =>{
-        console.log('permission:', res)
-        getFcmToken().then(fcm =>{
-            console.log('FCM Token:', fcm);
-            if(fcm){
-                saveFcmToken({
-                    fcmtoken: fcm,
-                    device_type: 'mobile'
-                })
-            }
+  getFcmToken()
+    .then(async (fcm) => {
+      let userID = await AsyncStorage.getItem("userID");
+      // return
+      if (fcm) {
+        saveFcmToken({
+          token: fcm,
+          userID: userID,
+          device_type: "mobile",
+        }).then((res) => {
+          console.log("res fcmToke", res)
         })
+      }
     })
-    console.log('App opened with message:', message);
-    // Handle the app opening event here
+    .catch((e) => {
+      console.log("error getting token", e);
+    });
+  return;
+  requestNotificationPermission()
+    .then((res) => {
+      console.log("permission:", res);
+      getFcmToken()
+        .then((fcm) => {
+          console.log("FCM Token:", fcm);
+          return;
+          if (fcm) {
+            saveFcmToken({
+              fcmtoken: fcm,
+              device_type: "mobile",
+            });
+          }
+        })
+        .catch((e) => {
+          console.log("error getting token", e);
+        });
+    })
+    .catch((e) => {
+      console.log("error getting permission", e);
+    });
+  console.log("App opened with message:", message);
+  // Handle the app opening event here
 }
 
-async function onMessageReceived(message) {
-    console.log('Message received:', message);
-    toastMessage({
-        text1: message?.notification?.title || "Vous avez un nouveau message",
-        text2: message?.notification?.body
-    })
+async function onMessageReceived(message , isBackground) {
+  try{
+     
+      console.log("Message received:",  isBackground);
+      let userID = await AsyncStorage.getItem("userID");
+      let currentChatId = await AsyncStorage.getItem("current-chat-id");
+    
+      let data = message?.data?.data
+      if(!data) return
+      data = JSON.parse(data)
+      console.log('data', data , data?.srcId)
+      console.log('currentChatId:', currentChatId)
+      
+      
+
+      // return
+      if(userID != data.userID && (currentChatId != data?.srcId || isBackground)){
+        let title = `Nouveau message - ${data.src} [${data?.Object || data?.srcId}]`
+        let body = data?.message
+
+        if(!isBackground && displayToastOnMessage){
+        //   toastMessage({
+        //         text1: title || "Vous avez un nouveau message",
+        //         text2: body
+        //   })
+        }
+
+        if(isBackground || !displayToastOnMessage){
+          
+            let notifeeObj = {
+                title: `<p style="color: #083859ff;"><strong >${title}</strong></p>` ,
+                body:`<p><strong>${data?.from}:</strong> ${body}</p>`,
+                channelId: (data.src+'-'+data?.srcId).toLowerCase(),
+                channelName: (data.src+'-'+data?.Object).toLowerCase(),
+                data,
+                android: {
+                  actions: [
+                      {
+                        title: 'Marquer comme lu',
+                        icon: 'https://my-cdn.com/icons/snooze.png',
+                        pressAction: {
+                          id: 'mark-as-read',
+                        },
+                      },
+                      {
+                        title: 'Répondre',
+                        icon: 'https://my-cdn.com/icons/snooze.png',
+                        pressAction: {
+                          id: 'reply',
+                        },
+                      },
+                    ]
+                }
+            };
+            displayNotitication(notifeeObj)
+        }
+      }
+  }catch(e){
+    console.log('error onMessageReceived', e)
+    
+  }
+  
 }
 
 function onNotificationOpenedApp(message) {
-    console.log('Notification opened app:', message);
-    // Handle the app opening event here
+  console.log("Notification opened app:", message);
+  // Handle the app opening event here
 }
 function onTokenRefresh(token) {
-    console.log('Token refreshed:', token);
-    // Handle the token refresh event here
+  console.log("Token refreshed:", token);
+  // Handle the token refresh event here
 }
 
 export function initFirebaseMessaging() {
-    getAndSaveFcmToken()
 
-    messaging.onMessage(onMessageReceived);
-    messaging.setBackgroundMessageHandler(onMessageReceived);
-    messaging.onNotificationOpenedApp(onNotificationOpenedApp);
-    messaging.onTokenRefresh(onTokenRefresh)
+  try {
+    console.log('initFirebaseMessaging')
+    // initNotifee()
+    getAndSaveFcmToken();
+  } catch (error) {
+    console.log("error getting token initFirebaseMessaging", error);
+  }
+}
 
-    // messaging.subscribeToTopic('admin-topic').then(res => {
-    //     console.log('subscribed to admin topic', res)
-    // }).catch(e=>{
-    //     console.log('error subscribing to admin topic', e)
-    // })
+export function subscribeToTopic(topic) {
+  messaging
+    .subscribeToTopic(topic)
+    .then((res) => {
+      console.log(`Subscribed to topic ${topic} succcess`, res);
+    })
+    .catch((e) => {
+      console.log(`Error subscribing to topic ${topic}`, e);
+    });
+}
+export function unSubscribeFromTopic(topic) {
+  messaging
+    .unsubscribeFromTopic(topic)
+    .then((res) => {
+      console.log(`Subscribed to topic ${topic} succcess`, res);
+    })
+    .catch((e) => {
+      console.log(`Error subscribing to topic ${topic}`, e);
+    });
 }
 
 
-export function subscribeToTopic(topic) {
-    messaging.subscribeToTopic(topic).then(res => {
-        console.log('subscribed to topic', res)
-    }).catch(e=>{
-        console.log('error subscribing to topic', e)
-    })
+export function initFirebaseEvents(){
+  console.log('initFirebaseEvents')
+    messaging.onMessage(onMessageReceived);
+    messaging.setBackgroundMessageHandler((message) =>  onMessageReceived(message , true));
+    messaging.onNotificationOpenedApp(onNotificationOpenedApp);
+    // messaging.onTokenRefresh(onTokenRefresh);
 }
