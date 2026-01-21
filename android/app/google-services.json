@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "727610922410",
-    "project_id": "asset-tracking-system-bf045",
-    "storage_bucket": "asset-tracking-system-bf045.firebasestorage.app"
+    "project_number": "748968991885",
+    "project_id": "fleetmanagament-6c486",
+    "storage_bucket": "fleetmanagament-6c486.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:727610922410:android:d4737e21ca43050c9c07d3",
+        "mobilesdk_app_id": "1:748968991885:android:7d57808aac4a4fc70396c4",
         "android_client_info": {
-          "package_name": "com.dadev.ats"
+          "package_name": "com.omniyat.fleetmanagement"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDC01JF-Ag1zff2PvnyW6TDaGByqYkectA"
+          "current_key": "AIzaSyAYrZBbfaMbcxFmXxW6ib4YnRYgktvx_eQ"
         }
       ],
       "services": {

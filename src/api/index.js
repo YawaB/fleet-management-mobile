@@ -26,6 +26,7 @@ export async function request(url, params) {
     let userInfos = {
       userID: userInf?.userID,
     };
+    console.log('userInfos', userInfos);
     params.params = {
       ...params.params,
       ...defaultConfigs,

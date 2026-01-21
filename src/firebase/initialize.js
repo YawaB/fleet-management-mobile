@@ -3,10 +3,10 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging } from '@react-native-firebase/messaging';
 
 let firebaseConfig = {
-    apiKey: "AIzaSyDC01JF-Ag1zff2PvnyW6TDaGByqYkectA",
-    projectId: "asset-tracking-system-bf045",
-    appId: "1:727610922410:android:d4737e21ca43050c9c07d3",
-    messagingSenderId: "727610922410"
+    apiKey: "AIzaSyAYrZBbfaMbcxFmXxW6ib4YnRYgktvx_eQ",
+    projectId: "fleetmanagament-6c486",
+    appId: "1:748968991885:android:7d57808aac4a4fc70396c4",
+    messagingSenderId: "748968991885"
 };
 
 const app = initializeApp(firebaseConfig);

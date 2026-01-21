@@ -29,7 +29,7 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="com.dadev.ats"/>
+        <data android:scheme="com.omniyat.fleetmanagement"/>
         <data android:scheme="exp+fleetmanagement"/>
       </intent-filter>
     </activity>

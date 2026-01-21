@@ -44,7 +44,7 @@ function Layout() {
   }, []);
 
   useEffect(() => {
-    initFirebaseMessaging();
+    // initFirebaseMessaging();
   }, []);
 
   return (

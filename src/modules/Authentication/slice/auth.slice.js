@@ -7,7 +7,7 @@ import {
   _logOut,
 } from "../api/index";
 import _ from "lodash";
-import { subscribeToTopic } from "../../../firebase";
+import { initFirebaseMessaging, subscribeToTopic } from "../../../firebase";
 const slice_name = "auth";
 
 export const login = createAsyncThunk(
@@ -24,6 +24,9 @@ export const login = createAsyncThunk(
         // dispatch(fetchUserAuthorizations())
         await AsyncStorage.setItem("token", user?.key);
         await AsyncStorage.setItem("user", JSON.stringify(user));
+        await AsyncStorage.setItem("userID", user?.userID.toString());
+        initFirebaseMessaging()
+        
         return true;
       } else {
         dispatch(setCurrentUser(null));
@@ -51,14 +54,17 @@ export const checkUser = createAsyncThunk(
       if (res?.data?.success && res?.data?.result) {
         // Update current user in Redux state
         dispatch(setCurrentUser(res.data.result));
+        console.log("Validated user:", res.data.result);
 
         // Store updated user data and token
         await AsyncStorage.setItem("token", res.data.key || token);
         await AsyncStorage.setItem("user", JSON.stringify(res.data.result));
+        await AsyncStorage.setItem("userID", res.data.result?.userID.toString());
+
 
         // // Fetch user authorizations
         // await dispatch(fetchUserAuthorizations());
-
+        initFirebaseMessaging()
         return true;
       }
 

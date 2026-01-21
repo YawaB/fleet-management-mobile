@@ -1,4 +1,4 @@
-package com.dadev.ats
+package com.omniyat.fleetmanagement
 
 import android.app.Application
 import android.content.res.Configuration

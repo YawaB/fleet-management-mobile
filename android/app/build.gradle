@@ -86,18 +86,18 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.dadev.ats'
+    namespace 'com.omniyat.fleetmanagement'
     defaultConfig {
-        applicationId 'com.dadev.ats'
+        applicationId 'com.omniyat.fleetmanagement'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
         externalNativeBuild {
-            cmake {
+            /*cmake {
                 arguments "-DCMAKE_MAKE_PROGRAM=C:\\Users\\zakaria\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
                           "-DCMAKE_OBJECT_PATH_MAX=1024"
-            }
+            }*/
         }
     }
     signingConfigs {
