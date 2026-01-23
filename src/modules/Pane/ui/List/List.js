@@ -50,7 +50,7 @@ function PaneList({ navigation }) {
           style: "destructive",
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -101,7 +101,7 @@ function PaneList({ navigation }) {
                   out.push(
                     it.src.startsWith("http") || it.src.startsWith("file")
                       ? it.src
-                      : baseUrl + it.src
+                      : baseUrl + it.src,
                   );
                 }
               }
@@ -116,7 +116,7 @@ function PaneList({ navigation }) {
                 out.push(
                   it.startsWith("http") || it.startsWith("file")
                     ? it
-                    : baseUrl + it
+                    : baseUrl + it,
                 );
               }
             }
@@ -180,7 +180,7 @@ function PaneList({ navigation }) {
                     className="flex items-center justify-center"
                     style={[
                       styles.statusChip,
-                      { backgroundColor: pane.bgColor },
+                      { backgroundColor: pane.bgColor || colors.primary },
                     ]}
                     textStyle={{ color: "#fff" }}
                   >

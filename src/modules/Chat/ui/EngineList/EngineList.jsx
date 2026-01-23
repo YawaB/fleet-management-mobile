@@ -106,7 +106,9 @@ const EngineList = () => {
         >
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("engines") || "Engins"}</Text>
+        <Text style={styles.headerTitle}>
+          {t("intervention") || "Interventions"}
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -119,7 +121,9 @@ const EngineList = () => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder={t("search_vehicle") || "Rechercher un véhicule..."}
+          placeholder={
+            t("search_intervention") || "Rechercher une intervention..."
+          }
           placeholderTextColor="#9ca3af"
           value={searchTerm}
           onChangeText={setSearchTerm}
@@ -129,12 +133,12 @@ const EngineList = () => {
       <FlatList
         data={filteredConversations}
         renderItem={renderEngineItem}
-        keyExtractor={(item) => item.id?.toString()}
+        keyExtractor={(item) => item.srcId?.toString()}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
-              {t("no_engines_found") || "Aucun engin trouvé"}
+              {t("no_interventions_found") || "Aucune intervention trouvée"}
             </Text>
           </View>
         }

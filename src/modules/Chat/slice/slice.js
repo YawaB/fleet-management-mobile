@@ -172,6 +172,9 @@ const chatSlice = createSlice({
     setNewChat: (state, action) => {
       try {
         const normalizedMsg = action.payload.msg;
+        if (!normalizedMsg) return;
+        if (normalizedMsg.fromId === undefined || normalizedMsg.fromId === null)
+          return;
 
         const listMsg = Array.isArray(state.messageList)
           ? state.messageList
@@ -188,12 +191,24 @@ const chatSlice = createSlice({
             const idx = listMsg.findIndex(
               (msg) => msg.srcId == normalizedMsg.fromId,
             );
-            listMsg[idx] = {
+
+            const prevUnreadRaw = foundMsgFromList?.unreadCount;
+            const prevUnread = Number.isFinite(Number(prevUnreadRaw))
+              ? Number(prevUnreadRaw)
+              : 0;
+
+            const updated = {
               ...foundMsgFromList,
               message: normalizedMsg.message,
               Read: 0,
               datecom: normalizedMsg.datecom,
+              unreadCount: prevUnread + 1,
             };
+
+            state.messageList = [
+              updated,
+              ...listMsg.filter((_, i) => i !== idx),
+            ];
           }
         }
 

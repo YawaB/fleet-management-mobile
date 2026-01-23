@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import React, { useCallback } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { fetchResources } from "../../slice/slice";
 
 // Fake user data
 const fakeUsers = [

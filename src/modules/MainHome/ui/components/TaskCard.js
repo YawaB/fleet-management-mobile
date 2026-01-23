@@ -12,16 +12,23 @@ const TaskCard = ({
   onActionPress,
   statusColor,
 }) => {
+  const safeStatusColor =
+    typeof statusColor === "string" && statusColor.trim().length > 0
+      ? statusColor
+      : "#64748b";
+
   return (
     <Card style={styles.card} onPress={onPress}>
       <View style={styles.container}>
-        <View style={[styles.indicator, { backgroundColor: statusColor }]} />
+        <View
+          style={[styles.indicator, { backgroundColor: safeStatusColor }]}
+        />
         <View style={styles.content}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Text style={styles.taskId}>{taskId}</Text>
               <Chip
-                style={[styles.chip, { backgroundColor: statusColor }]}
+                style={[styles.chip, { backgroundColor: safeStatusColor }]}
                 textStyle={[styles.chipText, { color: "white" }]}
               >
                 {status}
