@@ -25,7 +25,7 @@ export const fetchVehicles = createAsyncThunk(
         detail: error.message,
       });
     }
-  }
+  },
 );
 
 export const fetchPanneTypes = createAsyncThunk(
@@ -46,7 +46,7 @@ export const fetchPanneTypes = createAsyncThunk(
       console.log("fetchPanneTypes error:", e);
       return { error: true, message: e.message };
     }
-  }
+  },
 );
 
 export const fetchPannes = createAsyncThunk(
@@ -55,6 +55,7 @@ export const fetchPannes = createAsyncThunk(
     const { current_user } = getState()["auth"];
     console.log("current_user", current_user);
     let dataArgs = {
+      ..._args,
       userId: current_user?.instID,
     };
     try {
@@ -69,7 +70,7 @@ export const fetchPannes = createAsyncThunk(
       console.log("fetchPannes error:", e);
       return { error: true, message: e.message };
     }
-  }
+  },
 );
 
 export const removePanne = createAsyncThunk(
@@ -98,7 +99,7 @@ export const removePanne = createAsyncThunk(
       console.log("removePanne error:", e);
       return { error: true, message: e.message };
     }
-  }
+  },
 );
 
 export const createOrUpdatePanne = createAsyncThunk(
@@ -133,7 +134,7 @@ export const createOrUpdatePanne = createAsyncThunk(
       });
       return { error: true, message: e.message };
     }
-  }
+  },
 );
 
 export const paneslice = createSlice({

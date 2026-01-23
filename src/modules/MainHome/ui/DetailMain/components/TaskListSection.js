@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Text, Card, Chip, Avatar, useTheme, Button } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -6,6 +6,7 @@ import moment from "moment";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { getCurrentUser } from "../../../../Authentication/slice/auth.slice";
+import { getUpdatedTask } from "../../../../Tasks/slice/slice";
 
 const getStatusConfig = (statusName) => {
   switch (statusName?.toLowerCase()) {
@@ -41,10 +42,18 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
   const theme = useTheme();
   const { t } = useTranslation();
   const currentUser = useSelector(getCurrentUser);
-  console.log(currentUser, "currentUser");
+  const updatedTask = useSelector(getUpdatedTask);
+  console.log(updatedTask, "xxxtask updatedTask selector");
 
-  const tasksArray = Array.isArray(tasks) ? tasks : [];
+  const [tasksArray, setTasksArray] = useState(
+    Array.isArray(tasks) ? tasks : [],
+  );
+  console.log(tasksArray, "xxxtask tasksArray");
   const tasksCount = tasksArray.length;
+
+  useEffect(() => {
+    setTasksArray(Array.isArray(tasks) ? tasks : []);
+  }, [tasks]);
 
   const handleDetailsPress = (task) => {
     console.log(task, "task handleDetailsPress");
@@ -68,6 +77,19 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
   const handleCreateTask = () => {
     navigation?.navigate?.("CreateTask");
   };
+
+  useEffect(() => {
+    if (updatedTask?.TaskId && Array.isArray(tasksArray)) {
+      const updatedList = tasksArray.map((task) => {
+        if (task.TaskId === updatedTask.TaskId) {
+          return updatedTask;
+        }
+        return task;
+      });
+      console.log(updatedList, "xxxtask updated");
+      setTasksArray(updatedList);
+    }
+  }, [updatedTask]);
 
   return (
     <View style={styles.container}>

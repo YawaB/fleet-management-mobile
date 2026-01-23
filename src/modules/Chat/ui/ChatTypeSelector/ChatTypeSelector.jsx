@@ -21,10 +21,8 @@ const ChatTypeSelector = () => {
 
   const handleSelectType = (type) => {
     if (type === "users") {
-      dispatch(fetchResources({ srcObject: "User" }));
       navigation.navigate("UserList");
     } else {
-      dispatch(fetchResources({ srcObject: "Engin" }));
       navigation.navigate("EngineList");
     }
   };

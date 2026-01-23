@@ -1,4 +1,9 @@
-import { createSlice, createAction, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAction,
+  createAsyncThunk,
+  current,
+} from "@reduxjs/toolkit";
 import {
   _fetchConversationList,
   _fetchMessagesList,
@@ -165,39 +170,45 @@ const chatSlice = createSlice({
       state.userRead = action.payload;
     },
     setNewChat: (state, action) => {
-      state.newChat = action.payload;
-      if (!action.payload) return;
+      try {
+        const normalizedMsg = action.payload.msg;
 
-      const incomingRaw = action.payload;
-      const selected = state.selectedChat;
-      const incoming = mergeChatMeta(incomingRaw, selected);
+        const listMsg = Array.isArray(state.messageList)
+          ? state.messageList
+          : [];
 
-      const incomingKey = getChatKey(incoming);
-      const selectedKey = getChatKey(selected);
-      const matchesSelected =
-        incomingKey && selectedKey && incomingKey === selectedKey;
+        const detailMsg = Array.isArray(state.detailMessage)
+          ? state.detailMessage
+          : [];
+        if (listMsg.length > 0) {
+          const foundMsgFromList = listMsg.find(
+            (msg) => msg.srcId == normalizedMsg.fromId,
+          );
+          if (foundMsgFromList) {
+            const idx = listMsg.findIndex(
+              (msg) => msg.srcId == normalizedMsg.fromId,
+            );
+            listMsg[idx] = {
+              ...foundMsgFromList,
+              message: normalizedMsg.message,
+              Read: 0,
+              datecom: normalizedMsg.datecom,
+            };
+          }
+        }
 
-      if (state.detailChat && matchesSelected) {
-        state.detailMessage = [...state.detailMessage, incoming];
-      }
-
-      const idx = (state.messageList || []).findIndex(
-        (m) => getChatKey(m) === incomingKey,
-      );
-
-      if (idx >= 0) {
-        const found = state.messageList[idx];
-        state.messageList = [
-          {
-            ...found,
-            ...incoming,
-            message: incoming?.message ?? found?.message,
-            Read: 1,
-          },
-          ...state.messageList.filter((_, i) => i !== idx),
-        ];
-      } else {
-        state.messageList = [incoming, ...(state.messageList || [])];
+        if (state.detailChat && detailMsg.length > 0) {
+          const isMyThread = detailMsg.some(
+            (msg) =>
+              msg.srcId == normalizedMsg.toId ||
+              msg.srcId == normalizedMsg.fromId,
+          );
+          if (isMyThread) {
+            state.detailMessage = [...detailMsg, normalizedMsg];
+          }
+        }
+      } catch (e) {
+        console.log("chat error", e);
       }
     },
     setChatMessages: (state, action) => {

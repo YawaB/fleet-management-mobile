@@ -27,12 +27,6 @@ export const socketEvents = {
   },
   data_message: (data, dispatch, socketId) => {
     console.log("data_message:", data);
-    const chat = {
-      ...data.msg,
-      id: Date.now().toString(),
-      Read: 1,
-      type: "Chat",
-    };
-    if (chat) dispatch(setNewChat(chat));
+    if (data.msg) dispatch(setNewChat(data));
   },
 };

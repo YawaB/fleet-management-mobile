@@ -1,4 +1,3 @@
-import React from "react";
 import { DashboardScreen } from "./components";
 
 const MainHomeComponent = ({ navigation }) => {
