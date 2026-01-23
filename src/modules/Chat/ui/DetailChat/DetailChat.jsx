@@ -36,8 +36,6 @@ function DetailChat({ route, navigation }) {
 
   const detailMessage = useSelector(getDetailMessage);
   const currentUser = useSelector(getCurrentUser);
-  console.log("currentUser", currentUser);
-  console.log("detailMessage", detailMessage);
 
   const dispatch = useDispatch();
 
@@ -50,7 +48,6 @@ function DetailChat({ route, navigation }) {
   }, [dispatch, contact]);
 
   const displayMessages = [...localMessages];
-  console.log("displayMessages", displayMessages);
 
   const normalizeMessage = (msg) => {
     const text = typeof msg?.text === "string" ? msg.text : msg?.message;
@@ -77,7 +74,6 @@ function DetailChat({ route, navigation }) {
   };
 
   const renderMessage = ({ item }) => {
-    console.log("item renderMessage", item);
     const isMe =
       currentUser.userID && item.fromId != null
         ? item.fromId == currentUser.userID

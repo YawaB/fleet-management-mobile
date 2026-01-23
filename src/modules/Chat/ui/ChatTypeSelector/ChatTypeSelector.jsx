@@ -65,10 +65,12 @@ const ChatTypeSelector = () => {
             >
               <Ionicons name="car" size={32} color="#d97706" />
             </View>
-            <Text style={styles.cardTitle}>{t("engines") || "Engins"}</Text>
+            <Text style={styles.cardTitle}>
+              {t("intervention") || "Interventions"}
+            </Text>
             <Text style={styles.cardDescription}>
               {t("view_system_logs") ||
-                "Consultez les journaux système et les alertes automatisées des véhicules"}
+                "Consultez les journaux système et les alertes automatisées des interventions"}
             </Text>
           </TouchableOpacity>
         </View>

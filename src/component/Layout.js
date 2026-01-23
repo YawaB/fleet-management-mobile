@@ -20,16 +20,28 @@ import CameraScreen from "./Shared/CameraScreen/CameraScreen";
 import ToastComponent from "./Shared/ToastComponent/ToastComponent";
 import { I18nManager } from "react-native";
 import i18n from "../i18n";
+import NotificationPermissionScreen from "../modules/NotificationPermission/ui/NotificationPermissionScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
 
 const Stack = createNativeStackNavigator();
+const NOTIFICATION_PERMISSION_KEY = "notification_permission_checked";
+
 function Layout() {
   const { log } = useLogger();
   const current_user = useSelector(getCurrentUser);
+  const [notificationChecked, setNotificationChecked] = useState(null);
   console.log("current_user", current_user);
   let uiParams = useSelector(getUiParams);
   let dispatch = useDispatch();
 
   useEffect(() => {
+    const checkNotificationPermission = async () => {
+      const checked = await AsyncStorage.getItem(NOTIFICATION_PERMISSION_KEY);
+      setNotificationChecked(checked === "true");
+    };
+    checkNotificationPermission();
+
     SqliteModule.init({
       debug: false,
     }).then(async (res) => {
@@ -47,6 +59,14 @@ function Layout() {
     // initFirebaseMessaging();
   }, []);
 
+  if (notificationChecked === null) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.primary }}>
+        <StatusBar backgroundColor={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <StatusBar backgroundColor={colors.primary} />
@@ -57,7 +77,13 @@ function Layout() {
         )}
       </Portal>
       <Stack.Navigator
-        initialRouteName={current_user ? "Features" : "Login"}
+        initialRouteName={
+          current_user
+            ? "Features"
+            : notificationChecked === false
+              ? "NotificationPermission"
+              : "Login"
+        }
         screenOptions={({ route }) => ({
           header: () => (
             <View>
@@ -94,6 +120,11 @@ function Layout() {
           options={{
             header: () => <MenuComponent title={"Prendre une photo"} />,
           }}
+        />
+        <Stack.Screen
+          name="NotificationPermission"
+          component={NotificationPermissionScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </View>

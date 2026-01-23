@@ -55,7 +55,6 @@ function PaneEditor({ navigation }) {
   const dispatch = useDispatch();
 
   const vehicles = useSelector(getVehicles);
-  console.log("vehicles", vehicles);
   const panneTypes = useSelector(getPanneTypes);
   const currentUser = useSelector(getCurrentUser);
 
@@ -117,7 +116,7 @@ function PaneEditor({ navigation }) {
           playsInSilentModeIOS: true,
         });
         const { recording } = await Audio.Recording.createAsync(
-          Audio.RecordingOptionsPresets.HIGH_QUALITY
+          Audio.RecordingOptionsPresets.HIGH_QUALITY,
         );
         setRecording(recording);
         setIsRecording(true);
@@ -194,7 +193,7 @@ function PaneEditor({ navigation }) {
         : process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE + formData.audio;
       const { sound } = await Audio.Sound.createAsync(
         { uri: audioUrl },
-        { shouldPlay: true, progressUpdateIntervalMillis: 500 }
+        { shouldPlay: true, progressUpdateIntervalMillis: 500 },
       );
       setSound(sound);
       setIsPlaying(true);
