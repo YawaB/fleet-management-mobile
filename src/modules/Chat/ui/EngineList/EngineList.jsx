@@ -28,24 +28,20 @@ const EngineList = () => {
 
   const messageList = useSelector(getMessageList);
 
-  useEffect(() => {
-    dispatch(fetchMessagesList());
-  }, [dispatch]);
-
   const filteredConversations = useMemo(() => {
-    const conversations = Array.isArray(messageList)
-      ? messageList.filter((c) => (c?.srcObject || "") === "Engin")
-      : [];
+    const conversations = Array.isArray(messageList) ? messageList : [];
 
     if (!searchTerm.trim()) return conversations;
     const term = searchTerm.toLowerCase();
 
     return conversations.filter((c) => {
-      const title = String(c?.Object || "").toLowerCase();
+      const title = String(c?.label || "").toLowerCase();
       const preview = String(c?.message || "").toLowerCase();
       return title.includes(term) || preview.includes(term);
     });
   }, [messageList, searchTerm]);
+
+  console.log("filteredConversations", filteredConversations);
 
   const handleEnginePress = (conv) => {
     const obj = {
@@ -72,7 +68,7 @@ const EngineList = () => {
       <View style={styles.engineInfo}>
         <View style={styles.engineHeader}>
           <Text style={styles.engineName} numberOfLines={1}>
-            {item.Object}
+            {item.label}
           </Text>
           <Text style={styles.timestamp}>{item.datecom}</Text>
         </View>

@@ -10,15 +10,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { colors } from "../../../../theme/colors";
+import { useDispatch } from "react-redux";
+import { fetchResources } from "../../slice/slice";
 
 const ChatTypeSelector = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
 
+  const dispatch = useDispatch();
+
   const handleSelectType = (type) => {
     if (type === "users") {
+      dispatch(fetchResources({ srcObject: "User" }));
       navigation.navigate("UserList");
     } else {
+      dispatch(fetchResources({ srcObject: "Engin" }));
       navigation.navigate("EngineList");
     }
   };

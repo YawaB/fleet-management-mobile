@@ -24,7 +24,7 @@ export const fetchTaskList = createAsyncThunk(
     } catch (err) {
       console.log("Error fetch tasks", err.message);
     }
-  }
+  },
 );
 
 export const fetchTaskStatus = createAsyncThunk(
@@ -41,7 +41,7 @@ export const fetchTaskStatus = createAsyncThunk(
     } catch (err) {
       console.log("Error fetch tasks", err.message);
     }
-  }
+  },
 );
 
 export const startTaskOrStop = createAsyncThunk(
@@ -56,7 +56,7 @@ export const startTaskOrStop = createAsyncThunk(
           setToast({
             message: res?.data?.message,
             type: "success",
-          })
+          }),
         );
         return true;
       }
@@ -64,14 +64,14 @@ export const startTaskOrStop = createAsyncThunk(
         setToast({
           message: res?.data?.msg,
           type: "error",
-        })
+        }),
       );
       return false;
     } catch (err) {
       console.log("Error start or stop task", err.message);
       return false;
     }
-  }
+  },
 );
 
 export const saveOrUpdateTask = createAsyncThunk(
@@ -86,7 +86,7 @@ export const saveOrUpdateTask = createAsyncThunk(
           setToast({
             message: "Tâche modifiée avec succès",
             type: "success",
-          })
+          }),
         );
         return true;
       }
@@ -94,13 +94,13 @@ export const saveOrUpdateTask = createAsyncThunk(
         setToast({
           message: res.data.result[0].msg,
           type: "error",
-        })
+        }),
       );
       return false;
     } catch (err) {
       console.log("Error save or update task", err.message);
     }
-  }
+  },
 );
 
 export const tasksSlice = createSlice({
@@ -113,6 +113,23 @@ export const tasksSlice = createSlice({
     setTasks: (state, { payload }) => {
       state.tasks = payload;
     },
+    upsertTask: (state, { payload }) => {
+      const incoming = payload;
+      if (!incoming) return;
+
+      const incomingId = incoming?.TaskId ?? incoming?.taskId ?? incoming?.id;
+      if (incomingId === undefined || incomingId === null) return;
+
+      const idx = (state.tasks || []).findIndex(
+        (t) => String(t?.TaskId ?? t?.taskId ?? t?.id) === String(incomingId),
+      );
+
+      if (idx >= 0) {
+        state.tasks[idx] = { ...state.tasks[idx], ...incoming };
+      } else {
+        state.tasks.unshift(incoming);
+      }
+    },
     setTaskStatus: (state, { payload }) => {
       state.taskStatus = payload;
     },
@@ -122,6 +139,6 @@ export const tasksSlice = createSlice({
 export const getTasks = (state) => state[slice_name].tasks;
 export const getTaskStatus = (state) => state[slice_name].taskStatus;
 
-export const { setTasks, setTaskStatus } = tasksSlice.actions;
+export const { setTasks, upsertTask, setTaskStatus } = tasksSlice.actions;
 
 export default tasksSlice.reducer;
