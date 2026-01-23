@@ -49,13 +49,7 @@ function DetailChat({ route, navigation }) {
     };
   }, [dispatch, contact]);
 
-  const displayMessages = useMemo(() => {
-    const baseMessages =
-      Array.isArray(detailMessage) && detailMessage.length > 0
-        ? detailMessage
-        : [];
-    return [...baseMessages, ...localMessages];
-  }, [detailMessage, localMessages]);
+  const displayMessages = [...localMessages];
   console.log("displayMessages", displayMessages);
 
   const normalizeMessage = (msg) => {
@@ -83,31 +77,11 @@ function DetailChat({ route, navigation }) {
   };
 
   const renderMessage = ({ item }) => {
-    const m = normalizeMessage(item);
-    console.log("normalizeMessage", m.userId, currentUser?.userID);
-    console.log("currentUser", currentUser);
+    console.log("item renderMessage", item);
     const isMe =
-      currentUser?.userName && m.from != null
-        ? String(m.from) === String(currentUser?.userName)
+      currentUser.userID && item.fromId != null
+        ? item.fromId == currentUser.userID
         : false;
-    console.log("isMe", isMe);
-    const isSystem =
-      m.type === "log" ||
-      m.sender === "system" ||
-      (type === "engine" &&
-        (m.from === "-" || m.from === "system") &&
-        (m.userId == null || m.userId === ""));
-
-    if (isSystem) {
-      return (
-        <View style={styles.systemMessageContainer}>
-          <View style={styles.systemMessage}>
-            <Text style={styles.systemMessageText}>{m.text}</Text>
-            <Text style={styles.systemTimestamp}>{m.time}</Text>
-          </View>
-        </View>
-      );
-    }
 
     return (
       <View
@@ -117,33 +91,14 @@ function DetailChat({ route, navigation }) {
         ]}
       >
         <Text style={[styles.messageText, isMe && styles.myMessageText]}>
-          {m.text}
+          {item.message}
         </Text>
         <Text style={[styles.timestamp, isMe && styles.myTimestamp]}>
-          {m.time}
+          {item.datecom}
         </Text>
       </View>
     );
   };
-
-  // const handleSend = () => {
-  //   if (inputText.trim()) {
-  //     const newMessage = {
-  //       id: `local-${Date.now()}`,
-  //       text: inputText,
-  //       sender: "me",
-  //       time: new Date().toLocaleTimeString("fr-FR", {
-  //         hour: "2-digit",
-  //         minute: "2-digit",
-  //       }),
-  //       type: "text",
-  //     };
-  //     socket.emit("new_location_push", { msg: newMessage });
-  //     setLocalMessages([...localMessages, newMessage]);
-  //     setInputText("");
-  //     flatListRef.current?.scrollToEnd();
-  //   }
-  // };
 
   const handleSend = () => {
     if (inputText.trim()) {
@@ -154,18 +109,20 @@ function DetailChat({ route, navigation }) {
         label: contact?.label,
         message: inputText,
         // audioUrl: !!audioUrl,
-        to: contact?.srcId || "",
-        from: currentUser?.userID || "",
-        subject: type || "",
+        from: currentUser.userName,
+
+        // subject: detailMessage?.[0]?.Object || "",
         image: contact?.image || "",
-        Read: 1,
         datecom: currentDate,
         srcId: contact?.srcId || "",
-        src: type,
-        userId: currentUser?.userID || "",
+        srcObject: contact?.srcObject || "",
+        to: contact?.label || "",
+        toId: contact?.srcId || "",
+        fromId: currentUser?.userID,
+        type: "Chat",
       };
-
       console.log(obj, "obj sendMessage");
+
       dispatch(saveConversation(obj)).then(() => {
         setInputText("");
         setLocalMessages([...localMessages, obj]);
@@ -190,6 +147,10 @@ function DetailChat({ route, navigation }) {
   };
 
   const info = getContactInfo();
+
+  useEffect(() => {
+    setLocalMessages([...detailMessage]);
+  }, [detailMessage]);
 
   return (
     <SafeAreaView style={styles.container}>

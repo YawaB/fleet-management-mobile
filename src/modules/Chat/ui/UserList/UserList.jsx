@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,8 +19,9 @@ import {
   fetchConversationList,
   readMsg,
   setSelectedChat,
+  fetchResources,
 } from "../../slice/slice";
-import { colors } from "../../../../theme/colors";
+import ChatCard from "./ChatCard";
 
 const UserList = () => {
   const navigation = useNavigation();
@@ -49,55 +50,26 @@ const UserList = () => {
     });
   }, [messageList, searchTerm]);
 
-  console.log("filteredConversations", filteredConversations);
-
   const handleChatPress = (conv) => {
     const obj = {
       srcId: conv.srcId,
       srcObject: conv?.srcObject || "Engin",
     };
-    console.log(conv, "conv handleChatPress");
-    dispatch(readMsg({ id: conv.id }));
+    dispatch(readMsg({ id: conv?.comid }));
     dispatch(setSelectedChat(conv));
     dispatch(fetchConversationList(obj));
 
     navigation.navigate("DetailChat", { contact: conv, type: "user" });
   };
 
-  const renderChatItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => handleChatPress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.avatarContainer}>
-        <Image
-          source={{
-            uri: resolveImageUrl(item.image),
-          }}
-          style={styles.avatar}
-        />
-        {item?.Read === 1 && <View style={styles.unreadDot} />}
-      </View>
-      <View style={styles.chatInfo}>
-        <View style={styles.chatHeader}>
-          <Text style={styles.userName} numberOfLines={1}>
-            {item.label}
-          </Text>
-          <Text style={styles.timestamp}>{item.datecom}</Text>
-        </View>
-        <View style={styles.chatFooter}>
-          <Text style={styles.lastMessage} numberOfLines={1}>
-            {item.message}
-          </Text>
-          {item?.Read === 1 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadText}>1</Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        dispatch(fetchResources({ srcObject: "User" }));
+      } catch (err) {
+        console.log("Error fetch tasks", err.message);
+      }
+    }, []),
   );
 
   return (
@@ -131,7 +103,13 @@ const UserList = () => {
 
       <FlatList
         data={filteredConversations}
-        renderItem={renderChatItem}
+        renderItem={(item) => (
+          <ChatCard
+            resolveImageUrl={resolveImageUrl}
+            handleChatPress={handleChatPress}
+            item={item.item}
+          />
+        )}
         keyExtractor={(item) => item.srcId}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={

@@ -41,10 +41,10 @@ function BottomTabs() {
       }}
     >
       <Tab.Screen
-        name="Features"
+        name="Dashboard"
         component={MainHomeScreenStack}
         options={({ route }) => ({
-          tabBarLabel: t("Features"),
+          tabBarLabel: t("Dashboard"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons
               name="view-grid"

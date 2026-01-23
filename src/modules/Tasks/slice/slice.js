@@ -107,6 +107,7 @@ export const tasksSlice = createSlice({
   initialState: {
     tasks: [],
     taskStatus: [],
+    updatedTaskVar: null,
   },
   name: slice_name,
   reducers: {
@@ -115,6 +116,7 @@ export const tasksSlice = createSlice({
     },
     upsertTask: (state, { payload }) => {
       const incoming = payload;
+      state.updatedTaskVar = incoming;
       if (!incoming) return;
 
       const incomingId = incoming?.TaskId ?? incoming?.taskId ?? incoming?.id;
@@ -138,6 +140,7 @@ export const tasksSlice = createSlice({
 
 export const getTasks = (state) => state[slice_name].tasks;
 export const getTaskStatus = (state) => state[slice_name].taskStatus;
+export const getUpdatedTask = (state) => state[slice_name].updatedTaskVar;
 
 export const { setTasks, upsertTask, setTaskStatus } = tasksSlice.actions;
 

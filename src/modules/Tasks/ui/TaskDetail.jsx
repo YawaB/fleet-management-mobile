@@ -1,7 +1,9 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -10,6 +12,8 @@ import {
 } from "react-native";
 import { FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import {
   Button,
   Card,
@@ -23,10 +27,17 @@ import {
 } from "react-native-paper";
 import moment from "moment";
 import "moment/locale/fr";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch, useSelector } from "react-redux";
-import { getTasks, saveOrUpdateTask, startTaskOrStop } from "../slice/slice";
+import {
+  getTasks,
+  getTaskStatus,
+  saveOrUpdateTask,
+  startTaskOrStop,
+} from "../slice/slice";
 import { uploadFile } from "../../../core/utils/file";
 import { useTranslation } from "react-i18next";
+import { EXPO_PUBLIC_REACT_APP_API } from "@env";
 
 const formatFullDateFr = (date) => {
   if (!date) return "";
@@ -266,80 +277,12 @@ const TaskDetail = ({ navigation, route }) => {
   const [reason, setReason] = useState("");
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [downloadingPath, setDownloadingPath] = useState(null);
   const [visibleMonth, setVisibleMonth] = useState(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
 
-  const taskStatus = useMemo(
-    () => [
-      {
-        statusId: 49,
-        statusName: "created",
-        statusLabel: "Créer",
-        icon: "",
-        iconreact: "",
-        color: "#ffffff",
-        backgroundColor: "#6c757d",
-        isTransitionAllowed: true,
-        isCurrentStatus: false,
-        hasPermission: true,
-        displayOrder: 1,
-      },
-      {
-        statusId: 61,
-        statusName: "encours",
-        statusLabel: "En cours",
-        icon: "",
-        iconreact: "",
-        color: "#ffffff",
-        backgroundColor: "#ffc107",
-        isTransitionAllowed: true,
-        isCurrentStatus: false,
-        hasPermission: true,
-        displayOrder: 1,
-      },
-      {
-        statusId: 63,
-        statusName: "verification",
-        statusLabel: "En vérification",
-        icon: "",
-        iconreact: "circle",
-        color: "",
-        backgroundColor: "",
-        isTransitionAllowed: true,
-        isCurrentStatus: false,
-        hasPermission: true,
-        displayOrder: 1,
-      },
-      {
-        statusId: 62,
-        statusName: "terminer",
-        statusLabel: "Terminer",
-        icon: "",
-        iconreact: "",
-        color: "#ffffff",
-        backgroundColor: "#28a745",
-        isTransitionAllowed: true,
-        isCurrentStatus: false,
-        hasPermission: true,
-        displayOrder: 1,
-      },
-      {
-        statusId: 64,
-        statusName: "valide",
-        statusLabel: "Validé",
-        icon: "fas fa-circle",
-        iconreact: "circle",
-        color: "#000",
-        backgroundColor: "#fff",
-        isTransitionAllowed: true,
-        isCurrentStatus: false,
-        hasPermission: true,
-        displayOrder: 1,
-      },
-    ],
-    [],
-  );
+  const taskStatus = useSelector(getTaskStatus);
 
   const currentStatusId = useMemo(() => {
     const direct = task?.statusId ?? task?.statusID ?? task?.StatusId;
@@ -362,14 +305,6 @@ const TaskDetail = ({ navigation, route }) => {
 
   const [selectedStatusId, setSelectedStatusId] = useState(currentStatusId);
 
-  useEffect(() => {
-    setSelectedStatusId(currentStatusId);
-  }, [currentStatusId]);
-
-  useEffect(() => {
-    setSelectedDate(moment(task?.deadline).toDate() || null);
-  }, [task?.deadline]);
-
   const dispatch = useDispatch();
 
   const isLate = useMemo(() => {
@@ -382,6 +317,73 @@ const TaskDetail = ({ navigation, route }) => {
   }, [isLate, task.plannedDate]);
 
   const canConfirm = Boolean(selectedDate);
+
+  const validTaskFiles = useMemo(() => {
+    const list = Array.isArray(task?.files) ? task.files : [];
+    return list
+      .map((f) => {
+        if (typeof f === "string") return { path: f };
+        if (typeof f?.path === "string") return { path: f.path };
+        return null;
+      })
+      .filter((f) => typeof f?.path === "string" && f.path.trim().length > 0);
+  }, [task?.files]);
+
+  const existingFilesCount = validTaskFiles.length;
+
+  const totalAttachmentsCount = attachments.length + existingFilesCount;
+
+  const getFileBaseUrl = useCallback((apiBaseUrl) => {
+    if (typeof apiBaseUrl !== "string" || apiBaseUrl.trim().length === 0)
+      return "";
+    return apiBaseUrl.replace(/\/api\/?$/i, "");
+  }, []);
+
+  const handleDownloadServerFile = useCallback(
+    async (path) => {
+      try {
+        if (typeof path !== "string" || path.trim().length === 0) return;
+
+        const baseUrl = getFileBaseUrl(EXPO_PUBLIC_REACT_APP_API);
+        if (!baseUrl) {
+          Alert.alert("Missing base URL", "API base URL is not configured");
+          return;
+        }
+
+        const normalizedBase = baseUrl.replace(/\/+$/, "");
+        const normalizedPath = path.replace(/^\/+/, "");
+        const remoteUrl = `${normalizedBase}/${normalizedPath}`;
+
+        const fileNameRaw = normalizedPath.split("/").pop() || "file";
+        const fileName = fileNameRaw.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const localUri = `${FileSystem.documentDirectory || ""}${fileName}`;
+
+        setDownloadingPath(path);
+
+        const token = await AsyncStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const res = await FileSystem.downloadAsync(remoteUrl, localUri, {
+          headers,
+        });
+
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(res.uri);
+        } else {
+          await Linking.openURL(res.uri);
+        }
+      } catch (e) {
+        console.log("Download/open attachment error:", e);
+        Alert.alert(
+          "Download failed",
+          e?.message || "Could not download the attachment",
+        );
+      } finally {
+        setDownloadingPath(null);
+      }
+    },
+    [getFileBaseUrl],
+  );
 
   const handleGoBack = () => {
     if (navigation?.goBack) navigation.goBack();
@@ -571,6 +573,18 @@ const TaskDetail = ({ navigation, route }) => {
     setAttachments((prev) => prev.filter((a) => a?.uri !== uri));
   };
 
+  useEffect(() => {
+    setSelectedStatusId(currentStatusId);
+  }, [currentStatusId]);
+
+  useEffect(() => {
+    setSelectedDate(moment(task?.deadline).toDate() || null);
+  }, [task?.deadline]);
+
+  useEffect(() => {
+    console.log(task, "task TaskDetail");
+  }, [task.files]);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -681,10 +695,10 @@ const TaskDetail = ({ navigation, route }) => {
                     color="#475569"
                   />
                   <Text className="text-sm text-slate-700">
-                    {attachments.length > 0
-                      ? `${attachments.length} fichier${
-                          attachments.length === 1 ? "" : "s"
-                        } sélectionné${attachments.length === 1 ? "" : "s"}`
+                    {totalAttachmentsCount > 0
+                      ? `${totalAttachmentsCount} fichier${
+                          totalAttachmentsCount === 1 ? "" : "s"
+                        } sélectionné${totalAttachmentsCount === 1 ? "" : "s"}`
                       : "Aucun fichier sélectionné"}
                   </Text>
                 </View>
@@ -703,6 +717,49 @@ const TaskDetail = ({ navigation, route }) => {
                     : t("select_files")}
                 </Button>
               </View>
+
+              {validTaskFiles.length > 0 ? (
+                <View className="mt-3">
+                  {validTaskFiles.map((f, idx) => {
+                    const path = f?.path;
+                    const name =
+                      typeof path === "string" && path.length > 0
+                        ? path.split("/").pop()
+                        : `Fichier ${idx + 1}`;
+
+                    return (
+                      <Pressable
+                        key={`${path ?? "file"}-${idx}`}
+                        className="flex-row items-center justify-between py-2 border-t border-slate-100"
+                        onPress={() => handleDownloadServerFile(path)}
+                      >
+                        <View className="flex-1 pr-2">
+                          <View className="flex-row items-center gap-1">
+                            <Text
+                              className="text-sm text-slate-800 flex-1"
+                              numberOfLines={1}
+                            >
+                              {name}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View className="flex-row items-center">
+                          {downloadingPath === path ? (
+                            <ActivityIndicator size="small" />
+                          ) : (
+                            <MaterialCommunityIcons
+                              name="download"
+                              size={18}
+                              color="#475569"
+                            />
+                          )}
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : null}
 
               {attachments.length > 0 ? (
                 <View className="mt-3">

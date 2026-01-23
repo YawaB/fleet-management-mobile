@@ -20,6 +20,7 @@ import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 
 const FILTER_OPTIONS = [
   { key: "all", label: "All" },
+  { key: "todo", label: "To Do" },
   { key: "urgent", label: "Urgent" },
 ];
 const DashboardScreen = ({ navigation }) => {
@@ -33,21 +34,9 @@ const DashboardScreen = ({ navigation }) => {
   const panneList = useSelector(getPanes);
   const currentUser = useSelector(getCurrentUser);
   const dashboard = useSelector(getDashboard);
-  console.log(currentUser, "currentUser");
 
   const urgentTasksCount =
-    panneList?.filter((p) => p.pannePrioritaire === 1)?.length || 0;
-
-  const filteredPannes =
-    panneList?.filter((panne) => {
-      if (selectedFilter === "all") return true;
-      if (selectedFilter === "urgent") return panne.pannePrioritaire === 1;
-      if (selectedFilter === "vehicle")
-        return panne.categoryLabel?.toLowerCase().includes("mécanique");
-      if (selectedFilter === "claims")
-        return panne.panneImmobilisante === "oui";
-      return true;
-    }) || [];
+    dashboard?.find((item) => item.label === "High Priority")?.value || 0;
 
   const handleTaskPress = useCallback(
     (task) => {
@@ -55,7 +44,7 @@ const DashboardScreen = ({ navigation }) => {
         navigation?.navigate("TaskDetail", { payload });
       });
     },
-    [navigation]
+    [navigation],
   );
 
   const handleTaskAction = useCallback((task) => {
@@ -91,7 +80,7 @@ const DashboardScreen = ({ navigation }) => {
         iconColor={item.iconColor}
       />
     ),
-    []
+    [],
   );
 
   const renderStats = () => (
@@ -105,6 +94,20 @@ const DashboardScreen = ({ navigation }) => {
     />
   );
 
+  const getPanneFilter = (selected) => {
+    console.log(selected, "selected");
+    if (selected === "all") {
+      setSelectedFilter("all");
+      dispatch(fetchPannes({ mobileFilter: true }));
+    } else if (selected === "todo") {
+      setSelectedFilter("todo");
+      dispatch(fetchPannes({ mobileFilter: true, todolistFilter: true }));
+    } else if (selected === "urgent") {
+      setSelectedFilter("urgent");
+      return;
+    }
+  };
+
   const renderFilters = () => (
     <ScrollView
       horizontal
@@ -115,7 +118,7 @@ const DashboardScreen = ({ navigation }) => {
         <Chip
           key={filter.key}
           selected={selectedFilter === filter.key}
-          onPress={() => setSelectedFilter(filter.key)}
+          onPress={() => getPanneFilter(filter.key)}
           style={[
             styles.filterChip,
             selectedFilter === filter.key && styles.filterChipSelected,
@@ -145,7 +148,7 @@ const DashboardScreen = ({ navigation }) => {
         statusColor={item?.bgColor}
       />
     ),
-    [handleTaskPress, handleTaskAction]
+    [handleTaskPress, handleTaskAction],
   );
 
   const keyExtractor = useCallback((item) => item.id, []);
@@ -162,18 +165,23 @@ const DashboardScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       try {
-        dispatch(fetchPannes({ mobileFilter: true }));
+        let args =
+          selectedFilter === "todo"
+            ? { mobileFilter: true, todolistFilter: true }
+            : { mobileFilter: true };
+        dispatch(fetchPannes(args));
         dispatch(fetchDashboard());
       } catch (err) {
         console.log("Error fetch tasks", err.message);
       }
-    }, [])
+    }, [dispatch, selectedFilter]),
   );
+  console.log(selectedFilter, "selectedFilter");
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={filteredPannes}
+        data={panneList}
         renderItem={renderTaskItem}
         keyExtractor={keyExtractor}
         ListHeaderComponent={ListHeaderComponent}

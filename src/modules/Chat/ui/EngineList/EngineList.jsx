@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,6 +18,7 @@ import {
   fetchConversationList,
   readMsg,
   setSelectedChat,
+  fetchResources,
 } from "../../slice/slice";
 
 const EngineList = () => {
@@ -84,6 +85,16 @@ const EngineList = () => {
         </View>
       </View>
     </TouchableOpacity>
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        dispatch(fetchResources({ srcObject: "panne" }));
+      } catch (err) {
+        console.log("Error fetch tasks", err.message);
+      }
+    }, []),
   );
 
   return (
