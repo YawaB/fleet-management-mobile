@@ -81,6 +81,11 @@ const resources = {
       select_asset: "Select Asset",
       select_date: "Select Date",
       create_task: "Create Task",
+      notification_permission_title: "Enable Notifications",
+      notification_permission_description:
+        "Stay informed about your fleet! Enable notifications to receive real-time alerts about vehicle status, maintenance reminders, and important updates.",
+      notification_permission_authorize: "Enable Notifications",
+      notification_permission_skip: "Skip for now",
     },
   },
   fr: {
@@ -160,6 +165,11 @@ const resources = {
       select_asset: "Selectionner un asset",
       select_date: "Selectionner une date",
       create_task: "Créer une tâche",
+      notification_permission_title: "Activer les notifications",
+      notification_permission_description:
+        "Restez informé de votre flotte ! Activez les notifications pour recevoir des alertes en temps réel sur l'état des véhicules, les rappels de maintenance et les mises à jour importantes.",
+      notification_permission_authorize: "Autoriser les notifications",
+      notification_permission_skip: "Passer pour l'instant",
     },
   },
   ar: {
@@ -238,6 +248,11 @@ const resources = {
       select_asset: "اختر الأصل",
       select_date: "اختر التاريخ",
       create_task: "إنشاء مهمة",
+      notification_permission_title: "تفعيل الإشعارات",
+      notification_permission_description:
+        "ابق على اطلاع بأسطولك! قم بتفعيل الإشعارات لتلقي تنبيهات فورية حول حالة المركبات وتذكيرات الصيانة والتحديثات المهمة.",
+      notification_permission_authorize: "تفعيل الإشعارات",
+      notification_permission_skip: "تخطي الآن",
     },
   },
 };
