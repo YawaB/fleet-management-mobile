@@ -5,7 +5,7 @@ import { colors } from "../../../theme/colors";
 import { useTranslation } from "react-i18next";
 import { requestNotificationPermission } from "../../../firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import bgImage from "../../../../assets/fleet_logo.png";
+import bgImage from "../../../../assets/logo.png";
 
 const NOTIFICATION_PERMISSION_KEY = "notification_permission_checked";
 

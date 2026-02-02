@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { TouchableOpacity } from 'react-native'
 
-const FeatureHeader = ({ title = 'Fleet Management' }) => {
+const FeatureHeader = ({ title = 'FLEET EYE' }) => {
   const current_user = useSelector(getCurrentUser);
   const dispatch = useDispatch();
   const navigation = useNavigation();

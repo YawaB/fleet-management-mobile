@@ -54,9 +54,10 @@ export const startTaskOrStop = createAsyncThunk(
         dispatch(fetchTaskList());
         dispatch(
           setToast({
-            message: res?.data?.message,
+            message: "Tache mise à jour avec succès",
             type: "success",
           }),
+
         );
         return true;
       }

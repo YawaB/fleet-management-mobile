@@ -176,14 +176,14 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
               )
             }
           >
-            <Menu.Item onPress={closeMenu} title={t("profile")} />
+            {/* <Menu.Item onPress={closeMenu} title={t("profile")} />
             <Divider />
             <Menu.Item onPress={closeMenu} title={t("parametre")} />
             <Divider />
             <Menu.Item
               onPress={() => navigateTo("Features")}
               title={t("applications")}
-            />
+            /> */}
             <Divider />
             <Menu.Item
               onPress={() => setShowLanguageDialog(true)}

@@ -14,7 +14,6 @@ export async function request(url, params) {
     params.params = params.params || {};
     params.headers = params.headers || {};
     params.url = url;
-    const token = await AsyncStorage.getItem("token");
     let userInf = await AsyncStorage.getItem("user");
     userInf = JSON.parse(userInf);
     console.log("userInf", userInf);
@@ -23,9 +22,20 @@ export async function request(url, params) {
 
     console.log("url", url);
 
-    let userInfos = {
-      userID: userInf?.userID,
-    };
+     let userInfos = {};
+    if (await AsyncStorage.getItem("userID"))
+      userInfos.userID = await AsyncStorage.getItem("userID");
+
+    const attachement = await AsyncStorage.getItem("attachement") || await AsyncStorage.getItem("depositID");
+    console.log("attachement:", attachement , await AsyncStorage.getItem("attachement"));
+    userInfos.deviceid = await AsyncStorage.getItem("deviceid");
+    if (attachement)
+      userInfos.attachement = attachement;
+    // const depotId = 41428;
+    userInfos.attachement = attachement;
+    console.log("userInfos:", userInfos);
+    const token = await AsyncStorage.getItem("token");
+
     console.log('userInfos', userInfos);
     params.params = {
       ...params.params,

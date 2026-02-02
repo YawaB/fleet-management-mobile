@@ -50,3 +50,8 @@ export const SCREENS_ICONS = {
       title: "Notifications",
     }
 };
+
+export const APP_COLORS = {
+  primary: '#193451',
+  secondary: '#f48307'
+}

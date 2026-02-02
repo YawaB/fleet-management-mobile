@@ -44,11 +44,11 @@ export const createTask = createAsyncThunk(
       let { detailPanne } = getState()[slice_name];
       const res = await _createTask(_args);
       console.log("createTask:", res);
-      if (res.data.result[0].typeMsg === "success") {
+      if ((res.data.result[0].msg || '').toLowerCase() === "ok") {
         dispatch(fetchDetailPanne({ id: detailPanne?.id }));
         dispatch(
           setToast({
-            message: res?.data?.result?.[0]?.msg,
+            message: "Tache crée avec succès",
             type: "success",
           })
         );

@@ -211,9 +211,11 @@ const CreateTask = () => {
 
       try {
         const res = await dispatch(createTask(payload));
+        console.log("SUBMUT RES:", res ,res.payload);
         if (!res?.payload) return;
         helpers.resetForm();
         navigation.goBack();
+        // handleGoBack()
       } finally {
         helpers.setSubmitting(false);
       }

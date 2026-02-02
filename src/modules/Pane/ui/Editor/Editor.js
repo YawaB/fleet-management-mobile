@@ -143,7 +143,7 @@ function PaneEditor({ navigation }) {
     };
     console.log("args handleSave", args);
     dispatch(createOrUpdatePanne(args)).then(({ payload }) => {
-      if (payload) {
+      if(payload) {
         setFormData({
           immatriculation: currentUser?.vehiculeId,
           category: "",
@@ -154,6 +154,7 @@ function PaneEditor({ navigation }) {
           audio: null,
         });
         dispatch(fetchPannes());
+        navigation.setParams({})
         navigation.goBack();
       }
     });
@@ -561,6 +562,7 @@ function PaneEditor({ navigation }) {
   // );
 
   useEffect(() => {
+    console.log('photo:', photo)
     if (photo && photo.length > 0) {
       // Build a preview photo value and aggregate uploaded image IDs
       const firstPath =
@@ -573,6 +575,14 @@ function PaneEditor({ navigation }) {
       setFormData(next);
     }
   }, [photo]);
+
+  useFocusEffect(
+    useCallback(()=>{
+      return ()=>{
+        navigation.setParams({ });
+      }
+    },[])
+  )
 
   return (
     <View style={styles.container}>

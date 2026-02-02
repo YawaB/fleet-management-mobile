@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -25,6 +25,8 @@ import {
 import { socket } from "../../../../socket/socket";
 import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 import moment from "moment";
+import { useFocusEffect } from "@react-navigation/native";
+import { deleteChannel } from "../../../../notification";
 
 function DetailChat({ route, navigation }) {
   const { contact, type } = route.params;
@@ -47,7 +49,7 @@ function DetailChat({ route, navigation }) {
     };
   }, [dispatch, contact]);
 
-  const displayMessages = [...localMessages];
+  const displayMessages = useMemo(() => [...localMessages], [localMessages]);
 
   const normalizeMessage = (msg) => {
     const text = typeof msg?.text === "string" ? msg.text : msg?.message;
@@ -142,11 +144,30 @@ function DetailChat({ route, navigation }) {
     return { title, subtitle };
   };
 
-  const info = getContactInfo();
+  const info = useMemo(() => getContactInfo(), [contact]);
 
   useEffect(() => {
     setLocalMessages([...detailMessage]);
   }, [detailMessage]);
+
+  useEffect(() => {
+    console.log("displayMessages updated",displayMessages)
+  }, [displayMessages])
+  useFocusEffect(
+    useCallback(() => {
+      if(contact){
+        let id = (contact?.srcObject+'-'+contact?.srcId).toLowerCase()
+        deleteChannel(id)
+        AsyncStorage.setItem("current-chat-id", id)
+      }
+    }, [contact])
+  )
+
+  useEffect(() => {
+    return ()=>{
+      AsyncStorage.removeItem('current-chat-id')
+    }
+  },[])
 
   return (
     <SafeAreaView style={styles.container}>
@@ -198,8 +219,8 @@ function DetailChat({ route, navigation }) {
           ref={flatListRef}
           data={displayMessages}
           renderItem={renderMessage}
-          keyExtractor={(item) =>
-            item?.id?.toString() || `msg-${Math.random()}`
+          keyExtractor={(item, idx) =>
+            item?.id?.toString()+"-"+idx
           }
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd()}

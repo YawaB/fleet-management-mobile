@@ -113,11 +113,11 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
         const isLast = index === tasksArray.length - 1;
         const isActive =
           task?.assigned_user_id == currentUser?.userID &&
-          (task?.statusName === "created" || task?.statusName === "encours");
+          (!["valide", "terminer"].includes(task?.statusName) && task?.statusName != "");
 
         return (
           <View
-            key={`task-${task.TaskId || index}`}
+            key={`task-${task.TaskId}-${index}`}
             style={styles.timelineItem}
           >
             <View style={styles.leftColumn}>
@@ -137,7 +137,7 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
             </View>
 
             <View style={styles.rightColumn}>
-              {isActive ? (
+              {isActive  ? (
                 <Card
                   style={[
                     styles.activeCard,
@@ -163,12 +163,12 @@ const TaskListSection = ({ tasks, onTaskPress, navigation }) => {
                       <View style={styles.responsibleRow}>
                         <Avatar.Text
                           size={24}
-                          label={getInitials(task.Responsible)}
+                          label={getInitials(task.assigned_user_name)}
                           style={styles.activeAvatar}
                           labelStyle={styles.avatarLabel}
                         />
                         <Text style={styles.activeResponsible}>
-                          {task.Responsible}
+                          {task.assigned_user_name}
                         </Text>
                       </View>
                       <TouchableOpacity

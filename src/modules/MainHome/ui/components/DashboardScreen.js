@@ -21,7 +21,7 @@ import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 const FILTER_OPTIONS = [
   { key: "all", label: "All" },
   { key: "todo", label: "To Do" },
-  { key: "urgent", label: "Urgent" },
+  // { key: "urgent", label: "Urgent" },
 ];
 const DashboardScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -168,7 +168,7 @@ const DashboardScreen = ({ navigation }) => {
         let args =
           selectedFilter === "todo"
             ? { mobileFilter: true, todolistFilter: true }
-            : { mobileFilter: true };
+            : { };
         dispatch(fetchPannes(args));
         dispatch(fetchDashboard());
       } catch (err) {

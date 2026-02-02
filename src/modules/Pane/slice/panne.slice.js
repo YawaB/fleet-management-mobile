@@ -56,8 +56,9 @@ export const fetchPannes = createAsyncThunk(
     console.log("current_user", current_user);
     let dataArgs = {
       ..._args,
-      userId: current_user?.instID,
+      // userId: current_user?.instID,
     };
+    console.log('dataArgs', dataArgs);
     try {
       const res = await _fetchPannes(dataArgs);
       console.log("fetchPannes res:", res);

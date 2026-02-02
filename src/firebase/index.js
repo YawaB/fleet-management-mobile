@@ -64,29 +64,6 @@ export async function getAndSaveFcmToken(message) {
       console.log("error getting token", e);
     });
   return;
-  requestNotificationPermission()
-    .then((res) => {
-      console.log("permission:", res);
-      getFcmToken()
-        .then((fcm) => {
-          console.log("FCM Token:", fcm);
-          return;
-          if (fcm) {
-            saveFcmToken({
-              fcmtoken: fcm,
-              device_type: "mobile",
-            });
-          }
-        })
-        .catch((e) => {
-          console.log("error getting token", e);
-        });
-    })
-    .catch((e) => {
-      console.log("error getting permission", e);
-    });
-  console.log("App opened with message:", message);
-  // Handle the app opening event here
 }
 
 async function onMessageReceived(message , isBackground) {
@@ -101,13 +78,13 @@ async function onMessageReceived(message , isBackground) {
       data = JSON.parse(data)
       console.log('data', data , data?.srcId)
       console.log('currentChatId:', currentChatId)
+      const channelId = (`${data.srcObject}-${data.srcObject == 'user' ? data?.senderId : data?.recipientId}`).toLowerCase()
       
-      
+      console.log('currentChatId',currentChatId, channelId)
 
       // return
-      if(1 || (userID != data.fromId && (currentChatId != data?.toId || isBackground))){
-        let title = `Nouveau message ${data?.srcObject == 'user' ? `de [${data?.from}]` : `${data.srcObject} [${data?.object || data?.fromId}]`}`
-        let body = data?.message
+      if((userID != data.senderId && (currentChatId != channelId || isBackground))){
+        let title = `Nouveau message ${data?.srcObject == 'user' ? `de [${data?.sender}]` : `${data.srcObject} [${data?.object || data?.recipientId}]`}`
 
         if(!isBackground && displayToastOnMessage){
         //   toastMessage({
@@ -118,10 +95,10 @@ async function onMessageReceived(message , isBackground) {
 
         if(isBackground || !displayToastOnMessage){
             let notifeeObj = {
-                title: `<p style="color: #083859ff;"><strong >${title}</strong></p>` ,
-                body:`<p>${data?.srcObject != 'user' ? `<strong>${data?.from}:</strong>`: ''} ${body}</p>`,
-                channelId: (data.srcObject+'-'+data?.toId).toLowerCase(),
-                channelName: (data.srcObject+'-'+data?.toId).toLowerCase(),
+                title: `<p style="color: #083859ff;"><strong >${data.title || title}</strong></p>` ,
+                body:`<p>${data?.srcObject == 'user' && data?.sender ? `<strong>${data?.sender}:</strong>`: ''} ${data?.message}</p>`,
+                channelId: channelId,
+                channelName: (data.srcObject+'-'+data?.recipientId).toLowerCase(),
                 // data,
                 android: {
                   actions: [
@@ -199,5 +176,6 @@ export function initFirebaseEvents(){
     messaging.onMessage(onMessageReceived);
     messaging.setBackgroundMessageHandler((message) =>  onMessageReceived(message , true));
     messaging.onNotificationOpenedApp(onNotificationOpenedApp);
+    AsyncStorage.removeItem('current-chat-id')
     // messaging.onTokenRefresh(onTokenRefresh);
 }

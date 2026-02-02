@@ -23,6 +23,7 @@ import i18n from "../i18n";
 import NotificationPermissionScreen from "../modules/NotificationPermission/ui/NotificationPermissionScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
+import Toast from "react-native-toast-message";
 
 const Stack = createNativeStackNavigator();
 const NOTIFICATION_PERMISSION_KEY = "notification_permission_checked";
@@ -72,6 +73,7 @@ function Layout() {
       <StatusBar backgroundColor={colors.primary} />
       <Portal>
         <ToastComponent />
+        <Toast />
         {uiParams?.showLoader && (
           <LoadingComponent style={{ backgroundColor: "rgba(0,0,0,.1)" }} />
         )}

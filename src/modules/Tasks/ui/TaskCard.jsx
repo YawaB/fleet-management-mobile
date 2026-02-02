@@ -5,20 +5,23 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, Pressable } from "react-native";
 import { Button, Card, Chip, IconButton } from "react-native-paper";
+import { useSelector } from "react-redux";
+import { getCurrentUser } from "../../Authentication/slice/auth.slice";
 
 moment.locale("fr");
 
 const TaskCard = ({
   task,
   onPress,
-  onStart,
+  onChangeStatus,
   onChangeDate,
   onRequestHelp,
   onMore,
   onDone,
 }) => {
   const { t } = useTranslation();
-
+  const current_user = useSelector(getCurrentUser)
+  console.log('current_user in TaskCard', current_user);
   const formatReadableDate = (date) => {
     if (!date) return "";
 
@@ -58,7 +61,7 @@ const TaskCard = ({
               {task.licensePlate}
             </Chip>
             <Chip icon={"account"} compact className="bg-slate-100">
-              {task.Responsible}
+              {task.assigned_user_name}
             </Chip>
           </View>
 
@@ -80,7 +83,7 @@ const TaskCard = ({
                   color="#475569"
                 />
                 <Text className="text-sm font-semibold text-slate-700">
-                  {t("created")} {formatReadableDate(task?.createdAt)}
+                  {t("created")} {formatReadableDate(task?.createdAt)} par {task?.Responsible}
                 </Text>
               </View>
             </View>
@@ -109,42 +112,42 @@ const TaskCard = ({
                 onPress={() => onChangeDate(task)}
                 accessibilityLabel="Change date"
               />
-              <IconButton
+              {/* <IconButton
                 icon="dots-horizontal"
                 size={20}
                 onPress={() => onMore(task)}
                 accessibilityLabel="More options"
-              />
+              /> */}
             </View>
           )}
 
           {task?.statusName !== "verification" &&
             task?.statusName !== "valide" && (
               <View className="flex-row items-center justify-end">
-                {task?.statusName !== "terminer" && (
+                {task?.statusName == "onDemand" && +current_user?.userID === +task?.assigned_user_id && (
                   <Button
                     style={{
-                      backgroundColor: task?.bgColor,
+                      borderColor: task?.bgColor,
                     }}
-                    mode="contained"
-                    onPress={() => onStart(task)}
+                    mode="outlined"
+                    onPress={() => onChangeStatus(task, "start")}
                     icon={task?.statusName === "encours" ? "stop" : "play"}
                     textColor="black"
                   >
-                    {t(task?.statusName === "encours" ? "Stop" : "Start")}
+                    {t("start")}
                   </Button>
                 )}
-                {task?.statusName === "terminer" && (
+                {task?.statusName === "encours" && +current_user?.userID === +task?.assigned_user_id && (
                   <Button
                     mode="outlined"
-                    onPress={() => onDone(task)}
+                    onPress={() => onChangeStatus(task , 'end')}
                     icon={"check"}
                     textColor="#004b23"
                     style={{
                       borderColor: "#008000",
                     }}
                   >
-                    {t("Done")}
+                    {t("finish")}
                   </Button>
                 )}
               </View>

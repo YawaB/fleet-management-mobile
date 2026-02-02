@@ -8,11 +8,46 @@ import {
 } from "../api/index";
 import _ from "lodash";
 import { initFirebaseMessaging, subscribeToTopic } from "../../../firebase";
-import { deleteAllChannels } from "../../../notification";
+import { Alert } from "react-native";
 const slice_name = "auth";
 
+
 export const login = createAsyncThunk(
-  `${slice_name}/login`,
+  `${name}/login`,
+  async (_args, { dispatch, getState }) => {
+    try {
+      console.log(_args, "_args login");
+      const res = await _login(_args);
+      console.log("res login", res);
+      if (res?.result?.isError != 1 && res?.result?.key) {
+        console.log('login ooo:')
+        await AsyncStorage.setItem("@logitag:username", _args?.user);
+        await AsyncStorage.setItem("@logitag:password", _args?.password);
+        const depotId = res?.result?.depositID.toString();
+        await AsyncStorage.setItem("depositID", depotId);
+        dispatch(setCurrentUser(res.result));
+        const token = (res?.result?.key).toString();
+        await AsyncStorage.setItem("token", token);
+        const userID = res?.result?.userID.toString();
+        await AsyncStorage.setItem("userID", userID);
+        // dispatch(setToken(res?.result?.key));
+        // dispatch(fetchUserIsAllRead());
+        initFirebaseMessaging()
+        // dispatch(fetchAppConfig('appName'))
+        return { success: true };
+      } else {
+        Alert.alert("Error", "Email ou mot de passe inconrrect");
+        return { success: false, message: "Email ou mot de passe inconrrect" };
+      }
+    } catch (ex) {
+      console.log('error login:', ex)
+      return { success: false, message: ex.message };
+    }
+  }
+);
+
+export const login2 = createAsyncThunk(
+  `${slice_name}/login2`,
   async (_args, { dispatch, getState }) => {
     try {
       console.log("login args:", _args);
@@ -26,9 +61,6 @@ export const login = createAsyncThunk(
         await AsyncStorage.setItem("token", user?.key);
         await AsyncStorage.setItem("user", JSON.stringify(user));
         await AsyncStorage.setItem("userID", user?.userID.toString());
-        await AsyncStorage.setItem("depositID", user?.depositID.toString());
-
-      
         initFirebaseMessaging()
         
         return true;
@@ -98,9 +130,6 @@ export const logout = createAsyncThunk(
       dispatch(setCurrentUser(null));
       dispatch(setUserAuthorizations([]));
 
-      // delete all notifications when logout
-      deleteAllChannels();
-      
       return true;
     } catch (error) {
       console.error("Error during logout:", error);

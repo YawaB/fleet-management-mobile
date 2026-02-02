@@ -3,7 +3,7 @@ import { colors } from "../../../theme/colors";
 import React, { useEffect, useState } from "react";
 import { Button, Switch, TextInput } from "react-native-paper";
 import Styles from "../../../styles/index";
-import bgImage from "../../../../assets/fleet_logo.png";
+import bgImage from "../../../../assets/logo.png";
 import { checkUser, login, setCurrentUser } from "../slice/auth.slice";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -13,6 +13,7 @@ import { getLocalUser, updateLocalUser } from "../service";
 import useLogger from "../../../hook/Logger/useLogger";
 import { useTranslation } from "react-i18next";
 const mandatories = ["email", "password"];
+
 
 const AuthenticationScreen = ({ navigation, route }) => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -49,6 +50,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
         }
         console.log("response:,", payload);
         if (!payload) {
+          console.log('invalid credentials');
           toastMessage({
             type: "error",
             text1: "Authentification",
@@ -166,7 +168,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
         <Image
           resizeMode="contain"
           source={bgImage}
-          style={{ width: 400, height: 100 }}
+          style={{ width: 400, height: 200 }}
         />
         <Text style={{ color: colors.primary }}>
           {/* Le future commence maintenant */}
@@ -196,7 +198,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
               <TextInput
                 className="bg-white"
                 left={<TextInput.Icon icon="email" />}
-                label="Email"
+                label="Identifiant"
                 value={credentials?.email}
                 onChangeText={(val) => onCredentials("email", val)}
               />
@@ -222,12 +224,13 @@ const AuthenticationScreen = ({ navigation, route }) => {
               />
             </View>
             <Button
-              className="bg-blue-500"
+              // className="bg-blue-500"
               contentStyle={{ height: 60 }}
+              
               elevation={4}
               disabled={!ready}
               onPress={Login}
-              style={[Styles.my20]}
+              style={{...[Styles.my20] , backgroundColor: colors.secondary}}
               labelStyle={{ fontSize: 17 }}
               loading={loading}
               mode="contained"

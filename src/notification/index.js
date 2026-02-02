@@ -24,8 +24,9 @@ export async function displayNotitication(payload) {
 
     console.log('silenttt:', silent)
     let importance = silent === "1" ? AndroidImportance.DEFAULT : AndroidImportance.HIGH
+    let id = payload?.channelId || 'default'
     let channelId = await notifee.createChannel({
-      id: payload?.channelId || 'default',
+      id,
       name: payload?.channelName || 'Default Channel',
       importance
     });

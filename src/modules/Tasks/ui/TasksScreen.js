@@ -76,11 +76,27 @@ const TaskListScreen = ({ navigation, route }) => {
     let args = {
       srcObject: "Tasks",
       srcId: task.TaskId,
-      status:
-        task?.statusName === "terminer" || task?.statusName === "created"
-          ? "start"
-          : "end",
+      status: ["onDemand" , "terminer", "created"].includes(task?.statusName)
+        ? "start"
+        : "end",
+      // // status:
+      // //
+      //   task?.statusName === "terminer" || task?.statusName === "created"
+      //     ? "start"
+      //     : "end",
     };
+    console.log("handleStart args:", args ,task);
+    dispatch(startTaskOrStop(args));
+    return;
+  };
+
+  const handleChangeStatus = (task , status) => {
+    let args = {
+      srcObject: "Tasks",
+      srcId: task.TaskId,
+      status
+    };
+    console.log("handleStart args:", args ,task);
     dispatch(startTaskOrStop(args));
     return;
   };
@@ -105,7 +121,6 @@ const TaskListScreen = ({ navigation, route }) => {
       status: "submit_verification",
     };
     dispatch(startTaskOrStop(args));
-    return;
   };
 
   const addTask = () => {
@@ -127,6 +142,7 @@ const TaskListScreen = ({ navigation, route }) => {
       task={item}
       onPress={handleOpenDetails}
       onStart={handleStart}
+      onChangeStatus={handleChangeStatus}
       onChangeDate={handleChangeDate}
       onRequestHelp={handleRequestHelp}
       onMore={handleMore}
@@ -135,10 +151,19 @@ const TaskListScreen = ({ navigation, route }) => {
   );
 
   useEffect(() => {
-    if (route?.params?.searchQuery) {
-      setSearchQuery(route.params.searchQuery);
-    }
-  }, [route?.params?.searchQuery]);
+    
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('route?.params?.searchQuery', route?.params?.searchQuery)
+      if (route?.params?.searchQuery) {
+        setSearchQuery(route.params.searchQuery);
+      }else{
+        setSearchQuery("");
+      }
+    }, [route.params?.searchQuery]),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -209,7 +234,7 @@ const TaskListScreen = ({ navigation, route }) => {
             <FlatList
               data={visibleTasks}
               keyExtractor={(item, index) =>
-                String(item?.TaskId ?? item?.id ?? index)
+                `task-${item.TaskId}-${index}`
               }
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
@@ -229,6 +254,13 @@ const TaskListScreen = ({ navigation, route }) => {
 };
 
 const TasksScreen = ({ navigation, route }) => {
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        navigation.setParams({ id: null, searchQuery: null });
+      }
+    },[navigation])
+  )
   return <TaskListScreen navigation={navigation} route={route} />;
 };
 

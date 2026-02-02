@@ -1,9 +1,9 @@
 {
-  "name": "Fleet Management",
-  "displayName": "Fleet Management",
+  "name": "FLEET EYE",
+  "displayName": "FLEET EYE",
   "icon": "./assets/fleet_logo.png",
   "expo": {
-    "name": "Fleet Management",
+    "name": "FLEET EYE",
     "slug": "fleet-management",
     "version": "1.0.0",
     "orientation": "portrait",

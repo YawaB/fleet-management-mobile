@@ -170,6 +170,8 @@ const resources = {
         "Restez informé de votre flotte ! Activez les notifications pour recevoir des alertes en temps réel sur l'état des véhicules, les rappels de maintenance et les mises à jour importantes.",
       notification_permission_authorize: "Autoriser les notifications",
       notification_permission_skip: "Passer pour l'instant",
+      finish: "Terminer",
+      start: "Commencer",
     },
   },
   ar: {
