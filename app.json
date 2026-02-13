@@ -31,6 +31,9 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "softwareKeyboardLayoutMode": "pan"
           }
         }
       ]

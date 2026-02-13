@@ -14,10 +14,10 @@ import useLogger from "../../../hook/Logger/useLogger";
 import { useTranslation } from "react-i18next";
 const mandatories = ["email", "password"];
 
-
 const AuthenticationScreen = ({ navigation, route }) => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
@@ -50,7 +50,7 @@ const AuthenticationScreen = ({ navigation, route }) => {
         }
         console.log("response:,", payload);
         if (!payload) {
-          console.log('invalid credentials');
+          console.log("invalid credentials");
           toastMessage({
             type: "error",
             text1: "Authentification",
@@ -206,10 +206,21 @@ const AuthenticationScreen = ({ navigation, route }) => {
                 <TextInput
                   className="bg-white"
                   left={<TextInput.Icon icon="lock" />}
+                  right={
+                    <TextInput.Icon
+                      icon={showPassword ? "eye-off" : "eye"}
+                      onPress={() => setShowPassword(!showPassword)}
+                    />
+                  }
                   label="Mot de passe"
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   value={credentials?.password}
                   onChangeText={(val) => onCredentials("password", val)}
+                  textContentType="password"
+                  autoComplete="password"
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  spellCheck={false}
                 />
               </View>
             </View>
@@ -226,11 +237,10 @@ const AuthenticationScreen = ({ navigation, route }) => {
             <Button
               // className="bg-blue-500"
               contentStyle={{ height: 60 }}
-              
               elevation={4}
               disabled={!ready}
               onPress={Login}
-              style={{...[Styles.my20] , backgroundColor: colors.secondary}}
+              style={{ ...[Styles.my20], backgroundColor: colors.secondary }}
               labelStyle={{ fontSize: 17 }}
               loading={loading}
               mode="contained"

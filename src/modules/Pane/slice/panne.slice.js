@@ -5,6 +5,7 @@ import {
   _fetchTypes,
   _fetchVehicles,
   _removePanne,
+  _saveType,
 } from "../api";
 import { toastMessage } from "../../../core/ui";
 
@@ -58,7 +59,7 @@ export const fetchPannes = createAsyncThunk(
       ..._args,
       // userId: current_user?.instID,
     };
-    console.log('dataArgs', dataArgs);
+    console.log("dataArgs", dataArgs);
     try {
       const res = await _fetchPannes(dataArgs);
       console.log("fetchPannes res:", res);
@@ -69,6 +70,23 @@ export const fetchPannes = createAsyncThunk(
       return false;
     } catch (e) {
       console.log("fetchPannes error:", e);
+      return { error: true, message: e.message };
+    }
+  },
+);
+
+export const createOrUpdatePanneType = createAsyncThunk(
+  `${slice_name}/createOrUpdatePanneType`,
+  async (_args, { dispatch, getState }) => {
+    try {
+      const res = await _saveType(_args);
+      console.log("createOrUpdatePanneType res:", res);
+      if (res?.data?.success) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.log("createOrUpdatePanneType error:", e);
       return { error: true, message: e.message };
     }
   },

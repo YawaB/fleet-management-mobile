@@ -76,27 +76,22 @@ const TaskListScreen = ({ navigation, route }) => {
     let args = {
       srcObject: "Tasks",
       srcId: task.TaskId,
-      status: ["onDemand" , "terminer", "created"].includes(task?.statusName)
+      status: ["onDemand", "terminer", "created"].includes(task?.statusName)
         ? "start"
         : "end",
-      // // status:
-      // //
-      //   task?.statusName === "terminer" || task?.statusName === "created"
-      //     ? "start"
-      //     : "end",
     };
-    console.log("handleStart args:", args ,task);
+    console.log("handleStart args:", args, task);
     dispatch(startTaskOrStop(args));
     return;
   };
 
-  const handleChangeStatus = (task , status) => {
+  const handleChangeStatus = (task, status) => {
     let args = {
       srcObject: "Tasks",
       srcId: task.TaskId,
-      status
+      status,
     };
-    console.log("handleStart args:", args ,task);
+    console.log("handleStart args:", args, task);
     dispatch(startTaskOrStop(args));
     return;
   };
@@ -150,16 +145,14 @@ const TaskListScreen = ({ navigation, route }) => {
     />
   );
 
-  useEffect(() => {
-    
-  }, []);
+  useEffect(() => {}, []);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('route?.params?.searchQuery', route?.params?.searchQuery)
+      console.log("route?.params?.searchQuery", route?.params?.searchQuery);
       if (route?.params?.searchQuery) {
         setSearchQuery(route.params.searchQuery);
-      }else{
+      } else {
         setSearchQuery("");
       }
     }, [route.params?.searchQuery]),
@@ -233,9 +226,7 @@ const TaskListScreen = ({ navigation, route }) => {
           <View className="flex-1 px-4 pt-3">
             <FlatList
               data={visibleTasks}
-              keyExtractor={(item, index) =>
-                `task-${item.TaskId}-${index}`
-              }
+              keyExtractor={(item, index) => `task-${item.TaskId}-${index}`}
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
               ListFooterComponent={<View className="h-8" />}
@@ -258,9 +249,9 @@ const TasksScreen = ({ navigation, route }) => {
     useCallback(() => {
       return () => {
         navigation.setParams({ id: null, searchQuery: null });
-      }
-    },[navigation])
-  )
+      };
+    }, [navigation]),
+  );
   return <TaskListScreen navigation={navigation} route={route} />;
 };
 

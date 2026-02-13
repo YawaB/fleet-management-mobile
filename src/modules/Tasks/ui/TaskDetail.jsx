@@ -263,8 +263,6 @@ const TaskDetail = ({ navigation, route }) => {
 
   let task = taskFromStore ?? taskDataFromParams ?? taskFromParams;
 
-  console.log(task, "task");
-
   const { t } = useTranslation();
 
   if (!task) return null;
@@ -580,10 +578,6 @@ const TaskDetail = ({ navigation, route }) => {
   useEffect(() => {
     setSelectedDate(moment(task?.deadline).toDate() || null);
   }, [task?.deadline]);
-
-  useEffect(() => {
-    console.log(task, "task TaskDetail");
-  }, [task.files]);
 
   return (
     <KeyboardAvoidingView

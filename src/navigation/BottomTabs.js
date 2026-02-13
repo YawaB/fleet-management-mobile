@@ -8,6 +8,7 @@ import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import MenuComponent from "../component/MenuComponent";
 import TaskStack from "../modules/Tasks/TaskStack";
 import MainHomeScreenStack from "../modules/MainHome/ui/MainHomeScreenStack";
+import NotificationList from "../modules/Notification/ui/NotificationList";
 
 const Tab = createBottomTabNavigator();
 
@@ -77,6 +78,20 @@ function BottomTabs() {
             <MaterialCommunityIcons name="chat" color={color} size={size} />
           ),
           headerShown: false,
+          tabBarStyle: { display: getRoutName(route) },
+        })}
+      />
+      <Tab.Screen
+        name="Notification"
+        component={NotificationList}
+        options={({ route }) => ({
+          tabBarLabel: t("Notification"),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="bell" color={color} size={size} />
+          ),
+          header: () => (
+            <MenuComponent visibleBack={true} title="Notification" />
+          ),
           tabBarStyle: { display: getRoutName(route) },
         })}
       />
