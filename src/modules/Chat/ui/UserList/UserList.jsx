@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,6 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import {
-  fetchMessagesList,
   getMessageList,
   fetchConversationList,
   readMsg,
@@ -30,7 +29,6 @@ const UserList = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const messageList = useSelector(getMessageList);
-  console.log("messageList", messageList);
 
   const resolveImageUrl = (path) => {
     if (!path) return null;

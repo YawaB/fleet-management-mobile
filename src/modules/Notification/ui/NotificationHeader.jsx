@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { View, StyleSheet } from "react-native";
 import { Text, Button } from "react-native-paper";
 
 const NotificationHeader = ({ title = "Communication", onMarkAllRead }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
@@ -12,7 +14,7 @@ const NotificationHeader = ({ title = "Communication", onMarkAllRead }) => {
         compact
         labelStyle={styles.buttonLabel}
       >
-        Mark all as read
+        {t("mark_all_read") || "Tout marquer comme lu"}
       </Button>
     </View>
   );

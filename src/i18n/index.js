@@ -94,6 +94,14 @@ const resources = {
       describe_task_details: "Describe task details",
       select_person: "Select Person",
       about: "About",
+      select_chat_type: "Select Chat Type",
+      new_discussion: "New Discussion",
+      users: "Users",
+      chat_with_drivers: "Chat with drivers, logistics staff or admins",
+      view_system_logs:
+        "View system logs and automated alerts for interventions",
+      search_driver: "Search for a driver...",
+      mark_all_read: "Mark all as read",
     },
   },
   fr: {
@@ -188,6 +196,15 @@ const resources = {
       describe_task_details: "Décrivez les détails de la tâche",
       select_person: "Selectionner une personne",
       about: "À propos",
+      select_chat_type: "Sélectionnez le type de conversation",
+      new_discussion: "Nouvelle discussion",
+      users: "Utilisateurs",
+      chat_with_drivers:
+        "Discutez avec les conducteurs, le personnel logistique ou les administrateurs",
+      view_system_logs:
+        "Consultez les journaux système et les alertes automatisées des interventions",
+      search_driver: "Rechercher un conducteur...",
+      mark_all_read: "Tout marquer comme lu",
     },
   },
   ar: {
@@ -279,6 +296,13 @@ const resources = {
       describe_task_details: "وصف المهمة",
       select_person: "اختر الشخص",
       about: "حول",
+      select_chat_type: "اختر نوع المحادثة",
+      new_discussion: "مناقشة جديدة",
+      users: "المستخدمين",
+      chat_with_drivers: "تحدث مع السائقين، موظفي اللوجستيات أو المسؤولين",
+      view_system_logs: "اطلع على سجلات النظام والتنبيهات الآلية للتدخلات",
+      search_driver: "ابحث عن سائق...",
+      mark_all_read: "تحديد الكل كمقروء",
     },
   },
 };

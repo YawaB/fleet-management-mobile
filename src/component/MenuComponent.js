@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { colors } from "../theme/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -47,7 +47,6 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
   const getAvatarUri = () => {
     const base = process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE || "";
     if (!current_user?.image) return null;
-    console.log("current_user.image", current_user);
     return `${base}${current_user.image}`;
   };
 
@@ -75,7 +74,6 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
   let dispatch = useDispatch();
 
   const openMenu = () => {
-    console.log("openMenu");
     setVisible(true);
   };
 
@@ -215,6 +213,12 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
               leadingIcon="file-document-outline"
               onPress={() => navigateTo("Logger")}
               title={t("logs")}
+            />
+            <Divider />
+            <Menu.Item
+              leadingIcon="information-outline"
+              onPress={() => navigateTo("About")}
+              title={t("About")}
             />
             <Divider />
             <Menu.Item
