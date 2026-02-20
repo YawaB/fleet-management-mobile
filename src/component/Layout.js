@@ -32,7 +32,6 @@ function Layout() {
   const { log } = useLogger();
   const current_user = useSelector(getCurrentUser);
   const [notificationChecked, setNotificationChecked] = useState(null);
-  console.log("current_user", current_user);
   let uiParams = useSelector(getUiParams);
   let dispatch = useDispatch();
 

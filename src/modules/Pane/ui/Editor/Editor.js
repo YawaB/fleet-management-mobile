@@ -21,6 +21,7 @@ import { Audio, Video } from "expo-av";
 import CameraScreen from "../../../../component/Shared/CameraScreen/CameraScreen";
 import {
   createOrUpdatePanne,
+  createOrUpdatePanneType,
   fetchPannes,
   fetchPanneTypes,
   fetchVehicles,
@@ -34,10 +35,11 @@ import {
 } from "../../../../component/Shared/CameraScreen/slice/photo.slice";
 import { useDispatch, useSelector } from "react-redux";
 import { uploadFile } from "../../../../core/utils/file";
-import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import moment from "moment";
 import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 import { useTranslation } from "react-i18next";
+import DisplayImage from "./DisplayImage";
 
 function PaneEditor({ navigation }) {
   const photo = useSelector(getPhoto);
@@ -56,6 +58,7 @@ function PaneEditor({ navigation }) {
 
   const vehicles = useSelector(getVehicles);
   const panneTypes = useSelector(getPanneTypes);
+  console.log("panneTypes", panneTypes);
   const currentUser = useSelector(getCurrentUser);
 
   const newLoad = useRef(false);
@@ -74,7 +77,6 @@ function PaneEditor({ navigation }) {
     audioId: null,
     imageId: null,
   });
-  console.log("currentUser", currentUser);
 
   const symptoms = {
     280: ["Ne démarre pas", "Bruit anormal", "Perte de puissance"], // mécanique
@@ -90,7 +92,6 @@ function PaneEditor({ navigation }) {
         setIsRecording(false);
         await recording.stopAndUnloadAsync();
         const uri = recording.getURI();
-        console.log("handleAudioRecord uri", uri);
         // Upload the audio file
         const uploadResult = await uploadFile(uri, {
           srcID: 0,
@@ -126,8 +127,6 @@ function PaneEditor({ navigation }) {
     }
   };
 
-  console.log("currentUser", currentUser);
-
   const handleSave = () => {
     let args = {
       name: formData?.name,
@@ -141,9 +140,24 @@ function PaneEditor({ navigation }) {
       imageId: formData.imageId,
       declarantId: currentUser?.instID,
     };
-    console.log("args handleSave", args);
     dispatch(createOrUpdatePanne(args)).then(({ payload }) => {
-      if(payload) {
+      if (payload) {
+        if (
+          formData.customCategoryName &&
+          formData.customCategoryName.length > 2
+        ) {
+          let args = {
+            id: 0,
+            typeID: 41,
+            label: formData.customCategoryName,
+            name: formData.customCategoryName,
+            icon: "",
+            color: "",
+            backgroundColor: "",
+          };
+          dispatch(createOrUpdatePanneType(args));
+        }
+
         setFormData({
           immatriculation: currentUser?.vehiculeId,
           category: "",
@@ -154,7 +168,6 @@ function PaneEditor({ navigation }) {
           audio: null,
         });
         dispatch(fetchPannes());
-        navigation.setParams({})
         navigation.goBack();
       }
     });
@@ -200,314 +213,18 @@ function PaneEditor({ navigation }) {
       setIsPlaying(true);
     }
   };
-  console.log("photo out", photo);
-  const displayImage = () => {
-    const baseUrl = process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE || "";
 
-    const isImagePath = (p) =>
-      typeof p === "string" && /\.(png|jpe?g|webp|gif|bmp|heic|heif)$/i.test(p);
-    const isVideoPath = (p) =>
-      typeof p === "string" && /\.(mp4|mov|m4v|avi|mkv|webm)$/i.test(p);
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener("focus", () => {
+  //     if (route.params?.pane?.new && !newLoad.current) {
+  //       dispatch(setPhoto([]));
+  //       setFormData(initialFormData);
+  //       newLoad.current = true;
+  //     }
+  //   });
 
-    const parseMaybeJsonArray = (s) => {
-      try {
-        if (typeof s === "string" && s.trim().startsWith("[")) {
-          const arr = JSON.parse(s);
-          console.log("arr", arr);
-          return Array.isArray(arr) ? arr : [];
-        }
-      } catch (e) {
-        // ignore parsing errors
-      }
-      return [];
-    };
-
-    const normalize = (items) => {
-      console.log("items normalize", items);
-      if (!items) return [];
-      const arr = Array.isArray(items) ? items : [items];
-      console.log("arr normalize", arr);
-      const out = [];
-      for (const it of arr) {
-        if (!it) continue;
-        console.log("it", typeof it);
-        // 1) Expo ImageManipulator/File picker style
-        if (typeof it === "object") {
-          if (it.uri && isImagePath(it.uri)) {
-            out.push(it.uri);
-            continue;
-          }
-          if (it.path && isImagePath(it.path)) {
-            out.push(it.path);
-            continue;
-          }
-          if (it.src) {
-            // it.src can be a single path or a stringified JSON array
-            const parsed = parseMaybeJsonArray(it.src);
-            if (parsed.length) {
-              parsed.forEach((p) => {
-                if (isImagePath(p)) out.push(baseUrl + p);
-              });
-              continue;
-            }
-            if (typeof it.src === "string" && isImagePath(it.src)) {
-              out.push(baseUrl + it.src);
-              continue;
-            }
-          }
-          continue;
-        }
-
-        // 2) Raw string
-        if (typeof it === "string") {
-          const parsed = parseMaybeJsonArray(it);
-          if (parsed.length) {
-            parsed.forEach((p) => {
-              if (isImagePath(p.src)) out.push(baseUrl + p.src);
-            });
-          } else if (isImagePath(it)) {
-            // If it's a relative path, prefix with baseUrl
-            const uri =
-              it.startsWith("http") || it.startsWith("file://")
-                ? it
-                : baseUrl + it;
-            out.push(uri);
-          }
-        }
-      }
-      // Deduplicate
-      return Array.from(new Set(out));
-    };
-
-    if (Array.isArray(photo) && photo.length > 0) {
-      console.log("photo func", typeof photo);
-      const resolvePreview = (item) => {
-        // Prefer explicit image URIs
-        if (item?.uri && isImagePath(item.uri)) return item.uri;
-        // If path is an object from manipulateAsync
-        if (
-          item?.path &&
-          typeof item.path === "object" &&
-          item.path?.uri &&
-          isImagePath(item.path.uri)
-        )
-          return item.path.uri;
-        if (item?.path && typeof item.path === "string") {
-          const p =
-            item.path.startsWith("http") || item.path.startsWith("file://")
-              ? item.path
-              : baseUrl + item.path;
-          if (isImagePath(p)) return p;
-        }
-        if (item?.src && typeof item.src === "string") {
-          const parsed = parseMaybeJsonArray(item.src);
-          if (
-            parsed.length &&
-            typeof parsed[0] === "string" &&
-            isImagePath(parsed[0])
-          )
-            return baseUrl + parsed[0];
-          if (isImagePath(item.src)) return baseUrl + item.src;
-        }
-        return null;
-      };
-
-      const removeAt = (idx) => {
-        const next = photo.filter((_, i) => i !== idx);
-        // update imageId array with uploaded ones
-        const ids = next
-          .filter((x) => x?.uploaded && x?.imageId)
-          .map((x) => x.imageId);
-        dispatch(setPhoto(next));
-        setFormData((prev) => ({
-          ...prev,
-          photo: next,
-          imageId: ids.length ? JSON.stringify(ids) : null,
-        }));
-      };
-
-      return (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginVertical: 8 }}
-        >
-          {photo.map((item, idx) => {
-            const isVideo =
-              item?.type === "video" ||
-              (typeof item?.mimeType === "string" &&
-                item.mimeType.startsWith("video"));
-            const uri = resolvePreview(item);
-            return (
-              <View
-                key={idx}
-                style={{
-                  width: 100,
-                  height: 100,
-                  marginRight: 8,
-                  position: "relative",
-                }}
-              >
-                {isVideo ? (
-                  <Video
-                    source={{
-                      uri:
-                        item?.uri ||
-                        item?.path ||
-                        (typeof item?.path === "object"
-                          ? item?.path?.uri
-                          : null),
-                    }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: 8,
-                      backgroundColor: "#000",
-                    }}
-                    resizeMode="cover"
-                    useNativeControls
-                    isMuted
-                  />
-                ) : uri ? (
-                  <Image
-                    source={{ uri }}
-                    style={{ width: "100%", height: "100%", borderRadius: 8 }}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: 8,
-                      backgroundColor: "#e5e7eb",
-                    }}
-                  />
-                )}
-                {/* Index badge */}
-                <View
-                  style={{
-                    position: "absolute",
-                    top: -8,
-                    left: -8,
-                    backgroundColor: "rgba(0,0,0,0.7)",
-                    borderRadius: 10,
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 10 }}>{idx + 1}</Text>
-                </View>
-                <IconButton
-                  icon="close-circle"
-                  size={18}
-                  style={{ position: "absolute", top: -8, right: -8 }}
-                  onPress={() => removeAt(idx)}
-                />
-              </View>
-            );
-          })}
-        </ScrollView>
-      );
-    }
-
-    let imageSources = [];
-    if (formData?.photo) {
-      console.log("formData.photo", formData.photo);
-      imageSources = normalize(formData.photo);
-    } else if (route?.params?.pane?.images) {
-      imageSources = normalize(route.params.pane.images);
-    }
-
-    if (!imageSources.length) return null;
-
-    let currentIds = [];
-    try {
-      if (formData?.imageId) {
-        const parsed =
-          typeof formData.imageId === "string"
-            ? JSON.parse(formData.imageId)
-            : formData.imageId;
-        if (Array.isArray(parsed)) currentIds = parsed;
-      } else if (route?.params?.pane?.imageId) {
-        const parsed =
-          typeof route.params.pane.imageId === "string"
-            ? JSON.parse(route.params.pane.imageId)
-            : route.params.pane.imageId;
-        if (Array.isArray(parsed)) currentIds = parsed;
-      }
-    } catch (e) {
-      // ignore parse errors
-    }
-
-    const removeAtExisting = (idx) => {
-      const nextImages = imageSources.filter((_, i) => i !== idx);
-      const nextIds = (currentIds || []).filter((_, i) => i !== idx);
-      setFormData((prev) => ({
-        ...prev,
-        photo: nextImages,
-        imageId: nextIds.length ? JSON.stringify(nextIds) : null,
-      }));
-    };
-
-    return (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ marginVertical: 8 }}
-      >
-        {imageSources.map((uri, idx) => (
-          <View
-            key={`img-${idx}`}
-            style={{
-              width: 100,
-              height: 100,
-              marginRight: 8,
-              position: "relative",
-            }}
-          >
-            <Image
-              source={{ uri }}
-              style={{ width: "100%", height: "100%", borderRadius: 8 }}
-              resizeMode="cover"
-            />
-            {/* Index badge */}
-            <View
-              style={{
-                position: "absolute",
-                top: -8,
-                left: -8,
-                backgroundColor: "rgba(0,0,0,0.7)",
-                borderRadius: 10,
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-              }}
-            >
-              <Text style={{ color: "#fff", fontSize: 10 }}>{idx + 1}</Text>
-            </View>
-            <IconButton
-              icon="close-circle"
-              size={18}
-              style={{ position: "absolute", top: -8, right: -8 }}
-              onPress={() => removeAtExisting(idx)}
-            />
-          </View>
-        ))}
-      </ScrollView>
-    );
-  };
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      if (route.params?.pane?.new && !newLoad.current) {
-        dispatch(setPhoto([]));
-        setFormData(initialFormData);
-        newLoad.current = true;
-      }
-    });
-
-    return unsubscribe;
-  }, [navigation, route.params]);
+  //   return unsubscribe;
+  // }, [navigation, route.params]);
 
   useEffect(() => {
     dispatch(fetchVehicles());
@@ -562,7 +279,6 @@ function PaneEditor({ navigation }) {
   // );
 
   useEffect(() => {
-    console.log('photo:', photo)
     if (photo && photo.length > 0) {
       // Build a preview photo value and aggregate uploaded image IDs
       const firstPath =
@@ -576,13 +292,14 @@ function PaneEditor({ navigation }) {
     }
   }, [photo]);
 
-  useFocusEffect(
-    useCallback(()=>{
-      return ()=>{
-        navigation.setParams({ });
-      }
-    },[])
-  )
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", () => {
+      dispatch(setPhoto([]));
+      setFormData(initialFormData);
+    });
+
+    return unsubscribe;
+  }, [navigation, dispatch]);
 
   return (
     <View style={styles.container}>
@@ -596,6 +313,12 @@ function PaneEditor({ navigation }) {
               placeholder="Name"
               value={formData.name}
               onChangeText={(text) => setFormData({ ...formData, name: text })}
+              right={
+                <TextInput.Icon
+                  icon="close-circle-outline"
+                  onPress={() => setFormData({ ...formData, name: "" })}
+                />
+              }
             />
           </View>
           <View className="flex flex-col ">
@@ -660,11 +383,33 @@ function PaneEditor({ navigation }) {
                 );
               }}
             />
+            {formData.category == 304 && (
+              <View style={{ marginTop: 2 }}>
+                <Text className="text-gray-500 font-bold pb-1">
+                  {t("new_symptom")}
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  style={styles.input}
+                  placeholder={
+                    t("custom_category_name") || "Nom de la catégorie"
+                  }
+                  value={formData.customCategoryName || ""}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, customCategoryName: text })
+                  }
+                />
+                <Text style={{ fontSize: 12, color: "#6B7280" }}>
+                  {t("custom_category_hint") ||
+                    "Précisez le type de panne si elle n'est pas dans la liste."}
+                </Text>
+              </View>
+            )}
           </View>
           {/* Advanced fields moved below under Show More */}
           <Text className="text-gray-500 font-bold pb-1">{t("photo")}</Text>
           <Divider />
-          <View>{displayImage()}</View>
+          <DisplayImage photo={photo} formData={formData} route={route} />
           <View className=" flex justify-between flex-row">
             <Button
               mode="outlined"
@@ -674,7 +419,7 @@ function PaneEditor({ navigation }) {
             >
               {t("camera")}
             </Button>
-            {formData.photo || (Array.isArray(photo) && photo.length > 0) ? (
+            {formData.photo || (Array.isArray(photo) && photo?.length > 0) ? (
               <IconButton
                 icon="close-circle"
                 size={24}

@@ -4,11 +4,13 @@ import MenuComponent from "../../component/MenuComponent";
 import TasksScreen from "./ui/TasksScreen";
 import TaskDetail from "./ui/TaskDetail";
 import TaskDetailHeader from "./ui/TaskDetailHeader";
-import CreateTask from "./ui/CreateTask";
+import FormScreen from "../Form/ui/FormScreen";
+import { useNavigation } from "@react-navigation/native";
 
 const Stack = createNativeStackNavigator();
 
 const TaskStack = () => {
+  const navigation = useNavigation();
   return (
     <Stack.Navigator initialRouteName="TasksList">
       <Stack.Screen
@@ -21,8 +23,23 @@ const TaskStack = () => {
       <Stack.Screen
         name="TaskDetails"
         component={TaskDetail}
+        options={() => ({
+          header: () => (
+            <TaskDetailHeader
+              onBack={() => navigation.goBack()}
+              visibleBack={true}
+              title="Tâches"
+            />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="FormTask"
+        component={FormScreen}
         options={{
-          header: () => <TaskDetailHeader visibleBack={true} title="Tâches" />,
+          header: () => (
+            <TaskDetailHeader visibleBack={true} title="Formulaire" />
+          ),
         }}
       />
     </Stack.Navigator>

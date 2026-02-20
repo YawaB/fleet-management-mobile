@@ -86,6 +86,14 @@ const resources = {
         "Stay informed about your fleet! Enable notifications to receive real-time alerts about vehicle status, maintenance reminders, and important updates.",
       notification_permission_authorize: "Enable Notifications",
       notification_permission_skip: "Skip for now",
+      custom_category_hint:
+        "Enter symptoms for your custom category (e.g., unusual noise, warning light, performance issue)",
+      show_more: "Show more",
+      reason: "Reason (optional)",
+      enter_task_title: "Enter task title",
+      describe_task_details: "Describe task details",
+      select_person: "Select Person",
+      about: "About",
     },
   },
   fr: {
@@ -172,6 +180,14 @@ const resources = {
       notification_permission_skip: "Passer pour l'instant",
       finish: "Terminer",
       start: "Commencer",
+      custom_category_hint:
+        "Entrez les symptômes pour votre catégorie personnalisée (ex: bruit inhabituel, voyant lumineux, problème de performance)",
+      load_more: "Charger plus",
+      reason: "Raison (optionnel)",
+      enter_task_title: "Entrez le titre de la tâche",
+      describe_task_details: "Décrivez les détails de la tâche",
+      select_person: "Selectionner une personne",
+      about: "À propos",
     },
   },
   ar: {
@@ -255,6 +271,14 @@ const resources = {
         "ابق على اطلاع بأسطولك! قم بتفعيل الإشعارات لتلقي تنبيهات فورية حول حالة المركبات وتذكيرات الصيانة والتحديثات المهمة.",
       notification_permission_authorize: "تفعيل الإشعارات",
       notification_permission_skip: "تخطي الآن",
+      custom_category_hint:
+        "أدخل الأعراض لفئتك المخصصة (مثال: ضوضاء غير عادية، ضوء تحذير، مشكلة في الأداء)",
+      load_more: "تحميل المزيد",
+      reason: "السبب (اختياري)",
+      enter_task_title: "أدخل عنوان المهمة",
+      describe_task_details: "وصف المهمة",
+      select_person: "اختر الشخص",
+      about: "حول",
     },
   },
 };

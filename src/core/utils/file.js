@@ -154,7 +154,6 @@ export async function uploadFile(file, options = {}) {
     // If file is a URI, convert to base64
     let base64Data = file;
 
-    console.log("uploadFile file", file);
     if (typeof file === "string" && file.startsWith("file://")) {
       base64Data = await compressBase64(file, finalOptions);
     }
@@ -173,18 +172,8 @@ export async function uploadFile(file, options = {}) {
           }.${finalOptions.extension || "png"}`,
       },
     });
-    console.log("uploadResult _args", {
-      base64: base64Data,
-      model: finalOptions.model,
-      path: finalOptions.path,
-      name:
-        finalOptions.name ||
-        `${finalOptions.srcID}${finalOptions.desc}${finalOptions.src}_${
-          finalOptions.x
-        }.${finalOptions.extension || "png"}`,
-    });
-    console.log("uploadResult funct", uploadResult);
-    // If upload successful, save file metadata
+
+
     if (uploadResult?.data?.success) {
       const saveResult = await request("file/save", {
         method: "post",
