@@ -39,7 +39,6 @@ export default function AboutScreen() {
 
   return (
     <View style={styles.screen}>
-      <MenuComponent visibleBack title="À propos" />
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}

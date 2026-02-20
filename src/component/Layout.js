@@ -1,4 +1,4 @@
-import { StatusBar, Text, View } from "react-native";
+import { StatusBar, View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AuthenticationScreen from "../modules/Authentication/ui/AuthenticationComponent";
 import BottomTabs from "../navigation/BottomTabs";
@@ -13,17 +13,15 @@ import { useEffect } from "react";
 import SqliteModule from "../core/modules/SqliteModule";
 import { colors } from "../theme/colors";
 import { bindEvents, unbindEvents } from "../socket/socket";
-import { getAndSaveFcmToken, initFirebaseMessaging } from "../firebase";
 import useLogger from "../hook/Logger/useLogger";
 import LoggerScreen from "../modules/Logger/LoggerScreen";
 import CameraScreen from "./Shared/CameraScreen/CameraScreen";
 import ToastComponent from "./Shared/ToastComponent/ToastComponent";
-import { I18nManager } from "react-native";
-import i18n from "../i18n";
 import NotificationPermissionScreen from "../modules/NotificationPermission/ui/NotificationPermissionScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import Toast from "react-native-toast-message";
+import AboutScreen from "../modules/About/ui/AboutScreen";
 
 const Stack = createNativeStackNavigator();
 const NOTIFICATION_PERMISSION_KEY = "notification_permission_checked";
@@ -53,10 +51,6 @@ function Layout() {
       bindEvents(dispatch);
     }, 5000);
     return () => unbindEvents();
-  }, []);
-
-  useEffect(() => {
-    // initFirebaseMessaging();
   }, []);
 
   if (notificationChecked === null) {
@@ -114,6 +108,13 @@ function Layout() {
           name="Logger"
           component={LoggerScreen}
           options={{ headerTitle: "Les logs" }}
+        />
+        <Stack.Screen
+          name="About"
+          component={AboutScreen}
+          options={{
+            header: () => <MenuComponent title={"A propos"} />,
+          }}
         />
         <Stack.Screen
           name="CameraScreen"

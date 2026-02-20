@@ -97,7 +97,7 @@ function BottomTabs() {
           tabBarStyle: { display: getRoutName(route) },
         })}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="About"
         component={AboutScreen}
         options={({ route }) => ({
@@ -112,7 +112,7 @@ function BottomTabs() {
           headerShown: false,
           tabBarStyle: { display: getRoutName(route) },
         })}
-      />
+      /> */}
     </Tab.Navigator>
   );
 }
