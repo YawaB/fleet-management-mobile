@@ -4,7 +4,12 @@ import { Button, Text, Searchbar, Divider } from "react-native-paper";
 import TaskCard from "./TaskCard";
 import moment from "moment/moment";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTaskList, getTasks, startTaskOrStop } from "../slice/slice";
+import {
+  fetchFormFields,
+  fetchTaskList,
+  getTasks,
+  startTaskOrStop,
+} from "../slice/slice";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import LoadingComponent from "../../../component/LoadingComponent";
@@ -80,9 +85,7 @@ const TaskListScreen = ({ navigation, route }) => {
         ? "start"
         : "end",
     };
-    console.log("handleStart args:", args, task);
     dispatch(startTaskOrStop(args));
-    return;
   };
 
   const handleChangeStatus = (task, status) => {
@@ -93,7 +96,6 @@ const TaskListScreen = ({ navigation, route }) => {
     };
     console.log("handleStart args:", args, task);
     dispatch(startTaskOrStop(args));
-    return;
   };
 
   const handleChangeDate = (task) => {
@@ -122,10 +124,16 @@ const TaskListScreen = ({ navigation, route }) => {
     navigation.navigate("CreateTask");
     return;
   };
+  const handleForm = (task) => {
+    handleStart(task);
+    dispatch(fetchFormFields({ modelId: task?.linkSrcId })).then(() => {
+      navigation.navigate("FormTask", { task });
+    });
+    return;
+  };
 
   const handleSearchChange = (text) => {
     setSearchQuery(text);
-
     const cleared = !(text || "").trim();
     if (cleared && navigation?.setParams) {
       navigation.setParams({ id: null, searchQuery: null });
@@ -142,14 +150,25 @@ const TaskListScreen = ({ navigation, route }) => {
       onRequestHelp={handleRequestHelp}
       onMore={handleMore}
       onDone={handleDone}
+      onForm={handleForm}
     />
   );
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (route?.params?.id && taskList?.length > 0) {
+      const found = taskList.find(
+        (task) => String(task?.TaskId) === String(route.params.id),
+      );
+      if (found) {
+        setSearchQuery(found.taskName || "");
+      } else {
+        setSearchQuery("");
+      }
+    }
+  }, [route.params?.id, taskList]);
 
   useFocusEffect(
     useCallback(() => {
-      console.log("route?.params?.searchQuery", route?.params?.searchQuery);
       if (route?.params?.searchQuery) {
         setSearchQuery(route.params.searchQuery);
       } else {

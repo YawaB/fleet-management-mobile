@@ -1,49 +1,36 @@
 import { useState, useCallback } from "react";
-import { View, FlatList, StyleSheet, RefreshControl } from "react-native";
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  RefreshControl,
+  Modal,
+} from "react-native";
 import { Text, Button, ActivityIndicator } from "react-native-paper";
 import NotificationHeader from "./NotificationHeader";
 import NotificationItem from "./NotificationItem";
-
-const MOCK_NOTIFICATIONS = [
-  {
-    id: "61665",
-    srcId: "2147",
-    srcObject: "user",
-    Subject: "Besoin de validation de tache",
-    Message: "La tache MIGRATION CASTOLI 1234 a besoin d'etre valider",
-    from: null,
-    isSent: 1,
-    creaDate: "2026-01-29T08:33:43.533Z",
-    isRead: 0,
-  },
-  {
-    id: "61664",
-    srcId: "2146",
-    srcObject: "user",
-    Subject: "Nouvelle panne créée",
-    Message: "La panne panne_03_02_2026_10:30:29 a été créée avec succès",
-    from: null,
-    isSent: 1,
-    creaDate: "2026-02-03T12:30:00.000Z",
-    isRead: 0,
-  },
-  {
-    id: "61663",
-    srcId: "2145",
-    srcObject: "user",
-    Subject: "Nouvelle panne créée",
-    Message: "La panne A finaliser version 0 a été créée avec succès",
-    from: null,
-    isSent: 1,
-    creaDate: "2026-01-30T11:45:00.000Z",
-    isRead: 1,
-  },
-];
-
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchNotifications,
+  getNotifications,
+  readNotification,
+} from "../slice/header.slice";
+import { fetchTaskDetail } from "../../Tasks/slice/slice";
+import { fetchDetailPanne } from "../../MainHome/slice/slice";
+import { useTranslation } from "react-i18next";
 const NotificationList = () => {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [openingNotification, setOpeningNotification] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(true);
+
+  const navigation = useNavigation();
+
+  const notifications = useSelector(getNotifications);
+  const { t } = useTranslation();
+
+  const dispatch = useDispatch();
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -53,20 +40,47 @@ const NotificationList = () => {
   }, []);
 
   const handleMarkAllRead = useCallback(() => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: 1 })));
+    dispatch(readNotification({ markAll: true }));
   }, []);
 
-  const handleNotificationPress = useCallback((notification) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notification.id ? { ...notif, isRead: 1 } : notif,
-      ),
-    );
-  }, []);
+  const handleNotificationPress = useCallback(
+    async (notification) => {
+      const to = String(notification?.to || "");
+      const toId = notification?.toId;
+      if (!toId) return;
 
-  const handleLoadMore = useCallback(() => {
-    // Implement pagination logic here
-  }, []);
+      try {
+        setOpeningNotification(true);
+        dispatch(readNotification({ id: notification.id }));
+
+        if (to === "assets/tasks/list") {
+          setOpeningNotification(false);
+          navigation.navigate("Task", {
+            screen: "TasksList",
+            params: { id: toId },
+          });
+          return;
+        }
+
+        if (to === "assets/panneList") {
+          await dispatch(fetchDetailPanne({ id: toId }));
+          setOpeningNotification(false);
+          navigation?.navigate("Dashboard", {
+            screen: "TaskDetail",
+          });
+          return;
+        }
+      } finally {
+        setOpeningNotification(false);
+      }
+    },
+    [dispatch, navigation],
+  );
+
+  const handleLoadMore = () => {
+    dispatch(fetchNotifications());
+    setShowLoadingModal(false);
+  };
 
   const renderItem = useCallback(
     ({ item }) => (
@@ -83,19 +97,42 @@ const NotificationList = () => {
         </View>
       );
     }
-  }, [loading, handleLoadMore]);
+  }, [loading]);
 
   const renderEmpty = useCallback(
     () => (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>No notifications</Text>
+        <Button icon="arrow-down" mode="text" onPress={handleLoadMore}>
+          {t("load_more")}
+        </Button>
       </View>
     ),
     [],
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      try {
+        dispatch(fetchNotifications({ filterType: "unread" }));
+        setShowLoadingModal(true);
+      } catch (err) {
+        console.log("Error fetch tasks", err.message);
+      }
+    }, []),
+  );
+
   return (
     <View style={styles.container}>
+      <Modal transparent visible={openingNotification} animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <ActivityIndicator size="large" />
+            <Text style={styles.modalText}>{t("loading")}</Text>
+          </View>
+        </View>
+      </Modal>
+
       <NotificationHeader onMarkAllRead={handleMarkAllRead} />
       <FlatList
         data={notifications}
@@ -108,6 +145,11 @@ const NotificationList = () => {
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={styles.listContent}
       />
+      {showLoadingModal && (
+        <Button icon="arrow-down" mode="text" onPress={handleLoadMore}>
+          {t("load_more")}
+        </Button>
+      )}
     </View>
   );
 };
@@ -137,6 +179,23 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: "#9CA3AF",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    minWidth: 220,
+    alignItems: "center",
+  },
+  modalText: {
+    marginTop: 12,
   },
 });
 

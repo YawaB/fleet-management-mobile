@@ -27,3 +27,17 @@ export async function _fetchTaskStatus(data) {
     data,
   });
 }
+
+export async function _fetchFormFields(data) {
+  return await request(`form/fields`, {
+    method: "post",
+    data,
+  });
+}
+
+export async function _fetchTaskDetail(data) {
+  return await request(`tasks/get`, {
+    method: "post",
+    data,
+  });
+}

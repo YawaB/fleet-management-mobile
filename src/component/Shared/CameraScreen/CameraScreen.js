@@ -666,38 +666,8 @@ const CameraScreen = ({
               {/* Bottom capture area */}
               {cameraMode !== "scan" && (
                 <View style={styles.bottomCaptureArea}>
-                  {images.length === 0 ? (
-                    <View style={styles.captureButtonContainer}>
-                      {/* Main capture button */}
-                      <TouchableOpacity
-                        onPress={
-                          pickType === "camera"
-                            ? takePhoto
-                            : isRecording
-                              ? stopRecording
-                              : takeVideo
-                        }
-                        style={[
-                          styles.captureButton,
-                          pickType === "video" &&
-                            isRecording &&
-                            styles.captureButtonRecording,
-                        ]}
-                      >
-                        <Ionicons
-                          name={
-                            pickType === "camera"
-                              ? "camera"
-                              : isRecording
-                                ? "stop"
-                                : "videocam"
-                          }
-                          color={pickType === "video" ? "#fff" : "orange"}
-                          size={40}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
+                  {/* Thumbnail strip — always visible when photos exist */}
+                  {images.length > 0 && (
                     <View style={styles.previewContainer}>
                       <ScrollView
                         horizontal
@@ -726,6 +696,37 @@ const CameraScreen = ({
                       </ScrollView>
                     </View>
                   )}
+
+                  {/* Capture button — always visible */}
+                  <View style={styles.captureButtonContainer}>
+                    <TouchableOpacity
+                      onPress={
+                        pickType === "camera"
+                          ? takePhoto
+                          : isRecording
+                            ? stopRecording
+                            : takeVideo
+                      }
+                      style={[
+                        styles.captureButton,
+                        pickType === "video" &&
+                          isRecording &&
+                          styles.captureButtonRecording,
+                      ]}
+                    >
+                      <Ionicons
+                        name={
+                          pickType === "camera"
+                            ? "camera"
+                            : isRecording
+                              ? "stop"
+                              : "videocam"
+                        }
+                        color={pickType === "video" ? "#fff" : "orange"}
+                        size={40}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             </CameraView>
@@ -792,12 +793,13 @@ const styles = StyleSheet.create({
   },
   bottomCaptureArea: {
     position: "absolute",
-    bottom: 40,
+    bottom: 20,
     left: 0,
     right: 0,
     zIndex: 2,
     alignItems: "center",
     paddingHorizontal: 20,
+    gap: 12,
   },
   captureButtonContainer: {
     alignItems: "center",

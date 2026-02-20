@@ -92,7 +92,6 @@ function PaneEditor({ navigation }) {
         setIsRecording(false);
         await recording.stopAndUnloadAsync();
         const uri = recording.getURI();
-        console.log("handleAudioRecord uri", uri);
         // Upload the audio file
         const uploadResult = await uploadFile(uri, {
           srcID: 0,
@@ -141,7 +140,6 @@ function PaneEditor({ navigation }) {
       imageId: formData.imageId,
       declarantId: currentUser?.instID,
     };
-    console.log("args handleSave", formData.customCategoryName.length);
     dispatch(createOrUpdatePanne(args)).then(({ payload }) => {
       if (payload) {
         if (
@@ -421,7 +419,7 @@ function PaneEditor({ navigation }) {
             >
               {t("camera")}
             </Button>
-            {formData.photo || (Array.isArray(photo) && photo.length > 0) ? (
+            {formData.photo || (Array.isArray(photo) && photo?.length > 0) ? (
               <IconButton
                 icon="close-circle"
                 size={24}

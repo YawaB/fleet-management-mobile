@@ -35,3 +35,17 @@ export async function _fetchResources(data) {
     data,
   });
 }
+
+export async function _fetchNotificationList(data) {
+  return await request(`notifications/list`, {
+    method: "post",
+    data,
+  });
+}
+
+export async function _readNotification(data) {
+  return await request(`notifications/markAsRead`, {
+    method: "post",
+    data,
+  });
+}

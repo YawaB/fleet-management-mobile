@@ -1,4 +1,10 @@
-import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   View,
   Text,
@@ -21,6 +27,8 @@ import {
   saveConversation,
   setDetailChat,
   setSelectedChat,
+  fetchConversationList,
+  readMsg,
 } from "../../slice/slice";
 import { socket } from "../../../../socket/socket";
 import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
@@ -39,11 +47,20 @@ function DetailChat({ route, navigation }) {
   const detailMessage = useSelector(getDetailMessage);
   const currentUser = useSelector(getCurrentUser);
 
+  console.log("route.params", route.params);
+
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(setSelectedChat(contact));
     dispatch(setDetailChat(true));
+    dispatch(
+      fetchConversationList({
+        srcId: contact?.srcId,
+        srcObject: contact?.srcObject || "user",
+      }),
+    );
+    if (contact?.comid) dispatch(readMsg({ id: contact.comid }));
     return () => {
       dispatch(setDetailChat(false));
     };
@@ -151,23 +168,23 @@ function DetailChat({ route, navigation }) {
   }, [detailMessage]);
 
   useEffect(() => {
-    console.log("displayMessages updated",displayMessages)
-  }, [displayMessages])
+    console.log("displayMessages updated", displayMessages);
+  }, [displayMessages]);
   useFocusEffect(
     useCallback(() => {
-      if(contact){
-        let id = (contact?.srcObject+'-'+contact?.srcId).toLowerCase()
-        deleteChannel(id)
-        AsyncStorage.setItem("current-chat-id", id)
+      if (contact) {
+        let id = (contact?.srcObject + "-" + contact?.srcId).toLowerCase();
+        deleteChannel(id);
+        AsyncStorage.setItem("current-chat-id", id);
       }
-    }, [contact])
-  )
+    }, [contact]),
+  );
 
   useEffect(() => {
-    return ()=>{
-      AsyncStorage.removeItem('current-chat-id')
-    }
-  },[])
+    return () => {
+      AsyncStorage.removeItem("current-chat-id");
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -219,9 +236,7 @@ function DetailChat({ route, navigation }) {
           ref={flatListRef}
           data={displayMessages}
           renderItem={renderMessage}
-          keyExtractor={(item, idx) =>
-            item?.id?.toString()+"-"+idx
-          }
+          keyExtractor={(item, idx) => item?.id?.toString() + "-" + idx}
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
         />

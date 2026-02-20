@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import _ from "lodash";
 import {
+  _fetchFormFields,
+  _fetchTaskDetail,
   _fetchTaskList,
   _fetchTaskStatus,
   _saveOrUpdateTask,
@@ -44,29 +46,60 @@ export const fetchTaskStatus = createAsyncThunk(
   },
 );
 
+export const fetchFormFields = createAsyncThunk(
+  `${slice_name}/fetchFormFields`,
+  async (_args, { dispatch, getState }) => {
+    try {
+      const res = await _fetchFormFields(_args);
+      console.log(res, "res fetchFormFields");
+      dispatch(setFormFields(res.data.result));
+      return res;
+    } catch (err) {
+      console.log("Error fetch tasks", err.message);
+    }
+  },
+);
+
+export const fetchTaskDetail = createAsyncThunk(
+  `${slice_name}/fetchTaskDetail`,
+  async (_args, { dispatch }) => {
+    try {
+      const res = await _fetchTaskDetail(_args);
+      console.log(res, "res fetchTaskDetail");
+      const task = res?.data?.result?.[0] ?? res?.data?.result ?? res?.data;
+      if (task) dispatch(upsertTask(task));
+      return task ?? null;
+    } catch (err) {
+      console.log("Error fetch task detail", err.message);
+      return null;
+    }
+  },
+);
+
 export const startTaskOrStop = createAsyncThunk(
   `${slice_name}/startTaskOrStop`,
   async (_args, { dispatch, getState }) => {
     try {
       const res = await _startTaskOrStop(_args);
       console.log(res, "res startTaskOrStop");
-      if (res?.data.typeMsg === "success") {
+      if (res?.data?.typeMsg === "success") {
         dispatch(fetchTaskList());
         dispatch(
           setToast({
             message: "Tache mise à jour avec succès",
             type: "success",
           }),
-
         );
         return true;
+      } else {
+        dispatch(
+          setToast({
+            message:
+              "Transition non autorisée de En cours vers En vérification",
+            type: "error",
+          }),
+        );
       }
-      dispatch(
-        setToast({
-          message: res?.data?.msg,
-          type: "error",
-        }),
-      );
       return false;
     } catch (err) {
       console.log("Error start or stop task", err.message);
@@ -108,6 +141,7 @@ export const tasksSlice = createSlice({
   initialState: {
     tasks: [],
     taskStatus: [],
+    formFields: [],
     updatedTaskVar: null,
   },
   name: slice_name,
@@ -136,13 +170,18 @@ export const tasksSlice = createSlice({
     setTaskStatus: (state, { payload }) => {
       state.taskStatus = payload;
     },
+    setFormFields: (state, { payload }) => {
+      state.formFields = payload;
+    },
   },
 });
 
 export const getTasks = (state) => state[slice_name].tasks;
 export const getTaskStatus = (state) => state[slice_name].taskStatus;
 export const getUpdatedTask = (state) => state[slice_name].updatedTaskVar;
+export const getFormFields = (state) => state[slice_name].formFields;
 
-export const { setTasks, upsertTask, setTaskStatus } = tasksSlice.actions;
+export const { setTasks, upsertTask, setTaskStatus, setFormFields } =
+  tasksSlice.actions;
 
 export default tasksSlice.reducer;

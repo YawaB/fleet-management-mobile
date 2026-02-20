@@ -9,6 +9,7 @@ import MenuComponent from "../component/MenuComponent";
 import TaskStack from "../modules/Tasks/TaskStack";
 import MainHomeScreenStack from "../modules/MainHome/ui/MainHomeScreenStack";
 import NotificationList from "../modules/Notification/ui/NotificationList";
+import AboutScreen from "../modules/About/ui/AboutScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -25,7 +26,7 @@ function BottomTabs() {
       "AddPanne",
       "UserList",
       "EngineList",
-      "DetailChat",
+      "FormTask",
     ];
     const display = noDisplayValues.includes(routeName);
     if (display) {
@@ -59,6 +60,7 @@ function BottomTabs() {
       />
       <Tab.Screen
         name="Task"
+        initialRouteName="TasksList"
         component={TaskStack}
         options={({ route }) => ({
           tabBarLabel: t("tasks"),
@@ -92,6 +94,22 @@ function BottomTabs() {
           header: () => (
             <MenuComponent visibleBack={true} title="Notification" />
           ),
+          tabBarStyle: { display: getRoutName(route) },
+        })}
+      />
+      <Tab.Screen
+        name="About"
+        component={AboutScreen}
+        options={({ route }) => ({
+          tabBarLabel: t("about"),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons
+              name="information"
+              color={color}
+              size={size}
+            />
+          ),
+          headerShown: false,
           tabBarStyle: { display: getRoutName(route) },
         })}
       />
