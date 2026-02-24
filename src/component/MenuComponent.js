@@ -215,6 +215,14 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
               title={t("logs")}
             />
             <Divider />
+
+            <Menu.Item
+              leadingIcon="microsoft-excel"
+              onPress={() => navigateTo("Excel")}
+              title={t("excel")}
+            />
+            <Divider />
+
             <Menu.Item
               leadingIcon="information-outline"
               onPress={() => navigateTo("About")}

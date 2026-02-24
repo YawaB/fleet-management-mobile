@@ -66,7 +66,7 @@ function PaneEditor({ navigation }) {
   const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
-    name: `panne_${moment().format("DD_MM_YYYY_HH:mm:ss")}`,
+    name: `#PDC${moment().format("DDMMYYHHmm")}`,
     immatriculation: currentUser?.vehiculeId,
     category: "",
     symptom: "",
@@ -185,7 +185,7 @@ function PaneEditor({ navigation }) {
   };
 
   const initialFormData = {
-    name: `panne_${moment().format("DD_MM_YYYY_HH:mm:ss")}`,
+    name: `#PDC${moment().format("DDMMYYHHmm")}`,
     immatriculation: currentUser?.vehiculeId,
     category: "",
     symptom: "",
