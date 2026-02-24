@@ -13,6 +13,7 @@ import {
 import { navigate } from "../core/utils/navigation";
 import { store } from "../store/index";
 import { fetchDetailPanne } from "../modules/MainHome/slice/slice";
+import { fetchTaskList } from "../modules/Tasks/slice/slice";
 const displayToastOnMessage = false;
 
 let messaging = messaging2();
@@ -141,7 +142,8 @@ async function onMessageReceived(message, isBackground) {
   }
 }
 
-export function navigateToTask(data) {
+export async function navigateToTask(data) {
+  await store.dispatch(fetchTaskList({ filterType: "all" }));
   navigate("Task", {
     screen: "TasksList",
     params: { id: data?.subjectId },

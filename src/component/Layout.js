@@ -22,6 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import Toast from "react-native-toast-message";
 import AboutScreen from "../modules/About/ui/AboutScreen";
+import ExcelUploadScreen from "../modules/Excel/ui/ExcelUploadScreen";
 
 const Stack = createNativeStackNavigator();
 const NOTIFICATION_PERMISSION_KEY = "notification_permission_checked";
@@ -114,6 +115,13 @@ function Layout() {
           component={AboutScreen}
           options={{
             header: () => <MenuComponent title={"A propos"} />,
+          }}
+        />
+        <Stack.Screen
+          name="Excel"
+          component={ExcelUploadScreen}
+          options={{
+            header: () => <MenuComponent title={"Import Excel"} />,
           }}
         />
         <Stack.Screen
