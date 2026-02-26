@@ -79,12 +79,12 @@ const EmbeddedCalendar = ({
     const first = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth(),
-      1
+      1,
     );
     const last = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth() + 1,
-      0
+      0,
     );
 
     const jsDay = first.getDay();
@@ -126,7 +126,7 @@ const EmbeddedCalendar = ({
               : new Date(
                   visibleMonth.getFullYear(),
                   visibleMonth.getMonth(),
-                  day
+                  day,
                 );
 
           const selected =
@@ -160,17 +160,15 @@ const CreateTask = () => {
   const [responsibleFocus, setResponsibleFocus] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
 
   const users = useSelector(getStaff);
   const vehicles = useSelector(getVehicles);
-  console.log(users, "xxx users");
 
   const dispatch = useDispatch();
 
   const selectedPanne = useSelector(getDetailPanne);
-  console.log(selectedPanne, "xxx selectedPanne");
 
   const validationSchema = useMemo(
     () =>
@@ -184,7 +182,7 @@ const CreateTask = () => {
         responsible: Yup.mixed().required(t("required") || "Required"),
         deadline: Yup.date().required(t("required") || "Required"),
       }),
-    [t]
+    [t],
   );
 
   const formik = useFormik({
@@ -207,11 +205,8 @@ const CreateTask = () => {
         idPanne: selectedPanne?.id || null,
       };
 
-      console.log(payload, "xxx payload");
-
       try {
         const res = await dispatch(createTask(payload));
-        console.log("SUBMUT RES:", res ,res.payload);
         if (!res?.payload) return;
         helpers.resetForm();
         navigation.goBack();
@@ -256,13 +251,13 @@ const CreateTask = () => {
 
   const handlePrevMonth = () => {
     setVisibleMonth(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
     );
   };
 
   const handleNextMonth = () => {
     setVisibleMonth(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
     );
   };
 
@@ -282,7 +277,7 @@ const CreateTask = () => {
       } catch (err) {
         console.log("Error fetch tasks", err.message);
       }
-    }, [])
+    }, []),
   );
 
   return (

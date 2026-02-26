@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { colors } from "../theme/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -38,6 +38,18 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("fr");
 
+  const getInitials = () => {
+    const f = current_user?.fName?.substr(0, 1) || "";
+    const l = current_user?.lName?.substr(0, 1) || "";
+    return (f + l).toUpperCase();
+  };
+
+  const getAvatarUri = () => {
+    const base = process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE || "";
+    if (!current_user?.image) return null;
+    return `${base}${current_user.image}`;
+  };
+
   useEffect(() => {
     const loadSavedLanguage = async () => {
       try {
@@ -62,7 +74,6 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
   let dispatch = useDispatch();
 
   const openMenu = () => {
-    console.log("openMenu");
     setVisible(true);
   };
 
@@ -114,7 +125,7 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
               onPress: () => BackHandler.exitApp(),
             },
           ],
-          { cancelable: false }
+          { cancelable: false },
         );
       }
     } catch (error) {
@@ -146,34 +157,37 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
         </View>
         <View className="flex-row  items-center justify-center ">
           <Menu
-            style={{ backgroundColor: "white" }}
+            style={{ marginTop: 16 }}
+            contentStyle={styles.menuContent}
             visible={visible}
             onDismiss={closeMenu}
+            anchorPosition="bottom"
             anchor={
-              current_user ? (
-                <View className="flex-row items-center gap-2">
-                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                    {current_user?.fName?.substr(0, 1).toUpperCase() +
-                      current_user?.lName?.substr(0, 1).toUpperCase()}
-                  </Text>
-                  <TouchableOpacity onPress={() => setVisible(!visible)}>
-                    <Avatar.Image
-                      size={32}
-                      source={{
-                        uri:
-                          process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE +
-                          current_user?.image,
-                      }}
-                    />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <Ionicons
-                  size={20}
-                  onPress={() => setVisible(!visible)}
-                  name="ellipsis-vertical-outline"
-                />
-              )
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setVisible((v) => !v)}
+                style={styles.menuAnchor}
+              >
+                {current_user ? (
+                  <>
+                    <Text style={styles.anchorInitials}>{getInitials()}</Text>
+                    {getAvatarUri() ? (
+                      <Avatar.Image
+                        size={32}
+                        source={{ uri: getAvatarUri() }}
+                      />
+                    ) : (
+                      <Avatar.Text size={32} label={getInitials() || "U"} />
+                    )}
+                  </>
+                ) : (
+                  <Ionicons
+                    size={20}
+                    color="#fff"
+                    name="ellipsis-vertical-outline"
+                  />
+                )}
+              </TouchableOpacity>
             }
           >
             {/* <Menu.Item onPress={closeMenu} title={t("profile")} />
@@ -184,15 +198,42 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
               onPress={() => navigateTo("Features")}
               title={t("applications")}
             /> */}
-            <Divider />
+            {/* <Divider /> */}
             <Menu.Item
-              onPress={() => setShowLanguageDialog(true)}
+              leadingIcon="translate"
+              onPress={() => {
+                closeMenu();
+                setShowLanguageDialog(true);
+              }}
               title={t("langue")}
             />
             <Divider />
-            <Menu.Item onPress={_logOut} title={t("deconnexion")} />
+
+            <Menu.Item
+              leadingIcon="file-document-outline"
+              onPress={() => navigateTo("Logger")}
+              title={t("logs")}
+            />
             <Divider />
-            <Menu.Item onPress={() => navigateTo("Logger")} title={t("logs")} />
+
+            <Menu.Item
+              leadingIcon="microsoft-excel"
+              onPress={() => navigateTo("Excel")}
+              title={t("excel")}
+            />
+            <Divider />
+
+            <Menu.Item
+              leadingIcon="information-outline"
+              onPress={() => navigateTo("About")}
+              title={t("About")}
+            />
+            <Divider />
+            <Menu.Item
+              leadingIcon="logout"
+              onPress={_logOut}
+              title={t("deconnexion")}
+            />
           </Menu>
         </View>
       </View>
@@ -275,6 +316,28 @@ function MenuComponent({ navigator, title, visibleBack = false }) {
 }
 
 const styles = StyleSheet.create({
+  menuAnchor: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  anchorInitials: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  menuContent: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    paddingVertical: 6,
+    minWidth: 200,
+  },
   dialogTitle: {
     textAlign: "center",
     fontSize: 20,

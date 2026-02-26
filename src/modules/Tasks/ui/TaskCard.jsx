@@ -3,11 +3,11 @@ import moment from "moment";
 import "moment/locale/fr";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, TouchableOpacity } from "react-native";
 import { Button, Card, Chip, IconButton } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { getCurrentUser } from "../../Authentication/slice/auth.slice";
-
+import AntDesign from "@expo/vector-icons/AntDesign";
 moment.locale("fr");
 
 const TaskCard = ({
@@ -18,20 +18,21 @@ const TaskCard = ({
   onRequestHelp,
   onMore,
   onDone,
+  onForm,
 }) => {
   const { t } = useTranslation();
-  const current_user = useSelector(getCurrentUser)
-  console.log('current_user in TaskCard', current_user);
+  const current_user = useSelector(getCurrentUser);
   const formatReadableDate = (date) => {
     if (!date) return "";
-
     const raw = typeof date === "string" ? date.trim() : date;
     let m = moment.parseZone(raw);
     if (!m.isValid()) m = moment.utc(raw);
     if (!m.isValid()) m = moment(raw);
     if (!m.isValid()) return "";
-
-    return m.locale("fr").format("ddd DD MMM");
+    const isCurrentYear = m.year() === moment().year();
+    return m
+      .locale("fr")
+      .format(isCurrentYear ? "ddd DD MMM" : "ddd DD MMM YYYY");
   };
 
   return (
@@ -83,7 +84,8 @@ const TaskCard = ({
                   color="#475569"
                 />
                 <Text className="text-sm font-semibold text-slate-700">
-                  {t("created")} {formatReadableDate(task?.createdAt)} par {task?.Responsible}
+                  {t("created")} {formatReadableDate(task?.createdAt)} par{" "}
+                  {task?.Responsible}
                 </Text>
               </View>
             </View>
@@ -102,54 +104,64 @@ const TaskCard = ({
             </View>
           </View>
         </View>
-
         <View className="mt-4 flex-row items-center justify-between">
-          {task?.statusName !== "terminer" && (
-            <View className="flex-row items-center">
+          {["onDemand", "encours"].includes(task?.statusName) && (
+            <View className="flex-row items-start gap-2 ">
               <IconButton
                 icon="calendar-edit"
                 size={20}
                 onPress={() => onChangeDate(task)}
                 accessibilityLabel="Change date"
+                style={{
+                  height: 30,
+                  width: 30,
+                }}
               />
-              {/* <IconButton
-                icon="dots-horizontal"
-                size={20}
-                onPress={() => onMore(task)}
-                accessibilityLabel="More options"
-              /> */}
+              {task?.linkSrcObject === "form" && (
+                <TouchableOpacity
+                  className=" justify-center items-center rounded-full"
+                  onPress={() => onForm(task)}
+                  style={{
+                    height: 30,
+                    width: 30,
+                  }}
+                >
+                  <AntDesign name="form" size={20} color="#78cad2" />
+                </TouchableOpacity>
+              )}
             </View>
           )}
-
           {task?.statusName !== "verification" &&
             task?.statusName !== "valide" && (
               <View className="flex-row items-center justify-end">
-                {task?.statusName == "onDemand" && +current_user?.userID === +task?.assigned_user_id && (
-                  <Button
-                    style={{
-                      borderColor: task?.bgColor,
-                    }}
-                    mode="outlined"
-                    onPress={() => onChangeStatus(task, "start")}
-                    icon={task?.statusName === "encours" ? "stop" : "play"}
-                    textColor="black"
-                  >
-                    {t("start")}
-                  </Button>
-                )}
-                {task?.statusName === "encours" && +current_user?.userID === +task?.assigned_user_id && (
-                  <Button
-                    mode="outlined"
-                    onPress={() => onChangeStatus(task , 'end')}
-                    icon={"check"}
-                    textColor="#004b23"
-                    style={{
-                      borderColor: "#008000",
-                    }}
-                  >
-                    {t("finish")}
-                  </Button>
-                )}
+                {task?.statusName == "onDemand" &&
+                  +current_user?.userID === +task?.assigned_user_id && (
+                    <Button
+                      style={{
+                        borderColor: task?.bgColor,
+                      }}
+                      mode="outlined"
+                      onPress={() => onChangeStatus(task, "start")}
+                      icon={task?.statusName === "encours" ? "stop" : "play"}
+                      textColor="black"
+                    >
+                      {t("start")}
+                    </Button>
+                  )}
+                {task?.statusName === "encours" &&
+                  +current_user?.userID === +task?.assigned_user_id && (
+                    <Button
+                      mode="outlined"
+                      onPress={() => onChangeStatus(task, "end")}
+                      icon={"check"}
+                      textColor="#004b23"
+                      style={{
+                        borderColor: "#008000",
+                      }}
+                    >
+                      {t("finish")}
+                    </Button>
+                  )}
               </View>
             )}
         </View>

@@ -112,7 +112,7 @@ const CameraScreen = ({
           }
 
           return obj;
-        })
+        }),
       );
       validate(assets);
     } else {
@@ -129,7 +129,7 @@ const CameraScreen = ({
     try {
       if (!audioPermission?.granted) await requestAudioPermission();
       const { sound } = await Audio.Sound.createAsync(
-        require("./assets/sound/beep-07a.mp3")
+        require("./assets/sound/beep-07a.mp3"),
       );
       setSound(sound);
       await sound.playAsync();
@@ -183,10 +183,10 @@ const CameraScreen = ({
                   resize: { width: img.width * 0.8, height: img.height * 0.8 },
                 },
               ],
-              { compress: 0.5, format: SaveFormat.JPEG, base64: true }
+              { compress: 0.5, format: SaveFormat.JPEG, base64: true },
             );
             return compressedImage;
-          })
+          }),
         );
 
         // Read video files as base64 (no compression via image-manipulator)
@@ -260,7 +260,7 @@ const CameraScreen = ({
               resize: { width: image.width * 0.8, height: image.height * 0.8 },
             },
           ],
-          { compress: 0.5, format: SaveFormat.JPEG, base64: true }
+          { compress: 0.5, format: SaveFormat.JPEG, base64: true },
         );
         base64Payload = compressedImage?.base64;
         width = compressedImage?.width || width;
@@ -464,7 +464,7 @@ const CameraScreen = ({
               }
             },
           },
-        ]
+        ],
       );
     };
 
@@ -535,212 +535,198 @@ const CameraScreen = ({
   if (video) return <VideoPreview item={video} />;
   return (
     <View
-      className=""
       style={[
         styles.container,
-        // style,
-        // {
-        //   flex: !enginDetail ? 1 : 0,
-        //   justifyContent: !enginDetail ? "center" : null
-        // },
+        {
+          flex: 1,
+        },
       ]}
     >
       {permission?.granted !== true ? (
-        <View style={{ justifyContent: "center", alignItems: "center" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           {permission?.granted === false ? (
-            <Text>Your didn't grant your app the permission to take photo</Text>
+            <Text>You didn't grant your app the permission to take photo</Text>
           ) : (
-            <Text> Requesting permission to take photo .... </Text>
+            <Text>Requesting permission to take photo...</Text>
           )}
         </View>
       ) : null}
       {permission?.granted === true && (
-        <View className=" w-full" style={{ flex: 1 }}>
-          {pickType == "" && (
-            <View className="flex-1">
-              {/* <View className="items-end">
-                  <Ionicons name="close-circle-outline"  />
-                </View> */}
-              <View className="flex-row items-center justify-around flex-1">
-                <TouchableOpacity
-                  onPress={(e) => {
-                    setPickType("camera");
-                  }}
-                  style={{ width: 80, height: 80 }}
-                  className="bg-gray-400 justify-center items-center"
-                >
-                  <Ionicons name="camera-outline" size={40} color={"#fff"} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setCameraMode("video");
-                    setPickType("video");
-                  }}
-                  style={{ width: 80, height: 80 }}
-                  className="bg-red-400 justify-center items-center"
-                >
-                  <Ionicons
-                    name={"videocam-outline"}
-                    color={"white"}
-                    size={30}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={pickImageAsync}
-                  style={{ width: 80, height: 80 }}
-                  className="bg-blue-400 ml-5 justify-center items-center"
-                >
-                  <Ionicons name="image-outline" size={40} color={"#fff"} />
-                </TouchableOpacity>
-              </View>
+        <View style={{ flex: 1 }}>
+          {/* Mode selector - only show if pickType is empty */}
+          {pickType === "" && (
+            <View style={styles.modeSelectorContainer}>
+              <TouchableOpacity
+                onPress={() => setPickType("camera")}
+                style={[styles.modeButton, { backgroundColor: "#6B7280" }]}
+              >
+                <Ionicons name="camera" size={32} color="#fff" />
+                <Text style={styles.modeButtonText}>Photo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setCameraMode("video");
+                  setPickType("video");
+                }}
+                style={[styles.modeButton, { backgroundColor: "#EF4444" }]}
+              >
+                <Ionicons name="videocam" size={32} color="#fff" />
+                <Text style={styles.modeButtonText}>Video</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={pickImageAsync}
+                style={[styles.modeButton, { backgroundColor: "#3B82F6" }]}
+              >
+                <Ionicons name="images" size={32} color="#fff" />
+                <Text style={styles.modeButtonText}>Gallery</Text>
+              </TouchableOpacity>
             </View>
           )}
-          {(pickType == "camera" || pickType == "video") && (
+
+          {/* Camera view */}
+          {(pickType === "camera" || pickType === "video") && (
             <CameraView
-              barCodeScannerSettings={{ barCodeTypes: ["qr", "barecode"] }}
-              onBarCodeScanned={onBarcodeScanned}
-              facing={type}
-              style={{
-                height: style?.height || GuidLines.windowHeight,
-                width: GuidLines.windowWidth,
-                zIndex: 120000,
-                position: "relative",
+              barCodeScannerSettings={{
+                barCodeTypes: [
+                  "qr",
+                  "pdf417",
+                  "datamatrix",
+                  "code128",
+                  "code39",
+                  "code93",
+                  "codabar",
+                  "ean13",
+                  "ean8",
+                  "upc_e",
+                  "upc_a",
+                  "interleaved2of5",
+                  "itf14",
+                  "aztec",
+                ],
               }}
-              cameraMode={cameraMode}
+              onBarcodeScanned={onBarcodeScanned}
+              facing={type}
+              style={{ flex: 1, width: "100%" }}
               mode={cameraMode}
               ref={photoRef}
             >
-              <View
-                style={{
-                  position: "absolute",
-                  zIndex: 50,
-                  width: "100%",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  // top: 200,
-                  // top: openPhoto ? 30 :  0,
-                  paddingHorizontal: GuidLines.base,
-                  paddingVertical: GuidLines.small,
-                }}
-              >
+              {/* Top action bar */}
+              <View style={styles.topActionBar}>
                 {mode === "scan" && (
-                  <View
-                    style={{
-                      marginTop: "20%",
-                    }}
-                    className="flex-1 justify-center items-center "
-                  >
+                  <View style={styles.scanOverlay}>
                     <Image
-                      style={{
-                        width: 300,
-                        height: 300,
-                      }}
+                      style={{ width: 300, height: 300 }}
                       source={require("./assets/images/Square.png")}
                       resizeMode="cover"
                     />
                   </View>
                 )}
 
-                {mode !== "scan" && (
-                  <View>
-                    <Ionicons
-                      name="close-outline"
-                      color={GuidLines.colorRed}
-                      size={GuidLines.large}
-                      onPress={onCancel}
-                    />
-                  </View>
+                {mode !== "scan" && images.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setImages([]);
+                      onCancel();
+                    }}
+                    style={styles.topActionButton}
+                  >
+                    <Ionicons name="close" color="#fff" size={28} />
+                  </TouchableOpacity>
                 )}
-                {mode !== "scan" && (
-                  <Ionicons
-                    name="camera-reverse"
+
+                {mode !== "scan" && images.length === 0 && (
+                  <TouchableOpacity
                     onPress={toggleCameraType}
-                    color="#fff"
-                    size={GuidLines.large}
-                  />
+                    style={[
+                      styles.topActionButton,
+                      { backgroundColor: "rgba(255,255,255,0.3)" },
+                    ]}
+                  >
+                    <Ionicons name="camera-reverse" color="#fff" size={28} />
+                  </TouchableOpacity>
                 )}
-                {images?.length > 0 && !uploading && (
-                  <Ionicons
-                    name="checkmark-outline"
-                    color="#fff"
-                    size={30}
-                    onPress={(e) => validate()}
-                  />
+
+                {images.length > 0 && !uploading && (
+                  <TouchableOpacity
+                    onPress={() => validate()}
+                    style={[
+                      styles.topActionButton,
+                      { backgroundColor: "rgba(0,200,0,0.9)" },
+                    ]}
+                  >
+                    <Ionicons name="checkmark" color="#fff" size={32} />
+                  </TouchableOpacity>
                 )}
-                {uploading && (
-                  <ActivityIndicator color="orange" size={"small"} />
-                )}
+
+                {uploading && <ActivityIndicator color="orange" size="large" />}
               </View>
 
-              {cameraMode === "scan" ? null : (
-                <View
-                  style={{
-                    position: "absolute",
-                    zIndex: 2,
-                    width: "100%",
-                    bottom: "10%",
-                    margin: cameraMode == "scan" ? 0 : 10,
-                    alignItems: "center",
-                  }}
-                >
-                  <View className="flex-row items-center justify-center gap-2">
-                    {pickType == "camera" ? (
-                      <TouchableOpacity
-                        onPress={takePhoto}
-                        style={[
-                          styles.actionBtn,
-                          { backgroundColor: "orange" },
-                        ]}
+              {/* Bottom capture area */}
+              {cameraMode !== "scan" && (
+                <View style={styles.bottomCaptureArea}>
+                  {/* Thumbnail strip — always visible when photos exist */}
+                  {images.length > 0 && (
+                    <View style={styles.previewContainer}>
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.previewScrollContent}
                       >
-                        <Ionicons
-                          name="camera-outline"
-                          color={"white"}
-                          size={30}
-                        />
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        onPress={isRecording ? stopRecording : takeVideo}
-                        style={[styles.actionBtn, { backgroundColor: "red" }]}
-                      >
-                        <Ionicons
-                          name={
-                            isRecording ? "square-outline" : "videocam-outline"
-                          }
-                          color={"white"}
-                          size={30}
-                        />
-                      </TouchableOpacity>
-                    )}
+                        {images.map((img, idx) => (
+                          <View key={idx} style={styles.previewImageWrapper}>
+                            <Image
+                              source={{ uri: img.uri }}
+                              style={styles.previewImage}
+                              resizeMode="cover"
+                            />
+                            <TouchableOpacity
+                              onPress={() => removeImage(idx)}
+                              style={styles.previewRemoveButton}
+                            >
+                              <Ionicons
+                                name="close-circle"
+                                color="#EF4444"
+                                size={24}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+
+                  {/* Capture button — always visible */}
+                  <View style={styles.captureButtonContainer}>
+                    <TouchableOpacity
+                      onPress={
+                        pickType === "camera"
+                          ? takePhoto
+                          : isRecording
+                            ? stopRecording
+                            : takeVideo
+                      }
+                      style={[
+                        styles.captureButton,
+                        pickType === "video" &&
+                          isRecording &&
+                          styles.captureButtonRecording,
+                      ]}
+                    >
+                      <Ionicons
+                        name={
+                          pickType === "camera"
+                            ? "camera"
+                            : isRecording
+                              ? "stop"
+                              : "videocam"
+                        }
+                        color={pickType === "video" ? "#fff" : "orange"}
+                        size={40}
+                      />
+                    </TouchableOpacity>
                   </View>
-                  <ScrollView
-                    style={{ width: "auto", marginTop: 10 }}
-                    className="flex-row"
-                    horizontal={true}
-                  >
-                    {images?.length > 0 &&
-                      images.map((img, idx) => (
-                        <View key={idx} className="ml-2">
-                          <Image
-                            source={{ uri: img.uri }}
-                            width={50}
-                            height={50}
-                          />
-                          <Ionicons
-                            onPress={(e) => removeImage(idx)}
-                            style={{
-                              position: "absolute",
-                              zIndex: 3,
-                              left: "30%",
-                              top: "30%",
-                            }}
-                            name="close-outline"
-                            color={"red"}
-                            size={25}
-                          />
-                        </View>
-                      ))}
-                  </ScrollView>
                 </View>
               )}
             </CameraView>
@@ -757,10 +743,109 @@ const styles = StyleSheet.create({
   container: {
     position: "relative",
     flex: 1,
+    backgroundColor: "#000",
+  },
+  modeSelectorContainer: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    width: GuidLines.windowWidth,
-    height: GuidLines.windowHeight,
+    gap: 20,
+    backgroundColor: "#1F2937",
+  },
+  modeButton: {
+    width: 90,
+    height: 90,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  modeButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  topActionBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: GuidLines.base,
+    paddingVertical: GuidLines.base,
+  },
+  topActionButton: {
+    backgroundColor: "rgba(255,0,0,0.8)",
+    borderRadius: 30,
+    width: 56,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scanOverlay: {
+    flex: 1,
+    marginTop: "20%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bottomCaptureArea: {
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+    alignItems: "center",
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  captureButtonContainer: {
+    alignItems: "center",
+  },
+  captureButton: {
+    backgroundColor: "#fff",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 5,
+    borderColor: "orange",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  captureButtonRecording: {
+    backgroundColor: "#EF4444",
+    borderColor: "#fff",
+  },
+  previewContainer: {
+    backgroundColor: "rgba(0,0,0,0.7)",
+    borderRadius: 16,
+    padding: 12,
+    width: "100%",
+  },
+  previewScrollContent: {
+    gap: 10,
+  },
+  previewImageWrapper: {
+    position: "relative",
+  },
+  previewImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+  },
+  previewRemoveButton: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "#fff",
+    borderRadius: 12,
   },
   actionBtn: {
     width: 50,

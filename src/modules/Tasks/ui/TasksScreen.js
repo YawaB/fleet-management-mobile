@@ -4,7 +4,12 @@ import { Button, Text, Searchbar, Divider } from "react-native-paper";
 import TaskCard from "./TaskCard";
 import moment from "moment/moment";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTaskList, getTasks, startTaskOrStop } from "../slice/slice";
+import {
+  fetchFormFields,
+  fetchTaskList,
+  getTasks,
+  startTaskOrStop,
+} from "../slice/slice";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import LoadingComponent from "../../../component/LoadingComponent";
@@ -76,29 +81,21 @@ const TaskListScreen = ({ navigation, route }) => {
     let args = {
       srcObject: "Tasks",
       srcId: task.TaskId,
-      status: ["onDemand" , "terminer", "created"].includes(task?.statusName)
+      status: ["onDemand", "terminer", "created"].includes(task?.statusName)
         ? "start"
         : "end",
-      // // status:
-      // //
-      //   task?.statusName === "terminer" || task?.statusName === "created"
-      //     ? "start"
-      //     : "end",
     };
-    console.log("handleStart args:", args ,task);
     dispatch(startTaskOrStop(args));
-    return;
   };
 
-  const handleChangeStatus = (task , status) => {
+  const handleChangeStatus = (task, status) => {
     let args = {
       srcObject: "Tasks",
       srcId: task.TaskId,
-      status
+      status,
     };
-    console.log("handleStart args:", args ,task);
+    console.log("handleStart args:", args, task);
     dispatch(startTaskOrStop(args));
-    return;
   };
 
   const handleChangeDate = (task) => {
@@ -127,10 +124,16 @@ const TaskListScreen = ({ navigation, route }) => {
     navigation.navigate("CreateTask");
     return;
   };
+  const handleForm = (task) => {
+    handleStart(task);
+    dispatch(fetchFormFields({ modelId: task?.linkSrcId })).then(() => {
+      navigation.navigate("FormTask", { task });
+    });
+    return;
+  };
 
   const handleSearchChange = (text) => {
     setSearchQuery(text);
-
     const cleared = !(text || "").trim();
     if (cleared && navigation?.setParams) {
       navigation.setParams({ id: null, searchQuery: null });
@@ -147,19 +150,28 @@ const TaskListScreen = ({ navigation, route }) => {
       onRequestHelp={handleRequestHelp}
       onMore={handleMore}
       onDone={handleDone}
+      onForm={handleForm}
     />
   );
 
   useEffect(() => {
-    
-  }, []);
+    if (route?.params?.id && taskList?.length > 0) {
+      const found = taskList.find(
+        (task) => String(task?.TaskId) === String(route.params.id),
+      );
+      if (found) {
+        setSearchQuery(found.taskName || "");
+      } else {
+        setSearchQuery("");
+      }
+    }
+  }, [route.params?.id, taskList]);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('route?.params?.searchQuery', route?.params?.searchQuery)
       if (route?.params?.searchQuery) {
         setSearchQuery(route.params.searchQuery);
-      }else{
+      } else {
         setSearchQuery("");
       }
     }, [route.params?.searchQuery]),
@@ -233,9 +245,7 @@ const TaskListScreen = ({ navigation, route }) => {
           <View className="flex-1 px-4 pt-3">
             <FlatList
               data={visibleTasks}
-              keyExtractor={(item, index) =>
-                `task-${item.TaskId}-${index}`
-              }
+              keyExtractor={(item, index) => `task-${item.TaskId}-${index}`}
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
               ListFooterComponent={<View className="h-8" />}
@@ -258,9 +268,9 @@ const TasksScreen = ({ navigation, route }) => {
     useCallback(() => {
       return () => {
         navigation.setParams({ id: null, searchQuery: null });
-      }
-    },[navigation])
-  )
+      };
+    }, [navigation]),
+  );
   return <TaskListScreen navigation={navigation} route={route} />;
 };
 

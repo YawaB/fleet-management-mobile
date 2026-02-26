@@ -11,6 +11,8 @@ import toastSlice from "../component/Shared/ToastComponent/slice/toastSlice";
 import mainHomeSlice from "../modules/MainHome/slice/slice";
 import usersSlice from "../modules/User/slice/slice";
 import chatSlice from "../modules/Chat/slice/slice";
+import formSlice from "../modules/Form/slice/form.slice";
+import notificationSlice from "../modules/Notification/slice/header.slice";
 
 export const store = configureStore({
   reducer: {
@@ -26,5 +28,7 @@ export const store = configureStore({
     mainHome: mainHomeSlice,
     users: usersSlice,
     chat: chatSlice,
+    form: formSlice,
+    notification: notificationSlice,
   },
 });
