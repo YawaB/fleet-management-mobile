@@ -169,6 +169,8 @@ const FormScreen = ({ route }) => {
   const onSubmit = async (values, { resetForm }) => {
     try {
       const payload = {
+        srcObject: "tasks",
+        srcId: task?.TaskId,
         values: (formFields || []).map((field) => {
           let value = values[field.code];
           if (field.type === "image") {

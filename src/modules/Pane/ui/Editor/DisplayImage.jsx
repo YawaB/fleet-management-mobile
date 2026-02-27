@@ -1,8 +1,9 @@
 import { View, Text, ScrollView, Image } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useDispatch } from "react-redux";
+import { setPhoto } from "../../../../component/Shared/CameraScreen/slice/photo.slice";
 
-const DisplayImage = ({ photo, formData, route }) => {
+const DisplayImage = ({ photo, formData, route, setFormData }) => {
   const dispatch = useDispatch();
   const baseUrl = process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE || "";
 

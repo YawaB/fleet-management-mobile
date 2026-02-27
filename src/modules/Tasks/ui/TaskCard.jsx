@@ -134,34 +134,32 @@ const TaskCard = ({
           {task?.statusName !== "verification" &&
             task?.statusName !== "valide" && (
               <View className="flex-row items-center justify-end">
-                {task?.statusName == "onDemand" &&
-                  +current_user?.userID === +task?.assigned_user_id && (
-                    <Button
-                      style={{
-                        borderColor: task?.bgColor,
-                      }}
-                      mode="outlined"
-                      onPress={() => onChangeStatus(task, "start")}
-                      icon={task?.statusName === "encours" ? "stop" : "play"}
-                      textColor="black"
-                    >
-                      {t("start")}
-                    </Button>
-                  )}
-                {task?.statusName === "encours" &&
-                  +current_user?.userID === +task?.assigned_user_id && (
-                    <Button
-                      mode="outlined"
-                      onPress={() => onChangeStatus(task, "end")}
-                      icon={"check"}
-                      textColor="#004b23"
-                      style={{
-                        borderColor: "#008000",
-                      }}
-                    >
-                      {t("finish")}
-                    </Button>
-                  )}
+                {task?.statusName == "onDemand" && (
+                  <Button
+                    style={{
+                      borderColor: task?.bgColor,
+                    }}
+                    mode="outlined"
+                    onPress={() => onChangeStatus(task, "start")}
+                    icon={task?.statusName === "encours" ? "stop" : "play"}
+                    textColor="black"
+                  >
+                    {t("start")}
+                  </Button>
+                )}
+                {task?.statusName === "encours" && (
+                  <Button
+                    mode="outlined"
+                    onPress={() => onChangeStatus(task, "end")}
+                    icon={"check"}
+                    textColor="#004b23"
+                    style={{
+                      borderColor: "#008000",
+                    }}
+                  >
+                    {t("finish")}
+                  </Button>
+                )}
               </View>
             )}
         </View>
