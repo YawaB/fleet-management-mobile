@@ -5,7 +5,7 @@
   "expo": {
     "name": "FLEET EYE",
     "slug": "fleet-management",
-    "version": "1.0.5",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",

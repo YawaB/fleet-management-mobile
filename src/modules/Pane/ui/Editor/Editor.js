@@ -41,6 +41,40 @@ import { getCurrentUser } from "../../../Authentication/slice/auth.slice";
 import { useTranslation } from "react-i18next";
 import DisplayImage from "./DisplayImage";
 
+const normalizeImmobilizingValue = (value) => {
+  if (value === 1 || value === "1" || value === "oui") return 1;
+  return 0;
+};
+
+const isSamePaneForm = (a, b) => {
+  if (!a || !b) return false;
+
+  const sameValue = (x, y) => {
+    const isObjX = x !== null && typeof x === "object";
+    const isObjY = y !== null && typeof y === "object";
+    if (isObjX || isObjY) {
+      try {
+        return JSON.stringify(x ?? null) === JSON.stringify(y ?? null);
+      } catch (e) {
+        return false;
+      }
+    }
+    return x === y;
+  };
+
+  return (
+    a.name === b.name &&
+    a.immatriculation === b.immatriculation &&
+    a.category === b.category &&
+    a.isImmobilizing === b.isImmobilizing &&
+    a.description === b.description &&
+    sameValue(a.photo, b.photo) &&
+    sameValue(a.audio, b.audio) &&
+    sameValue(a.imageId, b.imageId) &&
+    sameValue(a.audioId, b.audioId)
+  );
+};
+
 function PaneEditor({ navigation }) {
   const photo = useSelector(getPhoto);
 
@@ -70,7 +104,7 @@ function PaneEditor({ navigation }) {
     immatriculation: currentUser?.vehiculeId,
     category: "",
     symptom: "",
-    isImmobilizing: "non",
+    isImmobilizing: 0,
     description: "",
     photo: null,
     audio: null,
@@ -162,7 +196,7 @@ function PaneEditor({ navigation }) {
           immatriculation: currentUser?.vehiculeId,
           category: "",
           symptom: "",
-          isImmobilizing: "non",
+          isImmobilizing: 0,
           description: "",
           photo: null,
           audio: null,
@@ -184,18 +218,21 @@ function PaneEditor({ navigation }) {
     }
   };
 
-  const initialFormData = {
-    name: `#PDC${moment().format("DDMMYYHHmm")}`,
-    immatriculation: currentUser?.vehiculeId,
-    category: "",
-    symptom: "",
-    isImmobilizing: "non",
-    description: "",
-    photo: null,
-    audio: null,
-    imageId: null,
-    audioId: null,
-  };
+  const initialFormData = useMemo(
+    () => ({
+      name: `#PDC${moment().format("DDMMYYHHmm")}`,
+      immatriculation: currentUser?.vehiculeId,
+      category: "",
+      symptom: "",
+      isImmobilizing: 0,
+      description: "",
+      photo: null,
+      audio: null,
+      imageId: null,
+      audioId: null,
+    }),
+    [currentUser?.vehiculeId],
+  );
 
   const playOrStopAudio = async () => {
     setIsPlaying(!isPlaying);
@@ -234,7 +271,9 @@ function PaneEditor({ navigation }) {
   useEffect(() => {
     const pane = route.params?.pane;
     if (!pane) {
-      setFormData(initialFormData);
+      setFormData((prev) =>
+        isSamePaneForm(prev, initialFormData) ? prev : initialFormData,
+      );
       return;
     }
 
@@ -243,7 +282,7 @@ function PaneEditor({ navigation }) {
       immatriculation: pane?.VehiculeId,
       category: pane?.CategoryTypeId,
       symptom: pane?.Symptome,
-      isImmobilizing: pane?.panneImmobilisante,
+      isImmobilizing: normalizeImmobilizingValue(pane?.panneImmobilisante),
       description: pane?.Description,
       photo: pane?.images,
       audio: pane?.audio,
@@ -251,8 +290,8 @@ function PaneEditor({ navigation }) {
       audioId: pane?.audioId,
     };
 
-    setFormData(params);
-  }, [route.params]);
+    setFormData((prev) => (isSamePaneForm(prev, params) ? prev : params));
+  }, [route.params?.pane, initialFormData]);
 
   // useFocusEffect(
   //   useCallback(() => {
@@ -409,7 +448,12 @@ function PaneEditor({ navigation }) {
           {/* Advanced fields moved below under Show More */}
           <Text className="text-gray-500 font-bold pb-1">{t("photo")}</Text>
           <Divider />
-          <DisplayImage photo={photo} formData={formData} route={route} />
+          <DisplayImage
+            setFormData={setFormData}
+            photo={photo}
+            formData={formData}
+            route={route}
+          />
           <View className=" flex justify-between flex-row">
             <Button
               mode="outlined"
@@ -486,7 +530,7 @@ function PaneEditor({ navigation }) {
           </Button>
           {showMore && (
             <View>
-              <View className="flex flex-col">
+              {/* <View className="flex flex-col">
                 <Text className="text-gray-500 font-bold pb-1">
                   {t("symptom")}
                 </Text>
@@ -499,7 +543,7 @@ function PaneEditor({ navigation }) {
                   selectedTextStyle={styles.selectedTextStyle}
                   data={
                     formData.category
-                      ? symptoms[formData.category].map((symptom) => ({
+                      ? symptoms[formData.category]?.map((symptom) => ({
                           label: symptom,
                           value: symptom,
                         }))
@@ -518,19 +562,22 @@ function PaneEditor({ navigation }) {
                   }}
                   disable={!formData.category}
                 />
-              </View>
+              </View> */}
               <View className="flex flex-col">
                 <Text className="text-gray-500 font-bold pb-1">
                   {t("immobilizing")}
                 </Text>
                 <SegmentedButtons
-                  value={formData.isImmobilizing}
+                  value={`${formData.isImmobilizing}`}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, isImmobilizing: value })
+                    setFormData({
+                      ...formData,
+                      isImmobilizing: normalizeImmobilizingValue(value),
+                    })
                   }
                   buttons={[
-                    { value: "oui", label: "Oui" },
-                    { value: "non", label: "Non" },
+                    { value: "1", label: "Oui" },
+                    { value: "0", label: "Non" },
                   ]}
                   style={styles.segmentedButton}
                 />
