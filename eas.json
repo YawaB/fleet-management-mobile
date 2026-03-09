@@ -1,21 +1,45 @@
 {
-    "build": {
-      "preview": {
-        "android": {
-          "buildType": "apk"
-        }
+  "cli": {
+    "version": ">= 13.0.0"
+  },
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview2": {
+      "android": {
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "preview3": {
+      "developmentClient": true
+    },
+    "preview4": {
+      "distribution": "internal"
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle",
+        "autoIncrement": "versionCode"
       },
-      "preview2": {
-        "android": {
-          "gradleCommand": ":app:assembleRelease"
-        }
+      "ios": {
+        "simulator": false,
+        "autoIncrement": "buildNumber",
+        "resourceClass": "m-medium"
       },
-      "preview3": {
-        "developmentClient": true
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "YOUR_APPLE_TEAM_ID"
       },
-      "preview4": {
-        "distribution": "internal"
-      },
-      "production": {}
+      "android": {
+        "track": "production"
+      }
     }
   }
+}
