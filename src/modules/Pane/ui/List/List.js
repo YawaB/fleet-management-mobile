@@ -1,0 +1,502 @@
+import React, { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  View,
+  StyleSheet,
+  Alert,
+  Image,
+  FlatList,
+  Linking,
+  TouchableOpacity,
+} from "react-native";
+import { Button, Divider, Card, Text, Chip } from "react-native-paper";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { fetchPannes, getPanes, removePanne } from "../../slice/panne.slice";
+import { useDispatch, useSelector } from "react-redux";
+import { colors } from "../../../../theme/colors";
+import { useFocusEffect } from "@react-navigation/native";
+
+function PaneList({ navigation }) {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const panes = useSelector(getPanes);
+
+  const navigateToEditor = (pane) => {
+    console.log("pane navigateToEditor", pane);
+    navigation.navigate("Editor", { pane });
+  };
+
+  const handleDelete = (pane) => {
+    const paneName = typeof pane?.name === "string" ? pane.name : "";
+    Alert.alert(
+      "Delete Incident",
+      `Are you sure you want to delete incident "${paneName}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: () => {
+            // TODO: Add delete logic here
+            console.log("Deleting pane:", pane.id);
+            dispatch(removePanne({ id: pane.id })).then(({ payload }) => {
+              if (payload) {
+                dispatch(fetchPannes());
+              }
+            });
+          },
+          style: "destructive",
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  const renderPaneCard = (pane) => (
+    <Card style={styles.card} key={pane.id}>
+      {(() => {
+        const baseUrl = process.env.EXPO_PUBLIC_REACT_APP_SOCKET_IMAGE || "";
+
+        const isImagePath = (p) =>
+          typeof p === "string" &&
+          /\.(png|jpe?g|webp|gif|bmp|heic|heif)$/i.test(p);
+
+        const parseMaybeJsonArray = (s) => {
+          try {
+            if (typeof s === "string" && s.trim().startsWith("[")) {
+              const arr = JSON.parse(s);
+              return Array.isArray(arr) ? arr : [];
+            }
+          } catch (e) {
+            // ignore
+          }
+          return [];
+        };
+
+        const normalize = (items) => {
+          console.log("items list", items);
+          if (!items) return [];
+          const arr = Array.isArray(items) ? items : [items];
+          const out = [];
+          for (const it of arr) {
+            if (!it) continue;
+            console.log("it list", typeof it);
+            if (typeof it === "object") {
+              if (it.uri && isImagePath(it.uri)) out.push(it.uri);
+              else if (it.path && isImagePath(it.path)) out.push(it.path);
+              else if (it.src) {
+                if (
+                  typeof it.src === "string" &&
+                  it.src.trim().startsWith("[")
+                ) {
+                  const parsed = parseMaybeJsonArray(it.src);
+                  parsed.forEach((p) => {
+                    if (typeof p === "string" && isImagePath(p.src)) {
+                      out.push(baseUrl + p.src);
+                    }
+                  });
+                } else if (typeof it.src === "string" && isImagePath(it.src)) {
+                  out.push(
+                    it.src.startsWith("http") || it.src.startsWith("file")
+                      ? it.src
+                      : baseUrl + it.src,
+                  );
+                }
+              }
+            } else if (typeof it === "string") {
+              const parsed = parseMaybeJsonArray(it);
+              if (parsed?.length) {
+                parsed.forEach((p) => {
+                  console.log("p list", p);
+                  if (isImagePath(p.src)) out.push(baseUrl + p.src);
+                });
+              } else if (isImagePath(it)) {
+                out.push(
+                  it.startsWith("http") || it.startsWith("file")
+                    ? it
+                    : baseUrl + it,
+                );
+              }
+            }
+          }
+          // dedupe
+          return Array.from(new Set(out));
+        };
+
+        const sources = normalize(pane?.images || pane?.image);
+        if (sources?.length > 1) {
+          return (
+            <FlatList
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              data={sources}
+              keyExtractor={(uri, idx) => `${pane.id}-${idx}`}
+              renderItem={({ item }) => (
+                <Image
+                  source={{ uri: item }}
+                  style={{
+                    width: 300,
+                    height: 150,
+                    borderColor: "white",
+                    borderWidth: 2,
+                  }}
+                  resizeMode="cover"
+                />
+              )}
+              style={styles.carouselContainer}
+            />
+          );
+        }
+
+        const single =
+          sources[0] ||
+          (pane?.image ? baseUrl + pane.image : "https://picsum.photos/700");
+        return <Card.Cover source={{ uri: single }} style={styles.cardImage} />;
+      })()}
+      <Card.Content>
+        <View className="">
+          <View className="flex flex-col items-start gap-2 mt-2">
+            <Text numberOfLines={1} variant="titleMedium" style={styles.title}>
+              {(() => {
+                const paneName =
+                  typeof pane?.name === "string" ? pane.name : "";
+                return paneName?.length > 20
+                  ? `${paneName?.slice(0, 17)}...`
+                  : paneName;
+              })()}
+            </Text>
+            {/* Status chip if available */}
+            <View className="flex flex-row items-center gap-2">
+              {(() => {
+                console.log("pane status", pane);
+                if (!pane.statusLabel) return null;
+                // simple color mapping
+
+                return (
+                  <Chip
+                    className="flex items-center justify-center"
+                    style={[
+                      styles.statusChip,
+                      { backgroundColor: pane.bgColor || colors.primary },
+                    ]}
+                    textStyle={{ color: "#fff" }}
+                  >
+                    {pane.statusLabel}
+                  </Chip>
+                );
+              })()}
+              <Chip
+                className="flex items-center justify-center"
+                style={[
+                  { backgroundColor: pane.categoryBgColor || colors.primary },
+                ]}
+                textStyle={{ color: pane.categoryColor || "#fff" }}
+              >
+                {pane?.categoryLabel}
+              </Chip>
+            </View>
+          </View>
+        </View>
+        <Divider style={styles.divider} />
+        <View style={styles.infoRow}>
+          <MaterialCommunityIcons
+            name="car"
+            size={20}
+            color={colors.gray[600]}
+          />
+          <Text variant="bodyMedium" style={styles.infoText}>
+            {pane.marque} - {pane.licensePlate}
+          </Text>
+        </View>
+        <View style={styles.infoRow}>
+          <MaterialCommunityIcons
+            name="alert"
+            size={20}
+            color={colors.gray[600]}
+          />
+          <Text variant="bodyMedium" style={styles.infoText}>
+            {pane.Symptome}
+          </Text>
+        </View>
+        {pane.Description && (
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons
+              name="text"
+              size={20}
+              color={colors.gray[600]}
+            />
+            <Text variant="bodyMedium" style={styles.infoText}>
+              {pane.Description}
+            </Text>
+          </View>
+        )}
+        {/* Responsable name */}
+        {(() => {
+          const responsableName =
+            pane.responsablePanneFullName ||
+            pane.declarantName ||
+            pane.responsable ||
+            pane.userName ||
+            pane.declarant ||
+            pane.fullName;
+          if (!responsableName) return null;
+          return (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons
+                name="account"
+                size={20}
+                color={colors.gray[600]}
+              />
+              <Text variant="bodyMedium" style={styles.infoText}>
+                {responsableName}
+              </Text>
+            </View>
+          );
+        })()}
+        {/* Phone number with tap-to-call */}
+        {(() => {
+          const phone =
+            pane.contact ||
+            pane.phone ||
+            pane.telephone ||
+            pane.phoneNumber ||
+            pane.tel;
+          if (!phone) return null;
+          const cleanPhone = String(phone).replace(/\s+/g, "");
+          const makeCall = () =>
+            Linking.openURL(`tel:${cleanPhone}`).catch(() => {});
+          return (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons
+                name="phone"
+                size={20}
+                color={colors.gray[600]}
+              />
+              <TouchableOpacity onPress={makeCall}>
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.infoText,
+                    { color: colors.primary, textDecorationLine: "underline" },
+                  ]}
+                >
+                  {phone}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })()}
+        <View style={styles.cardFooter}>
+          <Chip
+            className="flex items-center justify-center"
+            textStyle={{ color: "#fff" }}
+            style={{
+              backgroundColor:
+                pane.panneImmobilisante === "oui" ? "#EF4444" : "#10B981",
+            }}
+          >
+            {pane.panneImmobilisante === "oui"
+              ? "Immobilizing"
+              : "Not Immobilizing"}
+          </Chip>
+          {/* <Button
+            icon="calendar-arrow-right"
+            mode="contained"
+            onPress={() => navigation.navigate('Plan', { pane })}
+          >
+            {t("plan")}
+          </Button> */}
+        </View>
+      </Card.Content>
+      <Card.Actions>
+        <Button
+          icon="pencil"
+          mode="text"
+          onPress={() => navigateToEditor(pane)}
+        >
+          Edit
+        </Button>
+        <Button
+          icon="delete"
+          mode="text"
+          textColor="#dc2626"
+          onPress={() => handleDelete(pane)}
+        >
+          Delete
+        </Button>
+      </Card.Actions>
+    </Card>
+  );
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     try {
+  //       dispatch(fetchPannes());
+  //     } catch (err) {
+  //       console.log("Error fetch panes", err.message);
+  //     }
+  //   }, [])
+  // );
+
+  return (
+    <View style={styles.container}>
+      <View className="flex flex-row justify-between items-center p-4">
+        <Text variant="titleMedium" style={styles.headerTitle}>
+          Incidents
+        </Text>
+        <Button
+          mode="text"
+          icon="plus"
+          onPress={() => navigateToEditor({ new: true })}
+          style={styles.addButton}
+        >
+          {t("add_incident")}
+        </Button>
+      </View>
+      <Divider />
+      <FlatList
+        style={styles.list}
+        data={panes}
+        renderItem={({ item }) => renderPaneCard(item)}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.content}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
+  cardImage: {
+    height: 150,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  header: {
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  addButton: {
+    borderRadius: 8,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 48,
+  },
+  card: {
+    marginBottom: 16,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flex: 1,
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  title: {
+    fontWeight: "bold",
+  },
+  statusChip: {
+    height: 28,
+  },
+  immobilizeChip: {
+    height: 28,
+  },
+  divider: {
+    marginVertical: 12,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 8,
+  },
+  infoText: {
+    flex: 1,
+    color: colors.gray[700],
+  },
+  cardFooter: {
+    marginTop: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  header: {
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  addButton: {
+    borderRadius: 8,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 48,
+  },
+  card: {
+    marginBottom: 16,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  title: {
+    fontWeight: "bold",
+  },
+  statusChip: {
+    height: 28,
+  },
+  immobilizeChip: {
+    height: 28,
+  },
+  divider: {
+    marginVertical: 12,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 8,
+  },
+  carouselContainer: {
+    height: 150,
+  },
+  carouselImage: {
+    width: "100%",
+    height: "100%",
+  },
+});
+
+export default PaneList;
