@@ -1,59 +1,49 @@
 # Setup iOS production
 
-Ce dossier fournit une base de configuration iOS orientée production pour le projet Expo/React Native.
+Guide de mise en production iOS pour ce projet React Native (Expo prebuild) avec Firebase Messaging.
 
 ## 1) Pré-requis
 
-- Xcode 15+
+- macOS + Xcode 15+
 - CocoaPods installé
-- Compte Apple Developer + Team ID
-- `GoogleService-Info.plist` placé à la racine du projet
+- Compte Apple Developer (Team ID)
+- `eas-cli`
+- Fichier Firebase iOS de production : `GoogleService-Info.plist`
 
-## 2) Configuration Expo/EAS
+## 2) Fichier Firebase
 
-- `app.json`
-  - `expo.ios.bundleIdentifier`
-  - `expo.ios.buildNumber`
-  - `expo.ios.googleServicesFile`
-  - permissions iOS dans `expo.ios.infoPlist`
-- `eas.json`
-  - profil `build.production.ios` configuré pour incrémenter `buildNumber`
-  - section `submit.production.ios.appleTeamId` à remplacer
+Placer le fichier dans :
 
-## 3) Génération du projet natif iOS
+```bash
+ios/firebase/GoogleService-Info.prod.plist
+```
+
+> Ce fichier est ignoré par git (secret), il faut donc le fournir dans chaque environnement de build (local/CI).
+
+## 3) Générer la base iOS + patch production
 
 Depuis la racine du repo :
 
 ```bash
-./ios/scripts/prepare-prod.sh
+./ios/scripts/bootstrap-ios-prod.sh
 ```
 
-Ensuite, ouvrir le workspace généré :
+Ce script :
 
-```bash
-open ios/FleetManagement.xcworkspace
-```
+- lance `expo prebuild --platform ios --clean`
+- copie `ios/firebase/GoogleService-Info.prod.plist` vers `GoogleService-Info.plist` (chemin attendu Expo)
+- applique une config release stricte dans `ios/FleetManagement/Release.xcconfig`
 
-## 4) Build release local (optionnel)
-
-```bash
-cd ios
-xcodebuild \
-  -workspace FleetManagement.xcworkspace \
-  -scheme FleetManagement \
-  -configuration Release \
-  -destination 'generic/platform=iOS' \
-  clean archive
-```
-
-## 5) Build cloud recommandé (EAS)
+## 4) Build cloud recommandé (EAS)
 
 ```bash
 eas build --platform ios --profile production
+eas submit --platform ios --profile production
 ```
 
-Puis soumission :
+## 5) Validation rapide locale
 
 ```bash
-eas submit --platform ios --profile production
+plutil -lint GoogleService-Info.plist
+xcodebuild -workspace ios/FleetManagement.xcworkspace -scheme FleetManagement -showBuildSettings | head
 ```

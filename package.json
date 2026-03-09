@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "android-apk": "node scripts/bump-version.js && cd android && gradlew :app:assembleRelease",
     "clean": "cd android && gradlew clean",
-    "prod": "node scripts/bump-version.js && npx expo run:android --variant release"
+    "prod": "node scripts/bump-version.js && npx expo run:android --variant release",
+    "ios:prod:prepare": "./ios/scripts/bootstrap-ios-prod.sh"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
