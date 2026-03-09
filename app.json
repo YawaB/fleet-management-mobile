@@ -1,7 +1,4 @@
 {
-  "name": "FLEET EYE",
-  "displayName": "FLEET EYE",
-  "icon": "./assets/fleet_logo.png",
   "expo": {
     "name": "FLEET EYE",
     "slug": "fleet-management",
@@ -45,7 +42,8 @@
             "softwareKeyboardLayoutMode": "pan"
           }
         }
-      ]
+      ],
+      "@react-native-firebase/messaging"
     ],
     "splash": {
       "image": "./assets/fleet_logo.png",
@@ -65,7 +63,11 @@
         "NSPhotoLibraryAddUsageDescription": "L'application a besoin d'enregistrer des photos.",
         "UIBackgroundModes": [
           "remote-notification"
-        ]
+        ],
+        "NSUserNotificationsUsageDescription": "L'application a besoin d'envoyer des notifications pour les mises a jour de statut."
+      },
+      "entitlements": {
+        "aps-environment": "development"
       }
     },
     "android": {
