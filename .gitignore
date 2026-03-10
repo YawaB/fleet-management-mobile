@@ -2,6 +2,11 @@
 
 # dependencies
 node_modules/
+.idea
+.vscode
+.env
+google-services.json
+GoogleService-Info.plist
 
 # Expo
 .expo/
