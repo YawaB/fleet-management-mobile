@@ -76,7 +76,11 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@react-native-community/cli": "latest"
+  },
+  "resolutions": {
+    "fast-xml-builder": "^1.1.0"
   },
   "private": true
 }
